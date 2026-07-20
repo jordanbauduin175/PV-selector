@@ -1,6 +1,4 @@
 ﻿__pycache__/
 *.pyc
-work/
-outputs/datasheet_import_report.csv
-outputs/panneaux_catalogue_export.csv
-outputs/onduleurs_catalogue_export.csv
+output/*
+!output/.gitkeep

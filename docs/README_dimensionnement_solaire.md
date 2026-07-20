@@ -1,14 +1,18 @@
-﻿# Dimensionnement solaire - prototype GUI v0.18
+﻿# Dimensionnement solaire - prototype GUI v0.19
 
-Ce dossier contient la version `v0.18` du programme :
+Ce dossier contient la version `v0.19` du programme :
 
-- `dimensionnement_solaire.html` : interface graphique locale a ouvrir dans un navigateur.
-- `solar_optimizer_gui.py` : interface graphique et moteur de selection.
-- `panneaux.csv` : catalogue panneaux d'exemple.
-- `onduleurs.csv` : catalogue onduleurs d'exemple.
-- `catalogue_fabricants.py` : module de recherche locale, stockage et export des fiches fabricant.
-- `datasheet_importer.py` : module d'import local de datasheets PDF/TXT.
-- `catalogue_fabricants_db.json` : base locale des fabricants, panneaux et onduleurs.
+- `ui/dimensionnement_solaire.html` : interface graphique locale a ouvrir dans un navigateur.
+- `code/solar_optimizer_gui.py` : interface graphique Python et moteur de selection.
+- `input/panneaux.csv` : catalogue panneaux d'exemple.
+- `input/onduleurs.csv` : catalogue onduleurs d'exemple.
+- `code/catalogue_fabricants.py` : module de recherche locale, stockage et export des fiches fabricant.
+- `code/datasheet_importer.py` : module d'import local de datasheets PDF/TXT.
+- `input/catalogue_fabricants_db.json` : base locale des fabricants, panneaux et onduleurs.
+
+## Version 0.19
+
+Cette version reorganise le depot : ui/ pour l'interface, code/ pour les scripts, input/ pour les donnees, output/ pour les exports generes et docs/ pour la documentation. Les chemins par defaut des scripts ont ete adaptes a cette nouvelle structure.
 
 ## Version 0.18
 
@@ -90,13 +94,13 @@ Pour chaque combinaison panneau / onduleur / nombre de modules / nombre de strin
 Option recommandee pour une demo rapide :
 
 ```text
-ouvrir dimensionnement_solaire.html dans un navigateur
+ouvrir ui/dimensionnement_solaire.html dans un navigateur
 ```
 
 Option Python :
 
 ```powershell
-python solar_optimizer_gui.py
+python code/solar_optimizer_gui.py
 ```
 
 Si Python n'est pas disponible sur le poste, installer Python 3.10+ puis relancer la commande.
@@ -110,10 +114,10 @@ cliquer sur Exporter calcul dans l'interface apres le calcul
 Module catalogue fabricants :
 
 ```powershell
-python catalogue_fabricants.py summary
-python catalogue_fabricants.py search SMA
-python catalogue_fabricants.py export-app-csv
-python datasheet_importer.py datasheets --dry-run
-python datasheet_importer.py datasheets
+python code/catalogue_fabricants.py summary
+python code/catalogue_fabricants.py search SMA
+python code/catalogue_fabricants.py export-app-csv
+python code/datasheet_importer.py input/datasheets --dry-run
+python code/datasheet_importer.py input/datasheets
 ```
 

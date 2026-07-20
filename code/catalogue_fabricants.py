@@ -8,8 +8,12 @@ from pathlib import Path
 from urllib.parse import quote_plus
 
 
-APP_VERSION = "0.18"
-DEFAULT_DB = Path(__file__).with_name("catalogue_fabricants_db.json")
+APP_VERSION = "0.19"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+INPUT_DIR = PROJECT_ROOT / "input"
+OUTPUT_DIR = PROJECT_ROOT / "output"
+UI_DIR = PROJECT_ROOT / "ui"
+DEFAULT_DB = INPUT_DIR / "catalogue_fabricants_db.json"
 PANELS_HEADER = [
     "reference",
     "fabricant",
@@ -58,6 +62,7 @@ def load_db(path: Path) -> dict:
 def save_db(path: Path, db: dict) -> None:
     db["schema_version"] = APP_VERSION
     db["updated_at"] = today()
+    path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as handle:
         json.dump(db, handle, indent=2, ensure_ascii=False)
         handle.write("\n")
@@ -104,6 +109,7 @@ def read_csv_rows(path: Path) -> list[dict]:
 
 
 def write_csv_rows(path: Path, header: list[str], rows: list[dict]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=header)
         writer.writeheader()
@@ -254,7 +260,7 @@ def add_common(parser: argparse.ArgumentParser) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Catalogue fabricants PV v0.18")
+    parser = argparse.ArgumentParser(description="Catalogue fabricants PV v0.19")
     sub = parser.add_subparsers(dest="command", required=True)
 
     p = sub.add_parser("summary")
@@ -263,14 +269,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser("import-app-csv")
     add_common(p)
-    p.add_argument("--panels", default=str(Path(__file__).with_name("panneaux.csv")))
-    p.add_argument("--inverters", default=str(Path(__file__).with_name("onduleurs.csv")))
+    p.add_argument("--panels", default=str(INPUT_DIR / "panneaux.csv"))
+    p.add_argument("--inverters", default=str(INPUT_DIR / "onduleurs.csv"))
     p.set_defaults(func=import_app_csv)
 
     p = sub.add_parser("export-app-csv")
     add_common(p)
-    p.add_argument("--panels-out", default=str(Path(__file__).with_name("panneaux_catalogue_export.csv")))
-    p.add_argument("--inverters-out", default=str(Path(__file__).with_name("onduleurs_catalogue_export.csv")))
+    p.add_argument("--panels-out", default=str(OUTPUT_DIR / "panneaux_catalogue_export.csv"))
+    p.add_argument("--inverters-out", default=str(OUTPUT_DIR / "onduleurs_catalogue_export.csv"))
     p.set_defaults(func=export_app_csv)
 
     p = sub.add_parser("search")
@@ -288,10 +294,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("directory", help="Repertoire contenant les datasheets PDF ou TXT.")
     p.add_argument("--kind", choices=["auto", "panel", "inverter"], default="auto")
     p.add_argument("--dry-run", action="store_true", help="Analyse sans import dans le catalogue.")
-    p.add_argument("--panels-out", default=str(Path(__file__).with_name("panneaux.csv")))
-    p.add_argument("--inverters-out", default=str(Path(__file__).with_name("onduleurs.csv")))
-    p.add_argument("--report", default=str(Path(__file__).with_name("datasheet_import_report.csv")))
-    p.add_argument("--html", default=str(Path(__file__).with_name("dimensionnement_solaire.html")))
+    p.add_argument("--panels-out", default=str(INPUT_DIR / "panneaux.csv"))
+    p.add_argument("--inverters-out", default=str(INPUT_DIR / "onduleurs.csv"))
+    p.add_argument("--report", default=str(OUTPUT_DIR / "datasheet_import_report.csv"))
+    p.add_argument("--html", default=str(UI_DIR / "dimensionnement_solaire.html"))
     p.add_argument("--no-html-sync", action="store_true", help="Ne pas synchroniser l'HTML.")
     p.set_defaults(func=import_datasheets)
 
@@ -333,6 +339,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-
 

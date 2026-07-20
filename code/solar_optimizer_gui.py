@@ -12,6 +12,8 @@ import tkinter as tk
 
 APP_VERSION = "v0.15"
 APP_TITLE = f"Dimensionnement solaire {APP_VERSION} - selection panneaux / onduleurs"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+INPUT_DIR = PROJECT_ROOT / "input"
 ALL_PANELS_LABEL = "Tous les panneaux"
 ALL_INVERTERS_LABEL = "Tous les onduleurs"
 RGIE_UOC_FROID_MAX_V = 750.0
@@ -1221,14 +1223,14 @@ class SolarOptimizerApp:
 
 
 def run_app() -> None:
-    base_dir = Path(__file__).resolve().parent
+    base_dir = INPUT_DIR
     root = tk.Tk()
     SolarOptimizerApp(root, base_dir)
     root.mainloop()
 
 
 def run_self_test() -> None:
-    base_dir = Path(__file__).resolve().parent
+    base_dir = INPUT_DIR
     panels = load_panels(base_dir / "panneaux.csv")
     inverters = load_inverters(base_dir / "onduleurs.csv")
     results, rejected = optimize(

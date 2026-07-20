@@ -9,6 +9,9 @@ from typing import Iterable
 
 from catalogue_fabricants import (
     DEFAULT_DB,
+    INPUT_DIR,
+    OUTPUT_DIR,
+    UI_DIR,
     INVERTERS_HEADER,
     PANELS_HEADER,
     load_db,
@@ -20,12 +23,12 @@ from catalogue_fabricants import (
 )
 
 
-APP_VERSION = "0.18"
+APP_VERSION = "0.19"
 SUPPORTED_EXTENSIONS = {".pdf", ".txt", ".text", ".md"}
-DEFAULT_REPORT = Path(__file__).with_name("datasheet_import_report.csv")
-DEFAULT_PANELS_OUT = Path(__file__).with_name("panneaux.csv")
-DEFAULT_INVERTERS_OUT = Path(__file__).with_name("onduleurs.csv")
-DEFAULT_HTML = Path(__file__).with_name("dimensionnement_solaire.html")
+DEFAULT_REPORT = OUTPUT_DIR / "datasheet_import_report.csv"
+DEFAULT_PANELS_OUT = INPUT_DIR / "panneaux.csv"
+DEFAULT_INVERTERS_OUT = INPUT_DIR / "onduleurs.csv"
+DEFAULT_HTML = UI_DIR / "dimensionnement_solaire.html"
 
 
 @dataclass
@@ -497,6 +500,7 @@ def write_report(path: Path, parsed_items: list[ParsedDatasheet]) -> None:
         "missing_fields",
         "message",
     ]
+    path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=header)
         writer.writeheader()
@@ -609,5 +613,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
 

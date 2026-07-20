@@ -2,12 +2,28 @@
 
 Prototype local de dimensionnement photovoltaique.
 
+## Structure du projet
+
+- `ui/` : interface navigateur HTML.
+- `code/` : scripts Python et modules d'import.
+- `input/` : catalogues CSV, base fabricant et datasheets sources.
+- `output/` : rapports et exports generes localement.
+- `docs/` : documentation et notes de version.
+
 ## Lancement rapide
 
 Ouvrir dans un navigateur :
 
 ```text
-outputs/dimensionnement_solaire.html
+ui/dimensionnement_solaire.html
+```
+
+## Commandes utiles
+
+```powershell
+python code/catalogue_fabricants.py summary
+python code/datasheet_importer.py input/datasheets --dry-run
+python code/datasheet_importer.py input/datasheets
 ```
 
 ## Fonctions principales
@@ -21,4 +37,4 @@ outputs/dimensionnement_solaire.html
 - export CSV et note de calcul ;
 - import local de datasheets fabricants.
 
-Les notes detaillees sont dans `outputs/README_dimensionnement_solaire.md`.
+Les notes detaillees sont dans `docs/README_dimensionnement_solaire.md`.
