@@ -1,0 +1,9 @@
+reference,fabricant,puissance_ac_w,puissance_pv_max_w,tension_dc_max_v,mppt_min_v,mppt_max_v,courant_max_mppt_a,isc_max_mppt_a,nombre_mppt,strings_max_par_mppt,phase
+INV-3K-MONO,Exemple,3000,4500,600,80,550,16,20,2,1,mono
+INV-5K-MONO,Exemple,5000,7500,600,120,550,16,20,2,1,mono
+INV-10K-TRI,Exemple,10000,15000,1000,180,850,26,32,2,2,tri
+INV-20K-TRI,Exemple,20000,30000,1100,200,1000,30,40,3,2,tri
+SB5.0-1AV-41,SMA,5000,7500,600,175,500,15,20,2,2,mono
+SUN2000-5KTL-M1,Huawei FusionSolar,5000,7500,1100,140,980,13.5,19.5,2,1,tri
+SUN2000-10KTL-M1,Huawei FusionSolar,10000,15000,1100,140,980,13.5,19.5,2,1,tri
+SYMO-GEN24-10.0,Fronius,10000,15000,1000,278,800,12.5,20,2,1,tri

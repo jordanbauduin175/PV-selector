@@ -1,0 +1,363 @@
+﻿{
+  "schema_version": "0.18",
+  "updated_at": "2026-07-20",
+  "manufacturers": [
+    {
+      "name": "Trina Solar",
+      "kind": "panel",
+      "homepage": "https://www.trinasolar.com",
+      "notes": "Modules PV. Ajouter les fiches techniques officielles par gamme."
+    },
+    {
+      "name": "Jinko Solar",
+      "kind": "panel",
+      "homepage": "https://www.jinkosolar.com",
+      "notes": "Modules PV. Ajouter les fiches techniques officielles par gamme."
+    },
+    {
+      "name": "LONGi",
+      "kind": "panel",
+      "homepage": "https://www.longi.com/en",
+      "notes": "Modules PV Hi-MO et fiches techniques officielles."
+    },
+    {
+      "name": "JA Solar",
+      "kind": "panel",
+      "homepage": "https://www.jasolar.com",
+      "notes": "Modules PV. Ajouter les fiches techniques officielles par gamme."
+    },
+    {
+      "name": "Canadian Solar",
+      "kind": "panel",
+      "homepage": "https://www.csisolar.com",
+      "notes": "Modules PV. Ajouter les fiches techniques officielles par gamme."
+    },
+    {
+      "name": "Qcells",
+      "kind": "panel",
+      "homepage": "https://www.qcells.com",
+      "notes": "Modules PV. Ajouter les fiches techniques officielles par gamme."
+    },
+    {
+      "name": "REC",
+      "kind": "panel",
+      "homepage": "https://www.recgroup.com",
+      "notes": "Modules PV. Ajouter les fiches techniques officielles par gamme."
+    },
+    {
+      "name": "Maxeon",
+      "kind": "panel",
+      "homepage": "https://maxeon.com",
+      "notes": "Modules PV. Ajouter les fiches techniques officielles par gamme."
+    },
+    {
+      "name": "SMA",
+      "kind": "inverter",
+      "homepage": "https://www.sma.de/en/products",
+      "notes": "Onduleurs Sunny Boy, Sunny Tripower et hybrides."
+    },
+    {
+      "name": "Huawei FusionSolar",
+      "kind": "inverter",
+      "homepage": "https://solar.huawei.com",
+      "notes": "Onduleurs SUN2000 et documentation FusionSolar."
+    },
+    {
+      "name": "Fronius",
+      "kind": "inverter",
+      "homepage": "https://www.fronius.com/en/solar-energy",
+      "notes": "Onduleurs Primo, Symo, GEN24."
+    },
+    {
+      "name": "SolarEdge",
+      "kind": "inverter",
+      "homepage": "https://www.solaredge.com",
+      "notes": "Onduleurs avec optimiseurs."
+    },
+    {
+      "name": "Enphase",
+      "kind": "inverter",
+      "homepage": "https://enphase.com",
+      "notes": "Micro-onduleurs."
+    },
+    {
+      "name": "Sungrow",
+      "kind": "inverter",
+      "homepage": "https://en.sungrowpower.com",
+      "notes": "Onduleurs string et hybrides."
+    },
+    {
+      "name": "GoodWe",
+      "kind": "inverter",
+      "homepage": "https://www.goodwe.com",
+      "notes": "Onduleurs string et hybrides."
+    },
+    {
+      "name": "Solis",
+      "kind": "inverter",
+      "homepage": "https://www.solisinverters.com",
+      "notes": "Onduleurs string."
+    }
+  ],
+  "panels": [
+    {
+      "reference": "PV-MONO-430",
+      "fabricant": "Exemple",
+      "puissance_w": 430,
+      "largeur_m": 1.134,
+      "hauteur_m": 1.722,
+      "uoc_v": 39.8,
+      "isc_a": 13.7,
+      "umpp_v": 33.1,
+      "impp_a": 13.0,
+      "coef_tension_pct_c": -0.28,
+      "source_url": "",
+      "source_type": "example",
+      "last_verified": "2026-06-08",
+      "notes": "Donnee exemple du prototype."
+    },
+    {
+      "reference": "PV-MONO-455",
+      "fabricant": "Exemple",
+      "puissance_w": 455,
+      "largeur_m": 1.134,
+      "hauteur_m": 1.762,
+      "uoc_v": 41.2,
+      "isc_a": 14.0,
+      "umpp_v": 34.5,
+      "impp_a": 13.2,
+      "coef_tension_pct_c": -0.28,
+      "source_url": "",
+      "source_type": "example",
+      "last_verified": "2026-06-08",
+      "notes": "Donnee exemple du prototype."
+    },
+    {
+      "reference": "PV-HET-410",
+      "fabricant": "Exemple",
+      "puissance_w": 410,
+      "largeur_m": 1.04,
+      "hauteur_m": 1.755,
+      "uoc_v": 50.0,
+      "isc_a": 10.5,
+      "umpp_v": 42.0,
+      "impp_a": 9.76,
+      "coef_tension_pct_c": -0.24,
+      "source_url": "",
+      "source_type": "example",
+      "last_verified": "2026-06-08",
+      "notes": "Donnee exemple du prototype."
+    },
+    {
+      "reference": "PV-BIFACIAL-500",
+      "fabricant": "Exemple",
+      "puissance_w": 500,
+      "largeur_m": 1.134,
+      "hauteur_m": 1.95,
+      "uoc_v": 45.6,
+      "isc_a": 13.9,
+      "umpp_v": 38.2,
+      "impp_a": 13.1,
+      "coef_tension_pct_c": -0.29,
+      "source_url": "",
+      "source_type": "example",
+      "last_verified": "2026-06-08",
+      "notes": "Donnee exemple du prototype."
+    },
+    {
+      "reference": "TSM-450NEG9R.25",
+      "fabricant": "Trina Solar",
+      "puissance_w": 450,
+      "largeur_m": 1.134,
+      "hauteur_m": 1.762,
+      "uoc_v": 52.9,
+      "isc_a": 10.74,
+      "umpp_v": 44.6,
+      "impp_a": 10.09,
+      "coef_tension_pct_c": -0.24,
+      "source_url": "https://static.trinasolar.com/sites/default/files/250820_Datasheet_Vertex%20S%2B_NEG9R.25_EN_2025_B_web.pdf",
+      "source_type": "official_pdf",
+      "last_verified": "2026-06-08",
+      "notes": "Fiche Vertex S+ NEG9R.25 2025 B, valeur TSM-450."
+    },
+    {
+      "reference": "JKM580N-72HL4-BDV",
+      "fabricant": "Jinko Solar",
+      "puissance_w": 580,
+      "largeur_m": 1.134,
+      "hauteur_m": 2.278,
+      "uoc_v": 51.47,
+      "isc_a": 14.37,
+      "umpp_v": 42.59,
+      "impp_a": 13.62,
+      "coef_tension_pct_c": -0.25,
+      "source_url": "https://www.jinkosolar.com/uploads/JKM560-580N-72HL4-BDV-F6-EN.pdf",
+      "source_type": "official_pdf",
+      "last_verified": "2026-06-08",
+      "notes": "Fiche Tiger Neo N-type 72HL4-BDV, valeur JKM580."
+    },
+    {
+      "reference": "LR7-60HVH-560M",
+      "fabricant": "LONGi",
+      "puissance_w": 560,
+      "largeur_m": 1.134,
+      "hauteur_m": 1.99,
+      "uoc_v": 45.28,
+      "isc_a": 15.65,
+      "umpp_v": 37.51,
+      "impp_a": 14.93,
+      "coef_tension_pct_c": -0.2,
+      "source_url": "https://static.longi.com/LR_7_60_HVH_535_560_M_V1_0_ee51fac8f9.pdf",
+      "source_type": "official_pdf",
+      "last_verified": "2026-06-08",
+      "notes": "Fiche Hi-MO X10 LR7-60HVH 535-560M, valeur 560M."
+    }
+  ],
+  "inverters": [
+    {
+      "reference": "INV-3K-MONO",
+      "fabricant": "Exemple",
+      "puissance_ac_w": 3000,
+      "puissance_pv_max_w": 4500,
+      "tension_dc_max_v": 600,
+      "mppt_min_v": 80,
+      "mppt_max_v": 550,
+      "courant_max_mppt_a": 16,
+      "isc_max_mppt_a": 20,
+      "nombre_mppt": 2,
+      "strings_max_par_mppt": 1,
+      "phase": "mono",
+      "source_url": "",
+      "source_type": "example",
+      "last_verified": "2026-06-08",
+      "notes": "Donnee exemple du prototype."
+    },
+    {
+      "reference": "INV-5K-MONO",
+      "fabricant": "Exemple",
+      "puissance_ac_w": 5000,
+      "puissance_pv_max_w": 7500,
+      "tension_dc_max_v": 600,
+      "mppt_min_v": 120,
+      "mppt_max_v": 550,
+      "courant_max_mppt_a": 16,
+      "isc_max_mppt_a": 20,
+      "nombre_mppt": 2,
+      "strings_max_par_mppt": 1,
+      "phase": "mono",
+      "source_url": "",
+      "source_type": "example",
+      "last_verified": "2026-06-08",
+      "notes": "Donnee exemple du prototype."
+    },
+    {
+      "reference": "INV-10K-TRI",
+      "fabricant": "Exemple",
+      "puissance_ac_w": 10000,
+      "puissance_pv_max_w": 15000,
+      "tension_dc_max_v": 1000,
+      "mppt_min_v": 180,
+      "mppt_max_v": 850,
+      "courant_max_mppt_a": 26,
+      "isc_max_mppt_a": 32,
+      "nombre_mppt": 2,
+      "strings_max_par_mppt": 2,
+      "phase": "tri",
+      "source_url": "",
+      "source_type": "example",
+      "last_verified": "2026-06-08",
+      "notes": "Donnee exemple du prototype."
+    },
+    {
+      "reference": "INV-20K-TRI",
+      "fabricant": "Exemple",
+      "puissance_ac_w": 20000,
+      "puissance_pv_max_w": 30000,
+      "tension_dc_max_v": 1100,
+      "mppt_min_v": 200,
+      "mppt_max_v": 1000,
+      "courant_max_mppt_a": 30,
+      "isc_max_mppt_a": 40,
+      "nombre_mppt": 3,
+      "strings_max_par_mppt": 2,
+      "phase": "tri",
+      "source_url": "",
+      "source_type": "example",
+      "last_verified": "2026-06-08",
+      "notes": "Donnee exemple du prototype."
+    },
+    {
+      "reference": "SB5.0-1AV-41",
+      "fabricant": "SMA",
+      "puissance_ac_w": 5000,
+      "puissance_pv_max_w": 7500,
+      "tension_dc_max_v": 600,
+      "mppt_min_v": 175,
+      "mppt_max_v": 500,
+      "courant_max_mppt_a": 15,
+      "isc_max_mppt_a": 20,
+      "nombre_mppt": 2,
+      "strings_max_par_mppt": 2,
+      "phase": "mono",
+      "source_url": "https://manuals.sma.de/SBxx-1AV-41/en-US/4177754251.html",
+      "source_type": "official_html",
+      "last_verified": "2026-06-08",
+      "notes": "Fiche Sunny Boy 5.0 / 6.0, valeur SB5.0-1AV-41."
+    },
+    {
+      "reference": "SUN2000-5KTL-M1",
+      "fabricant": "Huawei FusionSolar",
+      "puissance_ac_w": 5000,
+      "puissance_pv_max_w": 7500,
+      "tension_dc_max_v": 1100,
+      "mppt_min_v": 140,
+      "mppt_max_v": 980,
+      "courant_max_mppt_a": 13.5,
+      "isc_max_mppt_a": 19.5,
+      "nombre_mppt": 2,
+      "strings_max_par_mppt": 1,
+      "phase": "tri",
+      "source_url": "https://solar.huawei.com/en/products/SUN2000-3-4-5-6-8-10KTL-M1/specs/",
+      "source_type": "official_html",
+      "last_verified": "2026-06-08",
+      "notes": "Fiche SUN2000 M1 high current, valeur 5KTL. La plage stockee est la plage de tension DC operationnelle."
+    },
+    {
+      "reference": "SUN2000-10KTL-M1",
+      "fabricant": "Huawei FusionSolar",
+      "puissance_ac_w": 10000,
+      "puissance_pv_max_w": 15000,
+      "tension_dc_max_v": 1100,
+      "mppt_min_v": 140,
+      "mppt_max_v": 980,
+      "courant_max_mppt_a": 13.5,
+      "isc_max_mppt_a": 19.5,
+      "nombre_mppt": 2,
+      "strings_max_par_mppt": 1,
+      "phase": "tri",
+      "source_url": "https://solar.huawei.com/en/products/SUN2000-3-4-5-6-8-10KTL-M1/specs/",
+      "source_type": "official_html",
+      "last_verified": "2026-06-08",
+      "notes": "Fiche SUN2000 M1 high current, valeur 10KTL. La plage stockee est la plage de tension DC operationnelle."
+    },
+    {
+      "reference": "SYMO-GEN24-10.0",
+      "fabricant": "Fronius",
+      "puissance_ac_w": 10000,
+      "puissance_pv_max_w": 15000,
+      "tension_dc_max_v": 1000,
+      "mppt_min_v": 278,
+      "mppt_max_v": 800,
+      "courant_max_mppt_a": 12.5,
+      "isc_max_mppt_a": 20,
+      "nombre_mppt": 2,
+      "strings_max_par_mppt": 1,
+      "phase": "tri",
+      "source_url": "https://www.fronius.com/en/help-center/solar-energy/products/solar-inverters/gen24/symo-gen24/fronius-symo-gen24-10-0",
+      "source_type": "official_html",
+      "last_verified": "2026-06-08",
+      "notes": "Fiche Symo GEN24 10.0. Entree conservatrice : MPPT asymetriques 25/12.5 A et Isc 40/20 A ramenes a la valeur limitante."
+    }
+  ]
+}
+

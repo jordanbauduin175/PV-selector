@@ -1,0 +1,2329 @@
+﻿<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dimensionnement solaire v0.18</title>
+  <style>
+    :root {
+      --bg: #f6f7f4;
+      --panel: #ffffff;
+      --line: #d9dfd2;
+      --text: #18211b;
+      --muted: #667065;
+      --green: #2f7d45;
+      --blue: #245f8f;
+      --amber: #ad741e;
+      --red: #b84235;
+      --shadow: 0 16px 36px rgba(24, 33, 27, 0.08);
+      color-scheme: light;
+      font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: minmax(280px, 1fr) auto;
+      gap: 18px;
+      align-items: center;
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcf8;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    .version-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      margin-left: 8px;
+      padding: 0 8px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #eef3ea;
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 800;
+      vertical-align: middle;
+    }
+
+    .subtitle {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .button {
+      min-height: 38px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--panel);
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .button.primary {
+      background: var(--green);
+      border-color: var(--green);
+      color: white;
+    }
+
+    .button:focus,
+    input:focus,
+    textarea:focus {
+      outline: 3px solid rgba(36, 95, 143, 0.22);
+      outline-offset: 1px;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      gap: 16px;
+      padding: 16px;
+      align-items: start;
+    }
+
+    aside,
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    aside {
+      position: sticky;
+      top: 16px;
+      padding: 14px;
+    }
+
+    .section-title {
+      margin: 2px 0 10px;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .field-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .field-divider {
+      margin-top: 6px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 800;
+      grid-column: 1 / -1;
+    }
+
+    .dynamic-list {
+      display: grid;
+      gap: 10px;
+      grid-column: 1 / -1;
+    }
+
+    .config-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcf8;
+    }
+
+    .config-row-title {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .wide-field {
+      grid-column: 1 / -1;
+    }
+
+    .icon-button {
+      min-width: 34px;
+      min-height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #eef4f1;
+      color: var(--accent);
+      font-size: 18px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .icon-button:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+
+    .small-textarea {
+      min-height: 78px;
+    }
+
+    .mppt-list {
+      grid-column: 1 / -1;
+      gap: 6px;
+    }
+
+    .mppt-row {
+      display: grid;
+      grid-template-columns: minmax(88px, 1fr) minmax(92px, 1fr);
+      gap: 8px;
+      align-items: center;
+      padding: 7px 8px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fbfcf8;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .mppt-row span {
+      color: var(--accent);
+    }
+
+    label {
+      display: grid;
+      gap: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fbfcf8;
+      color: var(--text);
+    }
+
+    input,
+    select {
+      min-height: 38px;
+      padding: 7px 9px;
+    }
+
+    textarea {
+      min-height: 220px;
+      padding: 10px;
+      resize: vertical;
+      font-family: Consolas, Menlo, monospace;
+      font-size: 12px;
+      line-height: 1.45;
+      text-transform: none;
+      color: #1f2d22;
+    }
+
+    .aside-actions {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .content {
+      display: grid;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+      gap: 10px;
+    }
+
+    .metric {
+      min-height: 92px;
+      padding: 13px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      display: grid;
+      align-content: center;
+      gap: 5px;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .metric strong {
+      font-size: 22px;
+      line-height: 1.15;
+      overflow-wrap: anywhere;
+    }
+
+    .panel {
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-header h2 {
+      margin: 0;
+      font-size: 16px;
+      letter-spacing: 0;
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 13px;
+      text-align: right;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      max-height: 430px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1280px;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      padding: 10px 9px;
+      border-bottom: 1px solid var(--line);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #eef3ea;
+      color: #3b463c;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    th:nth-child(2),
+    th:nth-child(3),
+    td:nth-child(2),
+    td:nth-child(3) {
+      text-align: left;
+    }
+
+    tbody tr {
+      cursor: pointer;
+    }
+
+    tbody tr:hover,
+    tbody tr.selected {
+      background: #edf6ee;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .detail-block {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      min-width: 0;
+      background: #fbfcf8;
+    }
+
+    .detail-block h3 {
+      margin: 0 0 10px;
+      font-size: 14px;
+    }
+
+    .schema-block {
+      grid-column: 1 / -1;
+    }
+
+    .schema-flow {
+      display: grid;
+      grid-template-columns: minmax(115px, 0.75fr) minmax(150px, 1fr) minmax(115px, 0.75fr) minmax(150px, 1fr) minmax(115px, 0.75fr) minmax(150px, 1fr) minmax(115px, 0.75fr);
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .schema-node,
+    .schema-link {
+      min-height: 82px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 10px;
+      display: grid;
+      align-content: center;
+      gap: 4px;
+    }
+
+    .schema-node {
+      text-align: center;
+      background: #eef3ea;
+    }
+
+    .schema-node span,
+    .schema-link span {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .schema-node strong,
+    .schema-link strong {
+      font-size: 14px;
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+    }
+
+    .schema-link {
+      position: relative;
+      background: #fbfcf8;
+    }
+
+    .schema-link::before,
+    .schema-link::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 8px;
+      border-top: 2px solid var(--blue);
+    }
+
+    .schema-link::before {
+      left: -8px;
+    }
+
+    .schema-link::after {
+      right: -8px;
+    }
+
+    .schema-node small,
+    .schema-link small {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.25;
+    }
+
+    .schema-total {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(110px, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .schema-total div {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcf8;
+      padding: 9px;
+    }
+
+    .schema-total span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .schema-total strong {
+      display: block;
+      margin-top: 4px;
+      font-size: 16px;
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: minmax(120px, 0.7fr) minmax(0, 1fr);
+      gap: 8px;
+      padding: 7px 0;
+      border-bottom: 1px solid #e8ece4;
+      font-size: 13px;
+    }
+
+    .kv:last-child {
+      border-bottom: 0;
+    }
+
+    .kv span {
+      color: var(--muted);
+    }
+
+    .checks {
+      display: grid;
+      gap: 8px;
+    }
+
+    .check {
+      display: grid;
+      grid-template-columns: 8px minmax(0, 1fr);
+      gap: 8px;
+      align-items: start;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      margin-top: 5px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      padding: 12px 14px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .tab {
+      min-height: 34px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-bottom: 0;
+      border-radius: 6px 6px 0 0;
+      background: #eef3ea;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      background: var(--panel);
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    .catalog-area {
+      display: none;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .catalog-area.active {
+      display: grid;
+    }
+
+    .drop-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .drop-row input {
+      min-height: auto;
+      padding: 0;
+      border: 0;
+      background: transparent;
+    }
+
+    .rejects {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
+      gap: 8px;
+      padding: 0 14px 14px;
+    }
+
+    .reject {
+      min-height: 58px;
+      padding: 9px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcf8;
+    }
+
+    .reject span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .reject strong {
+      display: block;
+      margin-top: 4px;
+      font-size: 18px;
+    }
+
+    .empty {
+      padding: 18px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 980px) {
+      header,
+      main,
+      .detail-grid,
+      .catalog-area {
+        grid-template-columns: 1fr;
+      }
+
+      aside {
+        position: static;
+      }
+
+      .metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .schema-flow,
+      .schema-total {
+        grid-template-columns: 1fr;
+      }
+
+      .schema-link::before,
+      .schema-link::after {
+        display: none;
+      }
+
+      .toolbar {
+        justify-content: flex-start;
+      }
+    }
+
+    @media (max-width: 560px) {
+      header,
+      main {
+        padding: 12px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+      .metrics,
+      .rejects {
+        grid-template-columns: 1fr;
+      }
+
+      .panel-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <h1>Dimensionnement solaire <span class="version-badge">v0.18</span></h1>
+        <div class="subtitle">Selection panneaux / onduleurs avec controles Uoc, Isc, Umpp et plages MPPT</div>
+      </div>
+      <div class="toolbar">
+        <button class="button primary" id="calculateBtn" type="button">Calculer</button>
+        <button class="button" id="exportBtn" type="button">Exporter CSV</button>
+        <button class="button" id="exportCalcBtn" type="button">Exporter calcul</button>
+      </div>
+    </header>
+
+    <main>
+      <aside>
+        <div class="section-title">Contraintes du site</div>
+        <div class="field-grid">
+          <label>
+            Occupation de surface (%)
+            <input id="occupationInput" type="number" min="1" max="100" step="1" value="85">
+          </label>
+          <label>
+            Conso client (kWh/an)
+            <input id="consumptionInput" type="number" min="0" step="100" value="4500">
+          </label>
+          <label>
+            Type de distribution
+            <select id="distributionInput">
+              <option value="mono" selected>Mono</option>
+              <option value="biphase">Biphase</option>
+              <option value="tri_delta">Tri delta (3x230)</option>
+              <option value="tetra">Tetra (3x400 + N)</option>
+            </select>
+          </label>
+          <label>
+            Filtre panneau
+            <select id="panelFilterInput">
+              <option value="__all__" selected>Tous les panneaux</option>
+            </select>
+          </label>
+          <label>
+            Filtre onduleur
+            <select id="inverterFilterInput">
+              <option value="__all__" selected>Tous les onduleurs</option>
+            </select>
+          </label>
+          <div class="field-divider">Onduleurs</div>
+          <div class="dynamic-list" id="inverterList"></div>
+          <button class="button" id="addInverterBtn" type="button" title="Ajouter un onduleur">+ Onduleur</button>
+          <div class="field-divider">Toitures</div>
+          <div class="dynamic-list" id="roofList"></div>
+          <button class="button" id="addRoofBtn" type="button" title="Ajouter une toiture">+ Toiture</button>
+          <div class="field-divider">Affectation MPPT</div>
+          <label>
+            Mode MPPT
+            <select id="mpptModeInput">
+              <option value="auto" selected>Auto propose</option>
+              <option value="manual">Manuel</option>
+            </select>
+          </label>
+          <button class="button" id="proposeMpptBtn" type="button">Proposer</button>
+          <label class="wide-field">
+            Strings vers MPP
+            <textarea id="mpptAssignmentInput" class="small-textarea"></textarea>
+          </label>
+          <div class="dynamic-list mppt-list" id="mpptAssignmentList"></div>
+          <label>
+            Gisement ref. (kWh/kWc/an)
+            <input id="yieldInput" type="number" min="1" step="10" value="950">
+          </label>
+          <div class="field-divider">Pertes DC</div>
+          <label>
+            Distance onduleur-panneaux/string (m)
+            <input id="dcDistanceInput" type="number" min="0" step="0.5" value="15">
+          </label>
+          <label>
+            Section cable DC string (mm2)
+            <select id="dcSectionInput">
+              <option value="4">4</option>
+              <option value="6" selected>6</option>
+              <option value="10">10</option>
+              <option value="16">16</option>
+            </select>
+          </label>
+          <label>
+            Retour string par panneau (m)
+            <input id="dcReturnPerPanelInput" type="number" min="0" step="0.01" value="1.13">
+          </label>
+          <label>
+            Cordons panneaux 4mm2 (m/module)
+            <input id="panelCordInput" type="number" min="0" step="0.1" value="1.2">
+          </label>
+          <div class="field-divider">Pertes AC</div>
+          <label>
+            Distance onduleur-TD (m)
+            <input id="acInvTdDistanceInput" type="number" min="0" step="0.5" value="10">
+          </label>
+          <label>
+            Section onduleur-TD (mm2)
+            <select id="acInvTdSectionInput">
+              <option value="4">4</option>
+              <option value="6" selected>6</option>
+              <option value="10">10</option>
+              <option value="16">16</option>
+            </select>
+          </label>
+          <label>
+            Distance TD-compteur (m)
+            <input id="acTdMeterDistanceInput" type="number" min="0" step="0.5" value="10">
+          </label>
+          <label>
+            Section TD-compteur (mm2)
+            <select id="acTdMeterSectionInput">
+              <option value="6">6</option>
+              <option value="10" selected>10</option>
+              <option value="16">16</option>
+            </select>
+          </label>
+          <label>
+            Temperature min (C)
+            <input id="tminInput" type="number" step="1" value="-10">
+          </label>
+          <label>
+            Temperature module max (C)
+            <input id="tmaxInput" type="number" step="1" value="70">
+          </label>
+          <label>
+            Nombre de resultats
+            <input id="limitInput" type="number" min="1" step="1" value="50">
+          </label>
+        </div>
+        <div class="aside-actions">
+          <button class="button primary" id="sideCalculateBtn" type="button">Calculer</button>
+          <button class="button" id="resetCatalogsBtn" type="button">Restaurer catalogue v0.18</button>
+        </div>
+      </aside>
+
+      <section class="content">
+        <div class="metrics">
+          <div class="metric"><span>Puissance DC</span><strong id="metricPower">-</strong></div>
+          <div class="metric"><span>Production/an</span><strong id="metricProduction">-</strong></div>
+          <div class="metric"><span>Couverture conso</span><strong id="metricCoverage">-</strong></div>
+          <div class="metric"><span>Coeff. exposition</span><strong id="metricCoefficient">-</strong></div>
+          <div class="metric"><span>Limite reseau</span><strong id="metricGridLimit">-</strong></div>
+          <div class="metric"><span>Pertes Joule</span><strong id="metricLoss">-</strong></div>
+          <div class="metric"><span>Onduleur</span><strong id="metricInverter">-</strong></div>
+          <div class="metric"><span>Surface utilisee</span><strong id="metricArea">-</strong></div>
+        </div>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Configurations valides</h2>
+            <div class="status" id="statusText">Calcul en attente</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Panneau</th>
+                  <th>Onduleur</th>
+                  <th>Modules</th>
+                  <th>Strings</th>
+                  <th>Surface</th>
+                  <th>Pdc</th>
+                  <th>Prod/an</th>
+                  <th>Couverture</th>
+                  <th>Pac</th>
+                  <th>DC/AC</th>
+                  <th>Pertes</th>
+                  <th>Uoc froid</th>
+                  <th>Umpp chaud/froid</th>
+                  <th>Isc/MPPT</th>
+                </tr>
+              </thead>
+              <tbody id="resultBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Detail de la configuration</h2>
+            <div class="status" id="detailStatus">-</div>
+          </div>
+          <div class="detail-grid" id="detailGrid"></div>
+        </section>
+
+        <section class="panel">
+          <div class="tabs">
+            <button class="tab active" id="summaryTab" type="button">Rejets</button>
+            <button class="tab" id="catalogTab" type="button">Catalogues</button>
+          </div>
+          <div class="rejects" id="rejectArea"></div>
+          <div class="catalog-area" id="catalogArea">
+            <div>
+              <div class="section-title">Panneaux CSV</div>
+              <textarea id="panelsCsv"></textarea>
+              <div class="drop-row">
+                <input id="panelsFile" type="file" accept=".csv,text/csv">
+              </div>
+            </div>
+            <div>
+              <div class="section-title">Onduleurs CSV</div>
+              <textarea id="invertersCsv"></textarea>
+              <div class="drop-row">
+                <input id="invertersFile" type="file" accept=".csv,text/csv">
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const RGIE_UOC_FROID_MAX_V = 750;
+    const OPTIMAL_SLOPE_DEG = 35;
+    const COPPER_RESISTIVITY_OHM_MM2_M = 0.0175;
+    const MAX_JOULE_LOSS_PCT = 2;
+    const MAX_ROOFS = 8;
+    const AC_VOLTAGE_DROP_REFERENCE_V = 230;
+    const DISTRIBUTION_LIMITS = {
+      mono: { label: "Mono", maxAcVa: 5000 },
+      biphase: { label: "Biphase", maxAcVa: 5000 },
+      tri_delta: { label: "Tri delta (3x230)", maxAcVa: 10000 },
+      tetra: { label: "Tetra (3x400 + N)", maxAcVa: 10000 }
+    };
+
+    const DEFAULT_PANELS_CSV = `reference,fabricant,puissance_w,largeur_m,hauteur_m,uoc_v,isc_a,umpp_v,impp_a,coef_tension_pct_c
+PV-MONO-430,Exemple,430,1.134,1.722,39.8,13.7,33.1,13.0,-0.28
+PV-MONO-455,Exemple,455,1.134,1.762,41.2,14.0,34.5,13.2,-0.28
+PV-HET-410,Exemple,410,1.040,1.755,50.0,10.5,42.0,9.76,-0.24
+PV-BIFACIAL-500,Exemple,500,1.134,1.950,45.6,13.9,38.2,13.1,-0.29
+TSM-450NEG9R.25,Trina Solar,450,1.134,1.762,52.9,10.74,44.6,10.09,-0.24
+JKM580N-72HL4-BDV,Jinko Solar,580,1.134,2.278,51.47,14.37,42.59,13.62,-0.25
+LR7-60HVH-560M,LONGi,560,1.134,1.990,45.28,15.65,37.51,14.93,-0.20
+JKM435N-54HL4R-B,jinko,435,1.134,1.762,39.36,13.72,32.78,13.27,-0.25`;
+
+    const DEFAULT_INVERTERS_CSV = `reference,fabricant,puissance_ac_w,puissance_pv_max_w,tension_dc_max_v,mppt_min_v,mppt_max_v,courant_max_mppt_a,isc_max_mppt_a,nombre_mppt,strings_max_par_mppt,phase
+INV-3K-MONO,Exemple,3000,4500,600,80,550,16,20,2,1,mono
+INV-5K-MONO,Exemple,5000,7500,600,120,550,16,20,2,1,mono
+INV-10K-TRI,Exemple,10000,15000,1000,180,850,26,32,2,2,tri
+INV-20K-TRI,Exemple,20000,30000,1100,200,1000,30,40,3,2,tri
+SB5.0-1AV-41,SMA,5000,7500,600,175,500,15,20,2,2,mono
+SUN2000-5KTL-M1,Huawei FusionSolar,5000,7500,1100,140,980,13.5,19.5,2,1,tri
+SUN2000-10KTL-M1,Huawei FusionSolar,10000,15000,1100,140,980,13.5,19.5,2,1,tri
+SG5.0RS,Sungrow,5000,7500,600,40,560,16,20,2,1,mono
+SYMO-GEN24-10.0,Fronius,10000,15000,1000,278,800,12.5,20,2,1,tri`;
+
+    const fields = {
+      occupation: document.querySelector("#occupationInput"),
+      consumption: document.querySelector("#consumptionInput"),
+      distribution: document.querySelector("#distributionInput"),
+      panelFilter: document.querySelector("#panelFilterInput"),
+      inverterFilter: document.querySelector("#inverterFilterInput"),
+      roofList: document.querySelector("#roofList"),
+      addRoof: document.querySelector("#addRoofBtn"),
+      inverterList: document.querySelector("#inverterList"),
+      addInverter: document.querySelector("#addInverterBtn"),
+      mpptMode: document.querySelector("#mpptModeInput"),
+      mpptAssignment: document.querySelector("#mpptAssignmentInput"),
+      mpptAssignmentList: document.querySelector("#mpptAssignmentList"),
+      proposeMppt: document.querySelector("#proposeMpptBtn"),
+      referenceYield: document.querySelector("#yieldInput"),
+      dcDistance: document.querySelector("#dcDistanceInput"),
+      dcSection: document.querySelector("#dcSectionInput"),
+      dcReturnPerPanel: document.querySelector("#dcReturnPerPanelInput"),
+      panelCord: document.querySelector("#panelCordInput"),
+      acInvTdDistance: document.querySelector("#acInvTdDistanceInput"),
+      acInvTdSection: document.querySelector("#acInvTdSectionInput"),
+      acTdMeterDistance: document.querySelector("#acTdMeterDistanceInput"),
+      acTdMeterSection: document.querySelector("#acTdMeterSectionInput"),
+      tmin: document.querySelector("#tminInput"),
+      tmax: document.querySelector("#tmaxInput"),
+      limit: document.querySelector("#limitInput"),
+      panelsCsv: document.querySelector("#panelsCsv"),
+      invertersCsv: document.querySelector("#invertersCsv")
+    };
+
+    const state = {
+      results: [],
+      rejected: {},
+      selectedIndex: 0,
+      nextRoofId: 2,
+      nextInverterSlotId: 2,
+      roofs: [
+        { id: 1, surfaceM2: 40, orientationDeg: 0, slopeDeg: 35 }
+      ],
+      inverterSlots: [
+        { id: 1 }
+      ],
+      mpptDirty: false
+    };
+
+    function parseNumber(value) {
+      const parsed = Number(String(value).trim().replace(",", "."));
+      if (!Number.isFinite(parsed)) {
+        throw new Error("Valeur numerique invalide");
+      }
+      return parsed;
+    }
+
+    function parseCsv(text) {
+      const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+      if (lines.length < 2) {
+        return [];
+      }
+      const headers = lines[0].split(",").map((cell) => cell.trim());
+      return lines.slice(1).map((line) => {
+        const cells = line.split(",").map((cell) => cell.trim());
+        return Object.fromEntries(headers.map((header, index) => [header, cells[index] ?? ""]));
+      });
+    }
+
+    function loadPanels() {
+      return parseCsv(fields.panelsCsv.value).map((row) => ({
+        reference: row.reference,
+        fabricant: row.fabricant,
+        puissanceW: parseNumber(row.puissance_w),
+        largeurM: parseNumber(row.largeur_m),
+        hauteurM: parseNumber(row.hauteur_m),
+        uocV: parseNumber(row.uoc_v),
+        iscA: parseNumber(row.isc_a),
+        umppV: parseNumber(row.umpp_v),
+        imppA: parseNumber(row.impp_a),
+        coefTensionPctC: parseNumber(row.coef_tension_pct_c),
+        get surfaceM2() {
+          return this.largeurM * this.hauteurM;
+        }
+      }));
+    }
+
+    function loadInverters() {
+      return parseCsv(fields.invertersCsv.value).map((row) => ({
+        reference: row.reference,
+        fabricant: row.fabricant,
+        puissanceAcW: parseNumber(row.puissance_ac_w),
+        puissancePvMaxW: parseNumber(row.puissance_pv_max_w),
+        tensionDcMaxV: parseNumber(row.tension_dc_max_v),
+        mpptMinV: parseNumber(row.mppt_min_v),
+        mpptMaxV: parseNumber(row.mppt_max_v),
+        courantMaxMpptA: parseNumber(row.courant_max_mppt_a),
+        iscMaxMpptA: parseNumber(row.isc_max_mppt_a),
+        nombreMppt: Math.round(parseNumber(row.nombre_mppt)),
+        stringsMaxParMppt: Math.round(parseNumber(row.strings_max_par_mppt)),
+        phase: row.phase
+      }));
+    }
+
+    function refreshFilterOptions(select, items, allLabel) {
+      const previous = select.value || "__all__";
+      select.innerHTML = `<option value="__all__">${allLabel}</option>`;
+      for (const item of items) {
+        const option = document.createElement("option");
+        option.value = item.reference;
+        option.textContent = `${item.reference} - ${item.fabricant}`;
+        select.appendChild(option);
+      }
+      select.value = items.some((item) => item.reference === previous) ? previous : "__all__";
+    }
+
+    function isSingleOrBiphaseDistribution(distributionValue) {
+      return distributionValue === "mono" || distributionValue === "biphase";
+    }
+
+    function allowedInvertersForDistribution(inverters, distributionValue) {
+      if (!isSingleOrBiphaseDistribution(distributionValue)) {
+        return inverters;
+      }
+      return inverters.filter((inverter) => inverter.phase !== "tri");
+    }
+
+    function applyMaterialFilters(panels, inverters) {
+      const forcedPanel = fields.panelFilter.value;
+      const forcedInverter = fields.inverterFilter.value;
+      return {
+        panels: forcedPanel === "__all__" ? panels : panels.filter((panel) => panel.reference === forcedPanel),
+        inverters: forcedInverter === "__all__" ? inverters : inverters.filter((inverter) => inverter.reference === forcedInverter),
+        panelFilterLabel: forcedPanel === "__all__" ? "Tous les panneaux" : forcedPanel,
+        inverterFilterLabel: forcedInverter === "__all__" ? "Tous les onduleurs" : forcedInverter
+      };
+    }
+
+    function voltageAtTemperature(voltageStc, coefPctC, temperatureC) {
+      return voltageStc * (1 + (coefPctC / 100) * (temperatureC - 25));
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function exposureCoefficient(orientationDeg, slopeDeg) {
+      const deviation = Math.min(Math.abs(orientationDeg), 360 - Math.abs(orientationDeg));
+      let orientationFactor;
+      if (deviation <= 90) {
+        orientationFactor = 1 - 0.20 * Math.pow(deviation / 90, 1.35);
+      } else {
+        orientationFactor = 0.80 - 0.35 * Math.pow((deviation - 90) / 90, 1.15);
+      }
+      const slopeFactor = 1 - Math.abs(slopeDeg - OPTIMAL_SLOPE_DEG) * 0.0055;
+      return {
+        orientationFactor: clamp(orientationFactor, 0.45, 1),
+        slopeFactor: clamp(slopeFactor, 0.78, 1),
+        coefficient: clamp(orientationFactor * slopeFactor, 0.35, 1)
+      };
+    }
+
+    const ORIENTATION_CHOICES = [
+      { value: 0, label: "Sud" },
+      { value: -45, label: "Sud-Est" },
+      { value: 45, label: "Sud-Ouest" },
+      { value: -90, label: "Est" },
+      { value: 90, label: "Ouest" },
+      { value: -135, label: "Nord-Est" },
+      { value: 135, label: "Nord-Ouest" },
+      { value: 180, label: "Nord" }
+    ];
+
+    function orientationLabelFromValue(value) {
+      return ORIENTATION_CHOICES.find((item) => Number(item.value) === Number(value))?.label ?? "Orientation";
+    }
+
+    function orientationOptionsHtml(selectedValue) {
+      return ORIENTATION_CHOICES.map((item) => `
+        <option value="${item.value}" ${Number(item.value) === Number(selectedValue) ? "selected" : ""}>${item.label}</option>
+      `).join("");
+    }
+
+    function maxInverterCountForDistribution(distributionValue) {
+      return isSingleOrBiphaseDistribution(distributionValue) ? 2 : 3;
+    }
+
+    function renderRoofControls() {
+      fields.roofList.innerHTML = state.roofs.map((roof, index) => `
+        <div class="config-row" data-roof-id="${roof.id}">
+          <div class="config-row-title">
+            <span>Toiture ${index + 1}</span>
+            <button class="icon-button" type="button" data-remove-roof="${roof.id}" title="Retirer cette toiture" ${state.roofs.length <= 1 ? "disabled" : ""}>-</button>
+          </div>
+          <label class="wide-field">
+            Surface (m2)
+            <input data-roof-field="surfaceM2" type="number" min="0" step="0.1" value="${roof.surfaceM2}">
+          </label>
+          <label>
+            Orientation
+            <select data-roof-field="orientationDeg">${orientationOptionsHtml(roof.orientationDeg)}</select>
+          </label>
+          <label>
+            Pente
+            <input data-roof-field="slopeDeg" type="number" min="0" max="90" step="1" value="${roof.slopeDeg}">
+          </label>
+        </div>
+      `).join("");
+      fields.roofList.querySelectorAll("[data-roof-field]").forEach((input) => {
+        input.addEventListener("change", (event) => {
+          const row = event.target.closest("[data-roof-id]");
+          const roof = state.roofs.find((item) => item.id === Number(row.dataset.roofId));
+          if (!roof) return;
+          roof[event.target.dataset.roofField] = parseNumber(event.target.value);
+          calculate();
+        });
+      });
+      fields.roofList.querySelectorAll("[data-remove-roof]").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.roofs = state.roofs.filter((roof) => roof.id !== Number(button.dataset.removeRoof));
+          renderRoofControls();
+          calculate();
+        });
+      });
+      fields.addRoof.disabled = state.roofs.length >= MAX_ROOFS;
+    }
+
+    function addRoof() {
+      if (state.roofs.length >= MAX_ROOFS) return;
+      state.roofs.push({
+        id: state.nextRoofId,
+        surfaceM2: 0,
+        orientationDeg: state.nextRoofId % 2 === 0 ? 45 : -45,
+        slopeDeg: 35
+      });
+      state.nextRoofId += 1;
+      renderRoofControls();
+      calculate();
+    }
+
+    function renderInverterControls() {
+      const maxCount = maxInverterCountForDistribution(fields.distribution.value);
+      if (state.inverterSlots.length > maxCount) {
+        state.inverterSlots = state.inverterSlots.slice(0, maxCount);
+      }
+      fields.inverterList.innerHTML = state.inverterSlots.map((slot, index) => `
+        <div class="config-row" data-inverter-slot-id="${slot.id}">
+          <div class="config-row-title">
+            <span>Onduleur autorise ${index + 1}</span>
+            <button class="icon-button" type="button" data-remove-inverter="${slot.id}" title="Retirer cet onduleur" ${state.inverterSlots.length <= 1 ? "disabled" : ""}>-</button>
+          </div>
+          <div class="wide-field">Le meilleur calcul peut utiliser jusqu'a cet emplacement.</div>
+        </div>
+      `).join("");
+      fields.inverterList.querySelectorAll("[data-remove-inverter]").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.inverterSlots = state.inverterSlots.filter((slot) => slot.id !== Number(button.dataset.removeInverter));
+          renderInverterControls();
+          calculate();
+        });
+      });
+      fields.addInverter.disabled = state.inverterSlots.length >= maxCount;
+    }
+
+    function addInverterSlot() {
+      const maxCount = maxInverterCountForDistribution(fields.distribution.value);
+      if (state.inverterSlots.length >= maxCount) return;
+      state.inverterSlots.push({ id: state.nextInverterSlotId });
+      state.nextInverterSlotId += 1;
+      renderInverterControls();
+      calculate();
+    }
+
+    function readRoofs() {
+      const roofs = state.roofs.map((roof, index) => ({
+        name: `Toiture ${index + 1}`,
+        surfaceM2: Number(roof.surfaceM2),
+        orientationDeg: Number(roof.orientationDeg),
+        orientationLabel: orientationLabelFromValue(roof.orientationDeg),
+        slopeDeg: Number(roof.slopeDeg)
+      }));
+      for (const roof of roofs) {
+        if (roof.surfaceM2 < 0 || roof.slopeDeg < 0 || roof.slopeDeg > 90) {
+          throw new Error("Verifie les surfaces et pentes des toitures.");
+        }
+      }
+      const activeRoofs = roofs.filter((roof) => roof.surfaceM2 > 0);
+      if (!activeRoofs.length) {
+        throw new Error("Renseigne au moins une toiture avec une surface positive.");
+      }
+      return activeRoofs;
+    }
+
+    function selectedDistribution() {
+      return DISTRIBUTION_LIMITS[fields.distribution.value] ?? DISTRIBUTION_LIMITS.mono;
+    }
+
+    function cableResistance(lengthM, sectionMm2) {
+      return COPPER_RESISTIVITY_OHM_MM2_M * lengthM / sectionMm2;
+    }
+
+    function acElectricalModel(inverter, distributionValue) {
+      const isThreePhase = inverter.phase === "tri";
+      if (isThreePhase) {
+        const lineVoltageV = distributionValue === "tetra" ? 400 : 230;
+        const dropFactor = distributionValue === "tetra" ? 1 : Math.sqrt(3);
+        return {
+          isThreePhase,
+          voltageV: lineVoltageV,
+          currentA: inverter.puissanceAcW / (Math.sqrt(3) * lineVoltageV),
+          conductors: 3,
+          dropFactor
+        };
+      }
+      return {
+        isThreePhase,
+        voltageV: 230,
+        currentA: inverter.puissanceAcW / 230,
+        conductors: 2,
+        dropFactor: 2
+      };
+    }
+
+    function calculateCableLosses(panel, inverter, inverterCount, modulesParString, nombreStrings, params) {
+      const dcMainLengthM = (2 * params.dcDistanceM) + (modulesParString * params.dcReturnPerPanelM);
+      const dcPanelCordLengthM = modulesParString * params.panelCordM;
+      const dcResistanceOhm =
+        cableResistance(dcMainLengthM, params.dcSectionMm2) +
+        cableResistance(dcPanelCordLengthM, 4);
+      const dcCurrentA = panel.imppA;
+      const dcVoltageDropV = dcCurrentA * dcResistanceOhm;
+      const dcLossPerStringW = dcCurrentA * dcCurrentA * dcResistanceOhm;
+      const dcLossW = dcLossPerStringW * nombreStrings;
+      const dcStringVoltageV = panel.umppV * modulesParString;
+      const dcVoltageDropPct = dcStringVoltageV > 0 ? dcVoltageDropV / dcStringVoltageV * 100 : 0;
+
+      const acModel = acElectricalModel(inverter, params.distributionValue);
+      const acUnitCurrentA = acModel.currentA;
+      const acTotalCurrentA = acUnitCurrentA * inverterCount;
+      const acInvTdResistanceOhm = cableResistance(params.acInvTdDistanceM, params.acInvTdSectionMm2);
+      const acTdMeterResistanceOhm = cableResistance(params.acTdMeterDistanceM, params.acTdMeterSectionMm2);
+      const acTotalResistanceOhm = acInvTdResistanceOhm + acTdMeterResistanceOhm;
+      const acInvTdLossW = acModel.conductors * acUnitCurrentA * acUnitCurrentA * acInvTdResistanceOhm * inverterCount;
+      const acTdMeterLossW = acModel.conductors * acTotalCurrentA * acTotalCurrentA * acTdMeterResistanceOhm;
+      const acLossW = acInvTdLossW + acTdMeterLossW;
+      const acInvTdVoltageDropV = acModel.dropFactor * acUnitCurrentA * acInvTdResistanceOhm;
+      const acTdMeterVoltageDropV = acModel.dropFactor * acTotalCurrentA * acTdMeterResistanceOhm;
+      const acVoltageDropV = acInvTdVoltageDropV + acTdMeterVoltageDropV;
+      const acVoltageDropPct = acVoltageDropV / AC_VOLTAGE_DROP_REFERENCE_V * 100;
+      const acInvTdVoltageDropPct = acInvTdVoltageDropV / AC_VOLTAGE_DROP_REFERENCE_V * 100;
+      const acTdMeterVoltageDropPct = acTdMeterVoltageDropV / AC_VOLTAGE_DROP_REFERENCE_V * 100;
+
+      return {
+        dcMainLengthM,
+        dcPanelCordLengthM,
+        dcResistanceOhm,
+        dcCurrentA,
+        dcVoltageDropV,
+        dcVoltageDropPct,
+        dcLossW,
+        acUnitCurrentA,
+        acCurrentA: acTotalCurrentA,
+        acVoltageV: acModel.voltageV,
+        acVoltageDropReferenceV: AC_VOLTAGE_DROP_REFERENCE_V,
+        acInvTdResistanceOhm,
+        acTdMeterResistanceOhm,
+        acInvTdLossW,
+        acTdMeterLossW,
+        acInvTdVoltageDropV,
+        acTdMeterVoltageDropV,
+        acInvTdVoltageDropPct,
+        acTdMeterVoltageDropPct,
+        acVoltageDropV,
+        acVoltageDropPct,
+        acLossW,
+        totalLossW: dcLossW + acLossW
+      };
+    }
+
+    function distributeStrings(nombreStrings, nombreMppt) {
+      const base = Math.floor(nombreStrings / nombreMppt);
+      const extra = nombreStrings % nombreMppt;
+      return Array.from({ length: nombreMppt }, (_, index) => base + (index < extra ? 1 : 0));
+    }
+
+    function expandRepartitionToAssignments(repartition) {
+      const assignments = [];
+      repartition.forEach((count, index) => {
+        for (let stringIndex = 0; stringIndex < count; stringIndex += 1) {
+          assignments.push(index + 1);
+        }
+      });
+      return assignments;
+    }
+
+    function assignmentLabel(assignments) {
+      return assignments.map((mppt, index) => `S${index + 1}->MPP${mppt}`).join(" / ");
+    }
+
+    function parseMpptAssignmentText(text) {
+      const parts = text.split(/[\n,;/]+/).map((part) => part.trim()).filter(Boolean);
+      const assignments = parts.map((part) => {
+        const match = part.match(/(\d+)\s*$/);
+        if (!match) {
+          throw new Error("Affectation MPPT illisible.");
+        }
+        return Number(match[1]);
+      });
+      if (assignments.some((value) => !Number.isInteger(value) || value <= 0)) {
+        throw new Error("Les sorties MPP doivent etre des nombres positifs.");
+      }
+      return assignments;
+    }
+
+    function parseManualMpptAssignments() {
+      if (fields.mpptMode.value !== "manual") {
+        return null;
+      }
+      const text = fields.mpptAssignment.value.trim();
+      if (!text) {
+        throw new Error("Ajoute une affectation MPPT ou repasse en mode auto.");
+      }
+      return parseMpptAssignmentText(text);
+    }
+
+    function repartitionFromAssignments(assignments, mpptTotal, nombreStrings) {
+      if (!assignments) {
+        const repartition = distributeStrings(nombreStrings, mpptTotal);
+        return { repartition, assignments: expandRepartitionToAssignments(repartition), mode: "auto" };
+      }
+      if (assignments.length !== nombreStrings || assignments.some((mppt) => mppt > mpptTotal)) {
+        return null;
+      }
+      const repartition = Array.from({ length: mpptTotal }, () => 0);
+      assignments.forEach((mppt) => {
+        repartition[mppt - 1] += 1;
+      });
+      return { repartition, assignments: [...assignments], mode: "manuel" };
+    }
+
+    function proposalTextForItem(item) {
+      return item.mpptAssignments?.join(", ") ?? "";
+    }
+
+    function mpptOptionsHtml(mpptTotal, selectedValue) {
+      return Array.from({ length: mpptTotal }, (_, index) => {
+        const value = index + 1;
+        return `<option value="${value}" ${Number(selectedValue) === value ? "selected" : ""}>MPP ${value}</option>`;
+      }).join("");
+    }
+
+    function currentMpptAssignmentValues(item) {
+      let assignments = [];
+      const text = fields.mpptAssignment.value.trim();
+      if (text) {
+        try {
+          assignments = parseMpptAssignmentText(text);
+        } catch {
+          assignments = [];
+        }
+      }
+      if (!item) {
+        return assignments;
+      }
+      if (assignments.length !== item.nombreStrings) {
+        assignments = [...item.mpptAssignments];
+      }
+      return assignments;
+    }
+
+    function renderMpptAssignmentControls(item) {
+      if (!item) {
+        return;
+      }
+      const mpptTotal = item.inverter.nombreMppt * item.inverterCount;
+      const assignments = currentMpptAssignmentValues(item);
+      fields.mpptAssignmentList.innerHTML = assignments.map((mppt, index) => `
+        <div class="mppt-row">
+          <span>String ${index + 1}</span>
+          <select data-mppt-index="${index}">
+            ${mpptOptionsHtml(mpptTotal, mppt)}
+          </select>
+        </div>
+      `).join("");
+      fields.mpptAssignmentList.querySelectorAll("[data-mppt-index]").forEach((select) => {
+        select.addEventListener("change", () => {
+          const nextAssignments = currentMpptAssignmentValues(item);
+          nextAssignments[Number(select.dataset.mpptIndex)] = Number(select.value);
+          fields.mpptAssignment.value = nextAssignments.join(", ");
+          fields.mpptMode.value = "manual";
+          state.mpptDirty = true;
+          calculate();
+        });
+      });
+    }
+
+    function updateMpptProposal(force = false) {
+      const item = state.results[state.selectedIndex] ?? state.results[0];
+      if (!item) return;
+      if (force || fields.mpptMode.value === "auto" || !state.mpptDirty) {
+        fields.mpptAssignment.value = proposalTextForItem(item);
+        state.mpptDirty = false;
+      }
+      renderMpptAssignmentControls(item);
+    }
+
+    function roofCapacities(roofs, occupationPct, panel) {
+      return roofs.map((roof) => {
+        const exposure = exposureCoefficient(roof.orientationDeg, roof.slopeDeg);
+        const usableSurfaceM2 = roof.surfaceM2 * occupationPct / 100;
+        return {
+          ...roof,
+          ...exposure,
+          usableSurfaceM2,
+          maxModules: Math.floor(usableSurfaceM2 / panel.surfaceM2)
+        };
+      });
+    }
+
+    function allocateModulesToRoofs(totalModules, capacities) {
+      let remaining = totalModules;
+      const allocation = [];
+      const sorted = [...capacities].sort((a, b) => b.coefficient - a.coefficient);
+      for (const roof of sorted) {
+        const modules = Math.min(remaining, roof.maxModules);
+        if (modules > 0) {
+          allocation.push({ ...roof, modules });
+          remaining -= modules;
+        }
+        if (remaining <= 0) break;
+      }
+      if (remaining > 0 || totalModules <= 0) {
+        return null;
+      }
+      const weighted = (key) => allocation.reduce((sum, roof) => sum + roof.modules * roof[key], 0) / totalModules;
+      return {
+        allocation,
+        coefficient: weighted("coefficient"),
+        orientationFactor: weighted("orientationFactor"),
+        slopeFactor: weighted("slopeFactor"),
+        weightedSlopeDeg: allocation.reduce((sum, roof) => sum + roof.modules * roof.slopeDeg, 0) / totalModules,
+        roofSummary: allocation.map((roof) => `${roof.name}: ${roof.modules} mod. ${roof.orientationLabel} ${n(roof.slopeDeg, 0)} deg`).join(" ; ")
+      };
+    }
+
+    function optimize(panels, inverters, params) {
+      const totalRoofSurfaceM2 = params.roofs.reduce((sum, roof) => sum + roof.surfaceM2, 0);
+      const usableSurface = Math.max(0, totalRoofSurfaceM2 * params.occupation / 100);
+      const rejected = {
+        surface: 0,
+        phase: 0,
+        distribution: 0,
+        uocRgie: 0,
+        uoc: 0,
+        umppMin: 0,
+        umppMax: 0,
+        courant: 0,
+        mpptManual: 0,
+        puissancePv: 0,
+        pertes: 0
+      };
+      const results = [];
+
+      for (const panel of panels) {
+        if (panel.surfaceM2 <= 0) continue;
+        const capacities = roofCapacities(params.roofs, params.occupation, panel);
+        const maxModulesSurface = capacities.reduce((sum, roof) => sum + roof.maxModules, 0);
+        if (maxModulesSurface <= 0) {
+          rejected.surface += 1;
+          continue;
+        }
+
+        for (const inverter of inverters) {
+          if (isSingleOrBiphaseDistribution(params.distributionValue) && inverter.phase === "tri") {
+            rejected.phase += maxModulesSurface * inverter.nombreMppt * inverter.stringsMaxParMppt;
+            continue;
+          }
+          if (inverter.puissanceAcW > params.maxInverterAcVa) {
+            rejected.distribution += maxModulesSurface * inverter.nombreMppt * inverter.stringsMaxParMppt;
+            continue;
+          }
+          for (let inverterCount = 1; inverterCount <= params.maxInverterCount; inverterCount += 1) {
+            const mpptTotal = inverter.nombreMppt * inverterCount;
+            const maxStrings = mpptTotal * inverter.stringsMaxParMppt;
+            for (let modulesParString = 1; modulesParString <= maxModulesSurface; modulesParString += 1) {
+              const uocFroid = voltageAtTemperature(panel.uocV * modulesParString, panel.coefTensionPctC, params.tmin);
+              const umppChaud = voltageAtTemperature(panel.umppV * modulesParString, panel.coefTensionPctC, params.tmax);
+              const umppFroid = voltageAtTemperature(panel.umppV * modulesParString, panel.coefTensionPctC, params.tmin);
+
+              if (uocFroid > RGIE_UOC_FROID_MAX_V) {
+                rejected.uocRgie += maxStrings;
+                continue;
+              }
+              if (uocFroid > inverter.tensionDcMaxV) {
+                rejected.uoc += maxStrings;
+                continue;
+              }
+              if (umppChaud < inverter.mpptMinV) {
+                rejected.umppMin += maxStrings;
+                continue;
+              }
+              if (umppFroid > inverter.mpptMaxV) {
+                rejected.umppMax += maxStrings;
+                continue;
+              }
+
+              for (let nombreStrings = 1; nombreStrings <= maxStrings; nombreStrings += 1) {
+                const totalModules = modulesParString * nombreStrings;
+                const surface = totalModules * panel.surfaceM2;
+                if (totalModules > maxModulesSurface) {
+                  rejected.surface += 1;
+                  continue;
+                }
+
+                const roofAllocation = allocateModulesToRoofs(totalModules, capacities);
+                if (!roofAllocation) {
+                  rejected.surface += 1;
+                  continue;
+                }
+
+                const mpptPlan = repartitionFromAssignments(params.manualMpptAssignments, mpptTotal, nombreStrings);
+                if (!mpptPlan) {
+                  rejected.mpptManual += 1;
+                  continue;
+                }
+                const repartition = mpptPlan.repartition;
+                if (Math.max(...repartition) > inverter.stringsMaxParMppt) {
+                  rejected.courant += 1;
+                  continue;
+                }
+
+                const imppMppt = Math.max(...repartition) * panel.imppA;
+                const iscMppt = Math.max(...repartition) * panel.iscA;
+                if (imppMppt > inverter.courantMaxMpptA || iscMppt > inverter.iscMaxMpptA) {
+                  rejected.courant += 1;
+                  continue;
+                }
+
+                const puissanceDc = totalModules * panel.puissanceW;
+                const puissancePvMaxTotalW = inverter.puissancePvMaxW * inverterCount;
+                if (inverter.puissancePvMaxW > 0 && puissanceDc > puissancePvMaxTotalW) {
+                  rejected.puissancePv += 1;
+                  continue;
+                }
+                const losses = calculateCableLosses(panel, inverter, inverterCount, modulesParString, nombreStrings, params);
+                const totalLossPct = puissanceDc > 0 ? losses.totalLossW / puissanceDc * 100 : 0;
+                if (totalLossPct > MAX_JOULE_LOSS_PCT) {
+                  rejected.pertes += 1;
+                  continue;
+                }
+                const productionBruteKwh = (puissanceDc / 1000) * params.referenceYieldKwhKwc * roofAllocation.coefficient;
+                const productionAnnuelleKwh = productionBruteKwh * (1 - totalLossPct / 100);
+                const tauxCouverturePct = params.consumptionKwh > 0
+                  ? productionAnnuelleKwh / params.consumptionKwh * 100
+                  : 0;
+                const puissanceAcTotalW = inverter.puissanceAcW * inverterCount;
+
+                results.push({
+                  panel,
+                  inverter,
+                  inverterCount,
+                  puissanceAcTotalW,
+                  puissancePvMaxTotalW,
+                  mpptMode: mpptPlan.mode,
+                  mpptAssignments: mpptPlan.assignments,
+                  mpptAssignmentLabel: assignmentLabel(mpptPlan.assignments),
+                  modulesParString,
+                  nombreStrings,
+                  repartition,
+                  totalModules,
+                  surfaceM2: surface,
+                  surfaceUtiliseePct: usableSurface ? surface / usableSurface * 100 : 0,
+                  totalRoofSurfaceM2,
+                  usableSurfaceM2: usableSurface,
+                  roofAllocation: roofAllocation.allocation,
+                  roofSummary: roofAllocation.roofSummary,
+                  puissanceDcW: puissanceDc,
+                  productionBruteKwh,
+                  productionAnnuelleKwh,
+                  consumptionKwh: params.consumptionKwh,
+                  tauxCouverturePct,
+                  ecartConsoKwh: productionAnnuelleKwh - params.consumptionKwh,
+                  orientationLabel: roofAllocation.roofSummary,
+                  distributionLabel: params.distributionLabel,
+                  maxInverterAcVa: params.maxInverterAcVa,
+                  systemAcLimitVa: params.maxInverterAcVa * inverterCount,
+                  maxInverterCount: params.maxInverterCount,
+                  panelFilterLabel: params.panelFilterLabel,
+                  inverterFilterLabel: params.inverterFilterLabel,
+                  slopeDeg: roofAllocation.weightedSlopeDeg,
+                  referenceYieldKwhKwc: params.referenceYieldKwhKwc,
+                  dcDistanceM: params.dcDistanceM,
+                  dcSectionMm2: params.dcSectionMm2,
+                  dcReturnPerPanelM: params.dcReturnPerPanelM,
+                  panelCordM: params.panelCordM,
+                  acInvTdDistanceM: params.acInvTdDistanceM,
+                  acInvTdSectionMm2: params.acInvTdSectionMm2,
+                  acTdMeterDistanceM: params.acTdMeterDistanceM,
+                  acTdMeterSectionMm2: params.acTdMeterSectionMm2,
+                  ...losses,
+                  totalLossPct,
+                  exposureCoefficient: roofAllocation.coefficient,
+                  orientationFactor: roofAllocation.orientationFactor,
+                  slopeFactor: roofAllocation.slopeFactor,
+                  ratioDcAc: puissanceAcTotalW ? puissanceDc / puissanceAcTotalW : 0,
+                  uocFroidV: uocFroid,
+                  umppChaudV: umppChaud,
+                  umppFroidV: umppFroid,
+                  imppMpptA: imppMppt,
+                  iscMpptA: iscMppt
+                });
+              }
+            }
+          }
+        }
+      }
+
+      results.sort((a, b) => {
+        if (params.consumptionKwh > 0) {
+          const gapA = Math.abs(a.ecartConsoKwh) / params.consumptionKwh;
+          const gapB = Math.abs(b.ecartConsoKwh) / params.consumptionKwh;
+          if (gapA !== gapB) return gapA - gapB;
+          const overA = Math.max(0, a.ecartConsoKwh);
+          const overB = Math.max(0, b.ecartConsoKwh);
+          if (overA !== overB) return overA - overB;
+        }
+        const p = b.puissanceDcW - a.puissanceDcW;
+        if (p !== 0) return p;
+        const s = b.surfaceUtiliseePct - a.surfaceUtiliseePct;
+        if (s !== 0) return s;
+        return Math.abs(a.ratioDcAc - 1.15) - Math.abs(b.ratioDcAc - 1.15);
+      });
+      return { results, rejected };
+    }
+
+    function kw(valueW) {
+      return `${(valueW / 1000).toFixed(2)} kW`;
+    }
+
+    function kva(valueVa) {
+      return `${(valueVa / 1000).toFixed(2)} kVA`;
+    }
+
+    function kwc(valueW) {
+      return `${(valueW / 1000).toFixed(2)} kWc`;
+    }
+
+    function kwh(value) {
+      return `${Math.round(value).toLocaleString("fr-BE")} kWh`;
+    }
+
+    function n(value, decimals = 1) {
+      return Number(value).toFixed(decimals);
+    }
+
+    function plural(value, singular, pluralText) {
+      return Number(value) > 1 ? pluralText : singular;
+    }
+
+    function calculate() {
+      try {
+        const catalogPanels = loadPanels();
+        const catalogInverters = loadInverters();
+        const distribution = selectedDistribution();
+        const allowedInverters = allowedInvertersForDistribution(catalogInverters, fields.distribution.value);
+        renderInverterControls();
+        refreshFilterOptions(fields.panelFilter, catalogPanels, "Tous les panneaux");
+        refreshFilterOptions(fields.inverterFilter, allowedInverters, "Tous les onduleurs");
+        const material = applyMaterialFilters(catalogPanels, allowedInverters);
+        const roofs = readRoofs();
+        const params = {
+          roofs,
+          occupation: parseNumber(fields.occupation.value),
+          consumptionKwh: parseNumber(fields.consumption.value),
+          distributionValue: fields.distribution.value,
+          distributionLabel: distribution.label,
+          maxInverterAcVa: distribution.maxAcVa,
+          maxInverterCount: state.inverterSlots.length,
+          manualMpptAssignments: parseManualMpptAssignments(),
+          panelFilterLabel: material.panelFilterLabel,
+          inverterFilterLabel: material.inverterFilterLabel,
+          referenceYieldKwhKwc: parseNumber(fields.referenceYield.value),
+          dcDistanceM: parseNumber(fields.dcDistance.value),
+          dcSectionMm2: parseNumber(fields.dcSection.value),
+          dcReturnPerPanelM: parseNumber(fields.dcReturnPerPanel.value),
+          panelCordM: parseNumber(fields.panelCord.value),
+          acInvTdDistanceM: parseNumber(fields.acInvTdDistance.value),
+          acInvTdSectionMm2: parseNumber(fields.acInvTdSection.value),
+          acTdMeterDistanceM: parseNumber(fields.acTdMeterDistance.value),
+          acTdMeterSectionMm2: parseNumber(fields.acTdMeterSection.value),
+          tmin: parseNumber(fields.tmin.value),
+          tmax: parseNumber(fields.tmax.value)
+        };
+        if (
+          params.consumptionKwh < 0 ||
+          params.referenceYieldKwhKwc <= 0 ||
+          params.dcDistanceM < 0 ||
+          params.dcReturnPerPanelM < 0 ||
+          params.panelCordM < 0 ||
+          params.acInvTdDistanceM < 0 ||
+          params.acTdMeterDistanceM < 0
+        ) {
+          throw new Error("Verifie la conso, le gisement, la pente et les distances cables.");
+        }
+        const limit = Math.max(1, Math.round(parseNumber(fields.limit.value)));
+        const outcome = optimize(material.panels, material.inverters, params);
+        state.results = outcome.results;
+        state.rejected = outcome.rejected;
+        state.selectedIndex = 0;
+        renderResults(limit);
+        renderRejects();
+        renderDetail();
+      } catch (error) {
+        document.querySelector("#statusText").textContent = error.message;
+      }
+    }
+
+    function renderResults(limit) {
+      const body = document.querySelector("#resultBody");
+      body.innerHTML = "";
+      const visible = state.results.slice(0, limit);
+      const panelFilter = fields.panelFilter.value === "__all__" ? "tous panneaux" : fields.panelFilter.value;
+      const inverterFilter = fields.inverterFilter.value === "__all__" ? "tous onduleurs" : fields.inverterFilter.value;
+      document.querySelector("#statusText").textContent = `${state.results.length} configurations valides, filtre: ${panelFilter} / ${inverterFilter}`;
+
+      if (state.results.length === 0) {
+        body.innerHTML = `<tr><td colspan="15" class="empty">Aucune configuration valide.</td></tr>`;
+        setMetrics(null);
+        return;
+      }
+
+      visible.forEach((item, index) => {
+        const row = document.createElement("tr");
+        row.className = index === state.selectedIndex ? "selected" : "";
+        const inverterLabel = item.inverterCount > 1 ? `${item.inverterCount} x ${item.inverter.reference}` : item.inverter.reference;
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${item.panel.reference}</td>
+          <td>${inverterLabel}</td>
+          <td>${item.totalModules}</td>
+          <td>${item.nombreStrings} x ${item.modulesParString}</td>
+          <td>${n(item.surfaceM2, 1)} m2</td>
+          <td>${kwc(item.puissanceDcW)}</td>
+          <td>${kwh(item.productionAnnuelleKwh)}</td>
+          <td>${n(item.tauxCouverturePct, 0)} %</td>
+          <td>${kw(item.puissanceAcTotalW)}</td>
+          <td>${n(item.ratioDcAc, 2)}</td>
+          <td>${n(item.totalLossPct, 2)} %</td>
+          <td>${n(item.uocFroidV, 0)} V</td>
+          <td>${n(item.umppChaudV, 0)} / ${n(item.umppFroidV, 0)} V</td>
+          <td>${n(item.iscMpptA, 1)} A</td>
+        `;
+        row.addEventListener("click", () => {
+          state.selectedIndex = index;
+          renderResults(limit);
+          renderDetail();
+        });
+        body.appendChild(row);
+      });
+      setMetrics(state.results[0]);
+      updateMpptProposal(false);
+    }
+
+    function setMetrics(best) {
+      document.querySelector("#metricPower").textContent = best ? kwc(best.puissanceDcW) : "-";
+      document.querySelector("#metricProduction").textContent = best ? kwh(best.productionAnnuelleKwh) : "-";
+      document.querySelector("#metricCoverage").textContent = best ? `${n(best.tauxCouverturePct, 0)} %` : "-";
+      document.querySelector("#metricCoefficient").textContent = best ? n(best.exposureCoefficient, 2) : "-";
+      document.querySelector("#metricGridLimit").textContent = best ? `${kva(best.systemAcLimitVa)} (${best.inverterCount} x ${kva(best.maxInverterAcVa)})` : "-";
+      document.querySelector("#metricLoss").textContent = best ? `${n(best.totalLossPct, 2)} %` : "-";
+      document.querySelector("#metricInverter").textContent = best ? `${best.inverterCount} x ${best.inverter.reference}` : "-";
+      document.querySelector("#metricArea").textContent = best ? `${n(best.surfaceM2, 1)} m2` : "-";
+    }
+
+    function renderDetail() {
+      const detail = document.querySelector("#detailGrid");
+      const item = state.results[state.selectedIndex];
+      if (!item) {
+        document.querySelector("#detailStatus").textContent = "-";
+        detail.innerHTML = `<div class="empty">Aucune configuration selectionnee.</div>`;
+        return;
+      }
+
+      const inverterLabel = item.inverterCount > 1 ? `${item.inverterCount} x ${item.inverter.reference}` : item.inverter.reference;
+      document.querySelector("#detailStatus").textContent = `${item.panel.reference} + ${inverterLabel}`;
+      detail.innerHTML = `
+        <div class="detail-block schema-block">
+          <h3>Schema simple PV - onduleur - TD - compteur</h3>
+          <div class="schema-flow">
+            <div class="schema-node">
+              <span>PV</span>
+              <strong>${item.totalModules} modules</strong>
+              <small>${item.nombreStrings} x ${item.modulesParString}</small>
+            </div>
+            <div class="schema-link">
+              <span>DC</span>
+              <strong>${n(item.dcLossW, 1)} W - ${n(item.dcVoltageDropV, 2)} V</strong>
+              <small>${n(item.dcMainLengthM, 2)} m en ${n(item.dcSectionMm2, 0)} mm2 + ${n(item.dcPanelCordLengthM, 2)} m cordons 4 mm2</small>
+            </div>
+            <div class="schema-node">
+              <span>Onduleur</span>
+              <strong>${inverterLabel}</strong>
+              <small>${kw(item.puissanceAcTotalW)} AC total</small>
+            </div>
+            <div class="schema-link">
+              <span>AC onduleur-TD</span>
+              <strong>${n(item.acInvTdLossW, 1)} W - ${n(item.acInvTdVoltageDropV, 2)} V</strong>
+              <small>${n(item.acInvTdDistanceM, 1)} m en ${n(item.acInvTdSectionMm2, 0)} mm2</small>
+            </div>
+            <div class="schema-node">
+              <span>TD</span>
+              <strong>Tableau</strong>
+              <small>${item.distributionLabel}</small>
+            </div>
+            <div class="schema-link">
+              <span>AC TD-compteur</span>
+              <strong>${n(item.acTdMeterLossW, 1)} W - ${n(item.acTdMeterVoltageDropV, 2)} V</strong>
+              <small>${n(item.acTdMeterDistanceM, 1)} m en ${n(item.acTdMeterSectionMm2, 0)} mm2</small>
+            </div>
+            <div class="schema-node">
+              <span>Compteur</span>
+              <strong>Reseau</strong>
+              <small>Limite ${kva(item.systemAcLimitVa)}</small>
+            </div>
+          </div>
+          <div class="schema-total">
+            <div><span>Pertes DC</span><strong>${n(item.dcLossW, 1)} W</strong></div>
+            <div><span>Pertes AC</span><strong>${n(item.acLossW, 1)} W</strong></div>
+            <div><span>Total W</span><strong>${n(item.totalLossW, 1)} W</strong></div>
+            <div><span>Total %</span><strong>${n(item.totalLossPct, 2)} %</strong></div>
+          </div>
+        </div>
+        <div class="detail-block">
+          <h3>Architecture</h3>
+          <div class="kv"><span>Panneau</span><strong>${item.panel.reference} (${item.panel.fabricant})</strong></div>
+          <div class="kv"><span>Onduleur</span><strong>${inverterLabel} (${item.inverter.phase})</strong></div>
+          <div class="kv"><span>Filtres actifs</span><strong>${item.panelFilterLabel} / ${item.inverterFilterLabel}</strong></div>
+          <div class="kv"><span>Strings</span><strong>${item.nombreStrings} ${plural(item.nombreStrings, "string", "strings")} de ${item.modulesParString} modules</strong></div>
+          <div class="kv"><span>Repartition MPPT</span><strong>${item.repartition.join(" / ")}</strong></div>
+          <div class="kv"><span>Affectation MPPT</span><strong>${item.mpptAssignmentLabel} (${item.mpptMode})</strong></div>
+          <div class="kv"><span>Puissance</span><strong>${kwc(item.puissanceDcW)} DC ; ${kw(item.puissanceAcTotalW)} AC total</strong></div>
+          <div class="kv"><span>Surface</span><strong>${n(item.surfaceM2, 2)} m2 (${n(item.surfaceUtiliseePct, 1)} % utile)</strong></div>
+        </div>
+        <div class="detail-block">
+          <h3>Client et exposition</h3>
+          <div class="kv"><span>Conso client</span><strong>${kwh(item.consumptionKwh)} / an</strong></div>
+          <div class="kv"><span>Distribution</span><strong>${item.distributionLabel}, ${item.inverterCount} onduleur(s), limite ${kva(item.maxInverterAcVa)} par onduleur</strong></div>
+          <div class="kv"><span>Toitures</span><strong>${item.roofSummary}</strong></div>
+          <div class="kv"><span>Surface utile totale</span><strong>${n(item.usableSurfaceM2, 2)} m2 sur ${n(item.totalRoofSurfaceM2, 2)} m2 bruts</strong></div>
+          <div class="kv"><span>Coefficient</span><strong>${n(item.exposureCoefficient, 2)} pondere par l'allocation toiture</strong></div>
+          <div class="kv"><span>Production brute</span><strong>${kwh(item.productionBruteKwh)} / an avant pertes cables</strong></div>
+          <div class="kv"><span>Production nette</span><strong>${kwh(item.productionAnnuelleKwh)} / an</strong></div>
+          <div class="kv"><span>Couverture</span><strong>${n(item.tauxCouverturePct, 1)} % ; ecart ${kwh(item.ecartConsoKwh)}</strong></div>
+        </div>
+        <div class="detail-block">
+          <h3>Pertes et cables</h3>
+          <div class="kv"><span>DC string</span><strong>${n(item.dcDistanceM, 1)} m aller site, section ${n(item.dcSectionMm2, 0)} mm2</strong></div>
+          <div class="kv"><span>Retour string</span><strong>${n(item.dcMainLengthM, 2)} m au total, dont ${n(item.modulesParString * item.dcReturnPerPanelM, 2)} m retour panneaux</strong></div>
+          <div class="kv"><span>Cordons panneaux</span><strong>${n(item.dcPanelCordLengthM, 2)} m en 4 mm2</strong></div>
+          <div class="kv"><span>Pertes DC</span><strong>${n(item.dcLossW, 1)} W ; chute ${n(item.dcVoltageDropV, 2)} V (${n(item.dcVoltageDropPct, 2)} %)</strong></div>
+          <div class="kv"><span>AC onduleur-TD</span><strong>${n(item.acInvTdDistanceM, 1)} m en ${n(item.acInvTdSectionMm2, 0)} mm2</strong></div>
+          <div class="kv"><span>AC TD-compteur</span><strong>${n(item.acTdMeterDistanceM, 1)} m en ${n(item.acTdMeterSectionMm2, 0)} mm2</strong></div>
+          <div class="kv"><span>Pertes AC onduleur-TD</span><strong>${n(item.acInvTdLossW, 1)} W total ; chute ${n(item.acInvTdVoltageDropV, 2)} V par onduleur (${n(item.acInvTdVoltageDropPct, 2)} % sur ${n(item.acVoltageDropReferenceV, 0)} V)</strong></div>
+          <div class="kv"><span>Pertes AC TD-compteur</span><strong>${n(item.acTdMeterLossW, 1)} W ; chute ${n(item.acTdMeterVoltageDropV, 2)} V avec courant total (${n(item.acTdMeterVoltageDropPct, 2)} % sur ${n(item.acVoltageDropReferenceV, 0)} V)</strong></div>
+          <div class="kv"><span>Pertes AC totales</span><strong>${n(item.acLossW, 1)} W ; chute ${n(item.acVoltageDropV, 2)} V (${n(item.acVoltageDropPct, 2)} % sur ${n(item.acVoltageDropReferenceV, 0)} V)</strong></div>
+          <div class="kv"><span>Pertes totales</span><strong>${n(item.totalLossW, 1)} W (${n(item.totalLossPct, 2)} %)</strong></div>
+        </div>
+        <div class="detail-block">
+          <h3>Controles valides</h3>
+          <div class="checks">
+            ${checkLine(`Uoc froid = ${n(item.uocFroidV, 1)} V <= limite RGIE ${n(RGIE_UOC_FROID_MAX_V, 0)} V DC`)}
+            ${checkLine(`Uoc froid = ${n(item.uocFroidV, 1)} V <= tension DC max ${n(item.inverter.tensionDcMaxV, 1)} V`)}
+            ${checkLine(`Umpp chaud = ${n(item.umppChaudV, 1)} V >= MPPT min ${n(item.inverter.mpptMinV, 1)} V`)}
+            ${checkLine(`Umpp froid = ${n(item.umppFroidV, 1)} V <= MPPT max ${n(item.inverter.mpptMaxV, 1)} V`)}
+            ${checkLine(`Impp par MPPT = ${n(item.imppMpptA, 1)} A <= courant max ${n(item.inverter.courantMaxMpptA, 1)} A`)}
+            ${checkLine(`Isc par MPPT = ${n(item.iscMpptA, 1)} A <= Isc max ${n(item.inverter.iscMaxMpptA, 1)} A`)}
+            ${checkLine(`Puissance PV = ${n(item.puissanceDcW, 0)} W <= PV max total ${n(item.puissancePvMaxTotalW, 0)} W`)}
+            ${checkLine(`Puissance AC unitaire = ${kva(item.inverter.puissanceAcW)} <= limite distribution ${kva(item.maxInverterAcVa)}`)}
+            ${checkLine(`Nombre onduleurs = ${item.inverterCount} <= maximum choisi ${item.maxInverterCount}`)}
+            ${checkLine(`Pertes Joule totales = ${n(item.totalLossPct, 2)} % <= ${n(MAX_JOULE_LOSS_PCT, 1)} %`)}
+          </div>
+        </div>
+      `;
+    }
+
+    function checkLine(text) {
+      return `<div class="check"><span class="dot"></span><span>${text}</span></div>`;
+    }
+
+    function renderRejects() {
+      const labels = [
+        ["surface", "Surface"],
+        ["phase", "Phase onduleur"],
+        ["distribution", "Limite reseau"],
+        ["uocRgie", "Uoc RGIE"],
+        ["uoc", "Uoc"],
+        ["umppMin", "Umpp min"],
+        ["umppMax", "Umpp max"],
+        ["courant", "Courant"],
+        ["mpptManual", "Affect. MPP"],
+        ["puissancePv", "Puissance PV"],
+        ["pertes", "Pertes > 2%"]
+      ];
+      document.querySelector("#rejectArea").innerHTML = labels.map(([key, label]) => `
+        <div class="reject"><span>${label}</span><strong>${state.rejected[key] ?? 0}</strong></div>
+      `).join("");
+    }
+
+    function exportCsv() {
+      if (!state.results.length) {
+        return;
+      }
+      const header = [
+        "rang",
+        "panneau",
+        "onduleur",
+        "nombre_onduleurs",
+        "filtre_panneau",
+        "filtre_onduleur",
+        "modules",
+        "nombre_strings",
+        "modules_par_string",
+        "repartition_mppt",
+        "affectation_mppt",
+        "mode_mppt",
+        "surface_m2",
+        "puissance_dc_kwc",
+        "production_brute_kwh",
+        "production_annuelle_kwh",
+        "consommation_client_kwh_an",
+        "taux_couverture_pct",
+        "ecart_conso_kwh",
+        "coefficient_exposition",
+        "allocation_toitures",
+        "surface_toitures_brute_m2",
+        "surface_toitures_utile_m2",
+        "type_distribution",
+        "limite_distribution_unitaire_kva",
+        "limite_distribution_totale_kva",
+        "pertes_totales_w",
+        "pertes_totales_pct",
+        "pertes_dc_w",
+        "chute_tension_dc_v",
+        "chute_tension_dc_pct",
+        "distance_dc_onduleur_panneaux_m",
+        "section_dc_mm2",
+        "retour_string_m",
+        "cordons_panneaux_4mm2_m",
+        "pertes_ac_w",
+        "pertes_ac_onduleur_td_w",
+        "pertes_ac_td_compteur_w",
+        "chute_tension_ac_v",
+        "chute_tension_ac_onduleur_td_v",
+        "chute_tension_ac_td_compteur_v",
+        "chute_tension_ac_pct",
+        "reference_pct_chute_ac_v",
+        "chute_tension_ac_onduleur_td_pct",
+        "chute_tension_ac_td_compteur_pct",
+        "distance_ac_onduleur_td_m",
+        "section_ac_onduleur_td_mm2",
+        "distance_ac_td_compteur_m",
+        "section_ac_td_compteur_mm2",
+        "orientation",
+        "pente_deg",
+        "gisement_reference_kwh_kwc_an",
+        "puissance_ac_unitaire_kw",
+        "puissance_ac_totale_kw",
+        "ratio_dc_ac",
+        "uoc_froid_v",
+        "limite_rgie_uoc_froid_v",
+        "umpp_chaud_v",
+        "umpp_froid_v",
+        "impp_mppt_a",
+        "isc_mppt_a"
+      ];
+      const rows = state.results.map((item, index) => [
+        index + 1,
+        item.panel.reference,
+        item.inverter.reference,
+        item.inverterCount,
+        item.panelFilterLabel,
+        item.inverterFilterLabel,
+        item.totalModules,
+        item.nombreStrings,
+        item.modulesParString,
+        item.repartition.join(" / "),
+        item.mpptAssignmentLabel,
+        item.mpptMode,
+        n(item.surfaceM2, 2),
+        n(item.puissanceDcW / 1000, 3),
+        n(item.productionBruteKwh, 0),
+        n(item.productionAnnuelleKwh, 0),
+        n(item.consumptionKwh, 0),
+        n(item.tauxCouverturePct, 2),
+        n(item.ecartConsoKwh, 0),
+        n(item.exposureCoefficient, 3),
+        item.roofSummary,
+        n(item.totalRoofSurfaceM2, 2),
+        n(item.usableSurfaceM2, 2),
+        item.distributionLabel,
+        n(item.maxInverterAcVa / 1000, 2),
+        n(item.systemAcLimitVa / 1000, 2),
+        n(item.totalLossW, 2),
+        n(item.totalLossPct, 3),
+        n(item.dcLossW, 2),
+        n(item.dcVoltageDropV, 3),
+        n(item.dcVoltageDropPct, 3),
+        n(item.dcDistanceM, 2),
+        n(item.dcSectionMm2, 0),
+        n(item.modulesParString * item.dcReturnPerPanelM, 2),
+        n(item.dcPanelCordLengthM, 2),
+        n(item.acLossW, 2),
+        n(item.acInvTdLossW, 2),
+        n(item.acTdMeterLossW, 2),
+        n(item.acVoltageDropV, 3),
+        n(item.acInvTdVoltageDropV, 3),
+        n(item.acTdMeterVoltageDropV, 3),
+        n(item.acVoltageDropPct, 3),
+        n(item.acVoltageDropReferenceV, 0),
+        n(item.acInvTdVoltageDropPct, 3),
+        n(item.acTdMeterVoltageDropPct, 3),
+        n(item.acInvTdDistanceM, 2),
+        n(item.acInvTdSectionMm2, 0),
+        n(item.acTdMeterDistanceM, 2),
+        n(item.acTdMeterSectionMm2, 0),
+        item.orientationLabel,
+        n(item.slopeDeg, 0),
+        n(item.referenceYieldKwhKwc, 0),
+        n(item.inverter.puissanceAcW / 1000, 3),
+        n(item.puissanceAcTotalW / 1000, 3),
+        n(item.ratioDcAc, 3),
+        n(item.uocFroidV, 2),
+        n(RGIE_UOC_FROID_MAX_V, 0),
+        n(item.umppChaudV, 2),
+        n(item.umppFroidV, 2),
+        n(item.imppMpptA, 2),
+        n(item.iscMpptA, 2)
+      ]);
+      const csv = [header, ...rows].map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(",")).join("\n");
+      downloadText(csv, "resultats_dimensionnement_solaire.csv", "text/csv;charset=utf-8");
+    }
+
+    function exportCalculation() {
+      if (!state.results.length) {
+        document.querySelector("#statusText").textContent = "Aucune configuration valide a exporter.";
+        return;
+      }
+      try {
+        const filename = `note_calcul_solaire_${new Date().toISOString().slice(0, 10)}.md`;
+        const report = buildCalculationReport(state.results[0]);
+        downloadText(report, filename, "text/markdown;charset=utf-8");
+        document.querySelector("#statusText").textContent = `Note de calcul generee : ${filename}`;
+        document.querySelector("#detailStatus").textContent = `Export calcul genere : ${filename}`;
+      } catch (error) {
+        document.querySelector("#statusText").textContent = `Export calcul impossible : ${error.message}`;
+      }
+    }
+
+    function buildCalculationReport(item) {
+      const surfaceDisponible = item.totalRoofSurfaceM2;
+      const occupation = parseNumber(fields.occupation.value);
+      const surfaceUtile = item.usableSurfaceM2;
+      const maxModulesSurface = item.roofAllocation.reduce((sum, roof) => sum + roof.maxModules, 0);
+      const tmin = parseNumber(fields.tmin.value);
+      const tmax = parseNumber(fields.tmax.value);
+      const coefPct = item.panel.coefTensionPctC;
+      const factorCold = 1 + (coefPct / 100) * (tmin - 25);
+      const factorHot = 1 + (coefPct / 100) * (tmax - 25);
+      const uocStringStc = item.panel.uocV * item.modulesParString;
+      const umppStringStc = item.panel.umppV * item.modulesParString;
+      const dcStringVoltage = item.panel.umppV * item.modulesParString;
+      const dcReturnLength = item.modulesParString * item.dcReturnPerPanelM;
+      const dcMainBaseLength = 2 * item.dcDistanceM;
+      const acTotalDistance = item.acInvTdDistanceM + item.acTdMeterDistanceM;
+      const rejectedTotal = Object.values(state.rejected).reduce((sum, value) => sum + Number(value || 0), 0);
+      const rankingLines = rankingExplanation(item);
+      const coverageLine = item.consumptionKwh > 0
+        ? `- Couverture client : ${n(item.productionAnnuelleKwh, 0)} / ${n(item.consumptionKwh, 0)} x 100 = ${n(item.tauxCouverturePct, 1)} %`
+        : "- Couverture client : non calculee, consommation client non renseignee.";
+      const lines = [
+        "# Note de calcul - meilleur choix solaire",
+        "",
+        `Version application : v0.18`,
+        `Date export : ${new Date().toLocaleString("fr-BE")}`,
+        "",
+        "## 1. Donnees d'entree",
+        "",
+        `- Surface toitures brute : ${n(surfaceDisponible, 2)} m2`,
+        `- Taux d'occupation : ${n(occupation, 1)} %`,
+        `- Surface utile totale : ${n(surfaceDisponible, 2)} x ${n(occupation, 1)} / 100 = ${n(surfaceUtile, 2)} m2`,
+        `- Allocation toiture retenue : ${item.roofSummary}`,
+        `- Consommation client : ${n(item.consumptionKwh, 0)} kWh/an`,
+        `- Distribution : ${item.distributionLabel}, limite ${kva(item.maxInverterAcVa)} par onduleur, ${item.maxInverterCount} onduleur(s) max choisi(s)`,
+        `- Gisement reference : ${n(item.referenceYieldKwhKwc, 0)} kWh/kWc/an`,
+        `- Temperature min / module max : ${n(tmin, 0)} C / ${n(tmax, 0)} C`,
+        `- Filtres materiel : ${item.panelFilterLabel} / ${item.inverterFilterLabel}`,
+        "",
+        "## 2. Materiel retenu",
+        "",
+        `- Panneau : ${item.panel.reference} (${item.panel.fabricant})`,
+        `- Puissance panneau : ${n(item.panel.puissanceW, 0)} Wc`,
+        `- Dimensions panneau : ${n(item.panel.largeurM, 3)} x ${n(item.panel.hauteurM, 3)} m = ${n(item.panel.surfaceM2, 3)} m2`,
+        `- Uoc / Isc / Umpp / Impp : ${n(item.panel.uocV, 2)} V / ${n(item.panel.iscA, 2)} A / ${n(item.panel.umppV, 2)} V / ${n(item.panel.imppA, 2)} A`,
+        `- Coefficient tension : ${n(coefPct, 2)} %/C`,
+        `- Onduleur : ${item.inverterCount} x ${item.inverter.reference} (${item.inverter.fabricant}, ${item.inverter.phase})`,
+        `- Puissance AC unitaire / totale : ${n(item.inverter.puissanceAcW, 0)} W / ${n(item.puissanceAcTotalW, 0)} W`,
+        `- PV max unitaire / total : ${n(item.inverter.puissancePvMaxW, 0)} W / ${n(item.puissancePvMaxTotalW, 0)} W`,
+        `- Plage MPPT : ${n(item.inverter.mpptMinV, 0)} a ${n(item.inverter.mpptMaxV, 0)} V`,
+        `- Courant max MPPT / Isc max MPPT : ${n(item.inverter.courantMaxMpptA, 2)} A / ${n(item.inverter.iscMaxMpptA, 2)} A`,
+        "",
+        "## 3. Construction de la configuration",
+        "",
+        `- Modules max par surface : somme des capacites de chaque toiture = ${maxModulesSurface}`,
+        `- Choix retenu : ${item.nombreStrings} strings x ${item.modulesParString} modules/string = ${item.totalModules} modules`,
+        `- Nombre d'onduleurs retenu : ${item.inverterCount}`,
+        `- Repartition MPPT : ${item.repartition.join(" / ")}`,
+        `- Affectation MPPT : ${item.mpptAssignmentLabel} (${item.mpptMode})`,
+        `- Allocation toiture : ${item.roofSummary}`,
+        `- Surface utilisee : ${item.totalModules} x ${n(item.panel.surfaceM2, 3)} = ${n(item.surfaceM2, 2)} m2 (${n(item.surfaceUtiliseePct, 1)} % de la surface utile)`,
+        `- Puissance DC : ${item.totalModules} x ${n(item.panel.puissanceW, 0)} = ${n(item.puissanceDcW, 0)} Wc (${kwc(item.puissanceDcW)})`,
+        `- Ratio DC/AC : ${n(item.puissanceDcW, 0)} / ${n(item.puissanceAcTotalW, 0)} = ${n(item.ratioDcAc, 3)}`,
+        "",
+        "## 4. Validations electriques DC",
+        "",
+        `- Facteur froid : 1 + (${n(coefPct, 2)} / 100) x (${n(tmin, 0)} - 25) = ${n(factorCold, 4)}`,
+        `- Facteur chaud : 1 + (${n(coefPct, 2)} / 100) x (${n(tmax, 0)} - 25) = ${n(factorHot, 4)}`,
+        `- Uoc string STC : ${n(item.panel.uocV, 2)} x ${item.modulesParString} = ${n(uocStringStc, 2)} V`,
+        `- Uoc froid : ${n(uocStringStc, 2)} x ${n(factorCold, 4)} = ${n(item.uocFroidV, 2)} V`,
+        `- Validation RGIE : ${n(item.uocFroidV, 2)} V <= ${n(RGIE_UOC_FROID_MAX_V, 0)} V DC`,
+        `- Validation onduleur : ${n(item.uocFroidV, 2)} V <= ${n(item.inverter.tensionDcMaxV, 0)} V DC max`,
+        `- Umpp string STC : ${n(item.panel.umppV, 2)} x ${item.modulesParString} = ${n(umppStringStc, 2)} V`,
+        `- Umpp chaud : ${n(umppStringStc, 2)} x ${n(factorHot, 4)} = ${n(item.umppChaudV, 2)} V >= MPPT min ${n(item.inverter.mpptMinV, 0)} V`,
+        `- Umpp froid : ${n(umppStringStc, 2)} x ${n(factorCold, 4)} = ${n(item.umppFroidV, 2)} V <= MPPT max ${n(item.inverter.mpptMaxV, 0)} V`,
+        `- Impp par MPPT : max(${item.repartition.join(" / ")}) x ${n(item.panel.imppA, 2)} = ${n(item.imppMpptA, 2)} A <= ${n(item.inverter.courantMaxMpptA, 2)} A`,
+        `- Isc par MPPT : max(${item.repartition.join(" / ")}) x ${n(item.panel.iscA, 2)} = ${n(item.iscMpptA, 2)} A <= ${n(item.inverter.iscMaxMpptA, 2)} A`,
+        `- Puissance PV max onduleurs : ${n(item.puissanceDcW, 0)} W <= ${n(item.puissancePvMaxTotalW, 0)} W`,
+        "",
+        "## 5. Pertes cables DC",
+        "",
+        `- Longueur principale DC/string : 2 x ${n(item.dcDistanceM, 2)} + (${item.modulesParString} x ${n(item.dcReturnPerPanelM, 2)}) = ${n(dcMainBaseLength, 2)} + ${n(dcReturnLength, 2)} = ${n(item.dcMainLengthM, 2)} m`,
+        `- Cordons panneaux : ${item.modulesParString} x ${n(item.panelCordM, 2)} = ${n(item.dcPanelCordLengthM, 2)} m en 4 mm2`,
+        `- Resistance DC/string : rho x L / S = ${n(item.dcResistanceOhm, 5)} ohm`,
+        `- Chute tension DC/string : I x R = ${n(item.dcCurrentA, 2)} x ${n(item.dcResistanceOhm, 5)} = ${n(item.dcVoltageDropV, 3)} V`,
+        `- Reference tension string : ${n(dcStringVoltage, 2)} V ; chute = ${n(item.dcVoltageDropPct, 3)} %`,
+        `- Perte Joule DC : I2 x R x strings = ${n(item.dcCurrentA, 2)}2 x ${n(item.dcResistanceOhm, 5)} x ${item.nombreStrings} = ${n(item.dcLossW, 2)} W`,
+        "",
+        "## 6. Pertes cables AC",
+        "",
+        `- Courant AC calcule : ${n(item.acUnitCurrentA, 2)} A par onduleur, ${n(item.acCurrentA, 2)} A total sur reseau ${n(item.acVoltageV, 0)} V`,
+        `- Troncon onduleur-TD : ${n(item.acInvTdDistanceM, 2)} m en ${n(item.acInvTdSectionMm2, 0)} mm2, R = ${n(item.acInvTdResistanceOhm, 5)} ohm`,
+        `- Perte onduleur-TD : ${n(item.acInvTdLossW, 2)} W total ; chute ${n(item.acInvTdVoltageDropV, 3)} V par onduleur = ${n(item.acInvTdVoltageDropPct, 3)} % sur ${n(item.acVoltageDropReferenceV, 0)} V`,
+        `- Troncon TD-compteur : ${n(item.acTdMeterDistanceM, 2)} m en ${n(item.acTdMeterSectionMm2, 0)} mm2, R = ${n(item.acTdMeterResistanceOhm, 5)} ohm`,
+        `- Perte TD-compteur : ${n(item.acTdMeterLossW, 2)} W ; chute ${n(item.acTdMeterVoltageDropV, 3)} V = ${n(item.acTdMeterVoltageDropPct, 3)} % sur ${n(item.acVoltageDropReferenceV, 0)} V`,
+        `- Distance AC totale : ${n(acTotalDistance, 2)} m`,
+        `- Pertes AC totales : ${n(item.acLossW, 2)} W ; chute ${n(item.acVoltageDropV, 3)} V = ${n(item.acVoltageDropPct, 3)} % sur ${n(item.acVoltageDropReferenceV, 0)} V`,
+        `- Pertes Joule totales : ${n(item.dcLossW, 2)} + ${n(item.acLossW, 2)} = ${n(item.totalLossW, 2)} W`,
+        `- Taux pertes total : ${n(item.totalLossW, 2)} / ${n(item.puissanceDcW, 0)} x 100 = ${n(item.totalLossPct, 3)} % <= ${n(MAX_JOULE_LOSS_PCT, 1)} %`,
+        "",
+        "## 7. Production estimee",
+        "",
+        `- Coefficient exposition pondere par toiture : ${n(item.exposureCoefficient, 3)}`,
+        `- Production brute : ${n(item.puissanceDcW / 1000, 3)} kWc x ${n(item.referenceYieldKwhKwc, 0)} x ${n(item.exposureCoefficient, 3)} = ${n(item.productionBruteKwh, 0)} kWh/an`,
+        `- Production nette : ${n(item.productionBruteKwh, 0)} x (1 - ${n(item.totalLossPct, 3)} / 100) = ${n(item.productionAnnuelleKwh, 0)} kWh/an`,
+        coverageLine,
+        `- Ecart production - consommation : ${n(item.productionAnnuelleKwh, 0)} - ${n(item.consumptionKwh, 0)} = ${n(item.ecartConsoKwh, 0)} kWh/an`,
+        "",
+        "## 8. Suite logique des decisions",
+        "",
+        `- Configurations valides : ${state.results.length}`,
+        `- Rejets pendant la recherche : ${rejectedTotal}`,
+        ...rejectedLines(),
+        "",
+        ...rankingLines,
+        "",
+        "## 9. Conclusion",
+        "",
+        `Le meilleur choix actuel est ${item.totalModules} modules ${item.panel.reference} avec ${item.inverterCount} x ${item.inverter.reference}.`,
+        `Il produit environ ${n(item.productionAnnuelleKwh, 0)} kWh/an nets pour ${n(item.consumptionKwh, 0)} kWh/an de consommation client, avec ${n(item.totalLossPct, 2)} % de pertes Joule.`,
+        "Le facteur prix n'est pas encore integre ; l'export prepare la logique pour ajouter ce critere plus tard."
+      ];
+      return lines.join("\n");
+    }
+
+    function rankingExplanation(item) {
+      if (item.consumptionKwh > 0) {
+        const gapRatio = Math.abs(item.ecartConsoKwh) / item.consumptionKwh * 100;
+        const overproduction = Math.max(0, item.ecartConsoKwh);
+        return [
+          "- Critere 1 : minimiser l'ecart entre production annuelle nette et consommation client.",
+          `- Score ecart meilleur choix : abs(${n(item.ecartConsoKwh, 0)}) / ${n(item.consumptionKwh, 0)} = ${n(gapRatio, 2)} %`,
+          "- Critere 2 : si deux ecarts sont identiques, eviter la surproduction.",
+          `- Surproduction du meilleur choix : ${n(overproduction, 0)} kWh/an`,
+          "- Critere 3 : departager ensuite par puissance DC, surface utile exploitee, puis ratio DC/AC proche de 1,15."
+        ];
+      }
+      return [
+        "- Critere 1 : sans consommation client, maximiser la puissance DC installee.",
+        "- Critere 2 : departager ensuite par surface utile exploitee.",
+        "- Critere 3 : departager enfin par ratio DC/AC proche de 1,15."
+      ];
+    }
+
+    function rejectedLines() {
+      const labels = {
+        surface: "surface",
+        phase: "phase onduleur",
+        distribution: "limite reseau",
+        uocRgie: "Uoc froid RGIE",
+        uoc: "Uoc froid onduleur",
+        umppMin: "Umpp sous MPPT min",
+        umppMax: "Umpp au-dessus MPPT max",
+        courant: "courants MPPT/Isc",
+        mpptManual: "affectation MPP manuelle",
+        puissancePv: "puissance PV max",
+        pertes: "pertes > 2 %"
+      };
+      return Object.entries(labels).map(([key, label]) => `- Rejets ${label} : ${state.rejected[key] ?? 0}`);
+    }
+
+    function downloadText(text, filename, mimeType) {
+      const blob = new Blob([text], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function readFileToTextarea(input, textarea) {
+      const file = input.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        textarea.value = String(reader.result ?? "");
+        calculate();
+      };
+      reader.readAsText(file);
+    }
+
+    function showTab(name) {
+      const isCatalog = name === "catalog";
+      document.querySelector("#catalogArea").classList.toggle("active", isCatalog);
+      document.querySelector("#rejectArea").style.display = isCatalog ? "none" : "grid";
+      document.querySelector("#catalogTab").classList.toggle("active", isCatalog);
+      document.querySelector("#summaryTab").classList.toggle("active", !isCatalog);
+    }
+
+    fields.panelsCsv.value = DEFAULT_PANELS_CSV;
+    fields.invertersCsv.value = DEFAULT_INVERTERS_CSV;
+
+    document.querySelector("#calculateBtn").addEventListener("click", calculate);
+    document.querySelector("#sideCalculateBtn").addEventListener("click", calculate);
+    document.querySelector("#exportBtn").addEventListener("click", exportCsv);
+    document.querySelector("#exportCalcBtn").addEventListener("click", exportCalculation);
+    document.querySelector("#resetCatalogsBtn").addEventListener("click", () => {
+      fields.panelsCsv.value = DEFAULT_PANELS_CSV;
+      fields.invertersCsv.value = DEFAULT_INVERTERS_CSV;
+      calculate();
+    });
+    document.querySelector("#panelsFile").addEventListener("change", (event) => readFileToTextarea(event.target, fields.panelsCsv));
+    document.querySelector("#invertersFile").addEventListener("change", (event) => readFileToTextarea(event.target, fields.invertersCsv));
+    document.querySelector("#summaryTab").addEventListener("click", () => showTab("summary"));
+    document.querySelector("#catalogTab").addEventListener("click", () => showTab("catalog"));
+    fields.distribution.addEventListener("change", calculate);
+    fields.addRoof.addEventListener("click", addRoof);
+    fields.addInverter.addEventListener("click", addInverterSlot);
+    fields.mpptMode.addEventListener("change", () => {
+      state.mpptDirty = fields.mpptMode.value === "manual";
+      calculate();
+    });
+    fields.mpptAssignment.addEventListener("change", () => {
+      state.mpptDirty = true;
+      fields.mpptMode.value = "manual";
+      calculate();
+    });
+    fields.proposeMppt.addEventListener("click", () => {
+      updateMpptProposal(true);
+      fields.mpptMode.value = "manual";
+      state.mpptDirty = true;
+      calculate();
+    });
+    fields.panelFilter.addEventListener("change", calculate);
+    fields.inverterFilter.addEventListener("change", calculate);
+    fields.dcSection.addEventListener("change", calculate);
+    fields.acInvTdSection.addEventListener("change", calculate);
+    fields.acTdMeterSection.addEventListener("change", calculate);
+    Object.values(fields).forEach((field) => {
+      if (field instanceof HTMLInputElement && field.type === "number") {
+        field.addEventListener("change", calculate);
+      }
+    });
+
+    renderRoofControls();
+    renderInverterControls();
+    calculate();
+  </script>
+</body>
+</html>
+
