@@ -14,6 +14,7 @@ from catalogue_fabricants import (
     OUTPUT_DIR,
     UI_DIR,
     INVERTERS_HEADER,
+    OPTIONAL_NUMERIC_FIELDS,
     PANELS_HEADER,
     load_db,
     normalize_entry,
@@ -25,7 +26,7 @@ from catalogue_fabricants import (
 )
 
 
-APP_VERSION = "0.20"
+APP_VERSION = "0.21"
 SUPPORTED_EXTENSIONS = {".pdf", ".txt", ".text", ".md"}
 DEFAULT_REPORT = OUTPUT_DIR / "datasheet_import_report.csv"
 DEFAULT_PANELS_OUT = INPUT_DIR / "panneaux.csv"
@@ -549,6 +550,7 @@ def huawei_base_entry(reference: str, manufacturer: str, path: Path, source_type
         "puissance_ac_w": None,
         "puissance_pv_max_w": None,
         "tension_dc_max_v": None,
+        "tension_dc_nominale_v": None,
         "mppt_min_v": None,
         "mppt_max_v": None,
         "courant_max_mppt_a": None,
@@ -656,6 +658,8 @@ def apply_huawei_row(entries: dict[str, dict], row: list[str], model_columns: li
             set_huawei_numeric_field(entries, values, "puissance_pv_max_w", parse_power_cell)
         elif "maxinputvoltage" in compact:
             set_huawei_numeric_field(entries, values, "tension_dc_max_v", decimal)
+        elif "ratedinputvoltage" in compact or "rateddcvoltage" in compact or "nominalinputvoltage" in compact:
+            set_huawei_numeric_field(entries, values, "tension_dc_nominale_v", decimal)
         elif "operatingvoltagerange" in compact or "mppvoltagerange" in compact or "mpptvoltagerange" in compact:
             set_huawei_range_field(entries, values)
         elif "maxinputcurrent" in compact and ("mppt" in compact or "mpp" in compact):
@@ -728,6 +732,8 @@ def apply_huawei_text_line(entries: dict[str, dict], line: str, references: list
             set_huawei_numeric_field(entries, huawei_values_from_line(line, references, parse_power_cell), "puissance_pv_max_w", parse_power_cell)
         elif "maxinputvoltage" in compact:
             set_huawei_numeric_field(entries, huawei_values_from_line(line, references, decimal), "tension_dc_max_v", decimal)
+        elif "ratedinputvoltage" in compact or "rateddcvoltage" in compact or "nominalinputvoltage" in compact:
+            set_huawei_numeric_field(entries, huawei_values_from_line(line, references, decimal), "tension_dc_nominale_v", decimal)
         elif "operatingvoltagerange" in compact or "mppvoltagerange" in compact or "mpptvoltagerange" in compact:
             set_huawei_range_field(entries, huawei_values_from_line(line, references, parse_range_cell))
         elif "maxinputcurrent" in compact and ("mppt" in compact or "mpp" in compact):
@@ -861,6 +867,16 @@ def parse_inverter(text: str, path: Path, manufacturer: str, source_type: str) -
             [r"max\.?\s+input\s+voltage", r"maximum\s+input\s+voltage", r"max\.?\s+dc\s+voltage"],
             "V",
         ),
+        "tension_dc_nominale_v": first_value(
+            text,
+            [
+                r"rated\s+input\s+voltage",
+                r"nominal\s+input\s+voltage",
+                r"rated\s+dc\s+voltage",
+                r"nominal\s+dc\s+voltage",
+            ],
+            "V",
+        ),
         "mppt_min_v": mppt_range[0] if mppt_range else None,
         "mppt_max_v": mppt_range[1] if mppt_range else None,
         "courant_max_mppt_a": first_value(
@@ -900,12 +916,16 @@ def missing_fields(entry: dict, header: list[str]) -> list[str]:
     for field in header:
         value = entry.get(field)
         if value in {None, ""}:
+            if field in OPTIONAL_NUMERIC_FIELDS:
+                continue
             missing.append(field)
             continue
         if field not in {"reference", "fabricant", "phase"}:
             numeric = decimal(value)
             if numeric is None:
                 missing.append(field)
+            elif field in OPTIONAL_NUMERIC_FIELDS:
+                pass
             elif field == "coef_tension_pct_c" and numeric == 0:
                 missing.append(field)
             elif field != "coef_tension_pct_c" and numeric <= 0:
@@ -1036,7 +1056,7 @@ def write_report(path: Path, parsed_items: list[ParsedDatasheet]) -> None:
     ]
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=header)
+        writer = csv.DictWriter(handle, fieldnames=header, lineterminator="\n")
         writer.writeheader()
         for item in parsed_items:
             writer.writerow(

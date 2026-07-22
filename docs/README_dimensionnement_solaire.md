@@ -1,6 +1,6 @@
-# Dimensionnement solaire - prototype GUI v0.20
+# Dimensionnement solaire - prototype GUI v0.21
 
-Ce dossier contient la version `v0.20` du programme :
+Ce dossier contient la version `v0.21` du programme :
 
 - `ui/dimensionnement_solaire.html` : interface graphique locale a ouvrir dans un navigateur.
 - `code/solar_optimizer_gui.py` : interface graphique Python et moteur de selection.
@@ -9,6 +9,10 @@ Ce dossier contient la version `v0.20` du programme :
 - `code/catalogue_fabricants.py` : module de recherche locale, stockage et export des fiches fabricant.
 - `code/datasheet_importer.py` : module d'import local de datasheets PDF/TXT.
 - `input/catalogue_fabricants_db.json` : base locale des fabricants, panneaux et onduleurs.
+
+## Version 0.21
+
+Cette version ajoute la tension DC nominale `rated input voltage` des onduleurs dans le catalogue. L'interface affiche l'ecart signe entre `Umpp STC` de la string et cette tension nominale, dans le tableau, le detail, l'export CSV et la note de calcul. Cet indicateur sert de repere qualitatif et ne bloque pas une configuration valide.
 
 ## Version 0.20
 

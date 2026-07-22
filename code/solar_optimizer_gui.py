@@ -10,7 +10,7 @@ from tkinter import BOTH, END, LEFT, RIGHT, TOP, X, Y, filedialog, messagebox, t
 import tkinter as tk
 
 
-APP_VERSION = "v0.15"
+APP_VERSION = "v0.21"
 APP_TITLE = f"Dimensionnement solaire {APP_VERSION} - selection panneaux / onduleurs"
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 INPUT_DIR = PROJECT_ROOT / "input"
@@ -64,6 +64,7 @@ class Inverter:
     puissance_ac_w: float
     puissance_pv_max_w: float
     tension_dc_max_v: float
+    tension_dc_nominale_v: float
     mppt_min_v: float
     mppt_max_v: float
     courant_max_mppt_a: float
@@ -122,6 +123,8 @@ class Candidate:
     surface_m2: float
     surface_utilisee_pct: float
     ratio_dc_ac: float
+    umpp_stc_v: float
+    ecart_umpp_nominal_pct: float
     uoc_froid_v: float
     umpp_chaud_v: float
     umpp_froid_v: float
@@ -139,6 +142,11 @@ def parse_float(value: str) -> float:
 
 def parse_int(value: str) -> int:
     return int(round(parse_float(value)))
+
+def parse_optional_float(value: str | None) -> float:
+    if value is None or str(value).strip() == "":
+        return 0.0
+    return parse_float(value)
 
 
 def load_panels(path: Path) -> list[Panel]:
@@ -173,6 +181,7 @@ def load_inverters(path: Path) -> list[Inverter]:
                     puissance_ac_w=parse_float(row["puissance_ac_w"]),
                     puissance_pv_max_w=parse_float(row["puissance_pv_max_w"]),
                     tension_dc_max_v=parse_float(row["tension_dc_max_v"]),
+                    tension_dc_nominale_v=parse_optional_float(row.get("tension_dc_nominale_v")),
                     mppt_min_v=parse_float(row["mppt_min_v"]),
                     mppt_max_v=parse_float(row["mppt_max_v"]),
                     courant_max_mppt_a=parse_float(row["courant_max_mppt_a"]),
@@ -367,6 +376,12 @@ def optimize(
                     panel.coef_tension_pct_c,
                     temperature_min_c,
                 )
+                umpp_stc = panel.umpp_v * modules_par_string
+                ecart_umpp_nominal_pct = (
+                    (umpp_stc - inverter.tension_dc_nominale_v) / inverter.tension_dc_nominale_v * 100.0
+                    if inverter.tension_dc_nominale_v > 0
+                    else 0.0
+                )
 
                 if uoc_froid > RGIE_UOC_FROID_MAX_V:
                     rejected["uoc_rgie"] += max_strings
@@ -486,6 +501,8 @@ def optimize(
                             ratio_dc_ac=(puissance_dc / inverter.puissance_ac_w)
                             if inverter.puissance_ac_w
                             else 0.0,
+                            umpp_stc_v=umpp_stc,
+                            ecart_umpp_nominal_pct=ecart_umpp_nominal_pct,
                             uoc_froid_v=uoc_froid,
                             umpp_chaud_v=umpp_chaud,
                             umpp_froid_v=umpp_froid,
@@ -520,6 +537,9 @@ def format_kw(value_w: float) -> str:
 
 def format_num(value: float, decimals: int = 1) -> str:
     return f"{value:.{decimals}f}"
+
+def format_signed_num(value: float, decimals: int = 1) -> str:
+    return f"{value:+.{decimals}f}"
 
 
 def rejected_lines(rejected: dict[str, int]) -> list[str]:
@@ -624,6 +644,7 @@ def build_calculation_report(
         f"- Onduleur : {item.inverter.reference} ({item.inverter.fabricant}, {item.inverter.phase})",
         f"- Puissance AC / PV max : {format_num(item.inverter.puissance_ac_w, 0)} W / {format_num(item.inverter.puissance_pv_max_w, 0)} W",
         f"- Plage MPPT : {format_num(item.inverter.mppt_min_v, 0)} a {format_num(item.inverter.mppt_max_v, 0)} V",
+        f"- Tension DC nominale rated input : {format_num(item.inverter.tension_dc_nominale_v, 0)} V" if item.inverter.tension_dc_nominale_v > 0 else "- Tension DC nominale rated input : non renseignee",
         f"- Courant max MPPT / Isc max MPPT : {format_num(item.inverter.courant_max_mppt_a, 2)} A / {format_num(item.inverter.isc_max_mppt_a, 2)} A",
         "",
         "## 3. Construction de la configuration",
@@ -644,6 +665,7 @@ def build_calculation_report(
         f"- Validation RGIE : {format_num(item.uoc_froid_v, 2)} V <= {format_num(RGIE_UOC_FROID_MAX_V, 0)} V DC",
         f"- Validation onduleur : {format_num(item.uoc_froid_v, 2)} V <= {format_num(item.inverter.tension_dc_max_v, 0)} V DC max",
         f"- Umpp string STC : {format_num(item.panel.umpp_v, 2)} x {item.modules_par_string} = {format_num(umpp_string_stc, 2)} V",
+        f"- Ecart au rated input : ({format_num(umpp_string_stc, 2)} - {format_num(item.inverter.tension_dc_nominale_v, 0)}) / {format_num(item.inverter.tension_dc_nominale_v, 0)} x 100 = {format_signed_num(item.ecart_umpp_nominal_pct, 2)} %" if item.inverter.tension_dc_nominale_v > 0 else "- Ecart au rated input : non calcule, tension nominale onduleur absente",
         f"- Umpp chaud : {format_num(umpp_string_stc, 2)} x {format_num(factor_hot, 4)} = {format_num(item.umpp_chaud_v, 2)} V >= MPPT min {format_num(item.inverter.mppt_min_v, 0)} V",
         f"- Umpp froid : {format_num(umpp_string_stc, 2)} x {format_num(factor_cold, 4)} = {format_num(item.umpp_froid_v, 2)} V <= MPPT max {format_num(item.inverter.mppt_max_v, 0)} V",
         f"- Impp par MPPT : max({' / '.join(str(value) for value in item.repartition_mppt)}) x {format_num(item.panel.impp_a, 2)} = {format_num(item.impp_mppt_a, 2)} A <= {format_num(item.inverter.courant_max_mppt_a, 2)} A",
@@ -797,6 +819,7 @@ class SolarOptimizerApp:
             "pertes",
             "uoc",
             "umpp",
+            "ecart_nominal",
             "isc",
         )
         self.tree = ttk.Treeview(table_frame, columns=columns, show="headings", height=14)
@@ -815,6 +838,7 @@ class SolarOptimizerApp:
             "pertes": "Pertes %",
             "uoc": "Uoc froid V",
             "umpp": "Umpp V",
+            "ecart_nominal": "Ecart rated %",
             "isc": "Isc/MPPT A",
         }
         widths = {
@@ -832,6 +856,7 @@ class SolarOptimizerApp:
             "pertes": 80,
             "uoc": 95,
             "umpp": 120,
+            "ecart_nominal": 105,
             "isc": 95,
         }
         for column in columns:
@@ -989,6 +1014,7 @@ class SolarOptimizerApp:
                     format_num(item.total_loss_pct, 2),
                     format_num(item.uoc_froid_v, 0),
                     f"{format_num(item.umpp_chaud_v, 0)}-{format_num(item.umpp_froid_v, 0)}",
+                    format_signed_num(item.ecart_umpp_nominal_pct, 1) if item.inverter.tension_dc_nominale_v > 0 else "-",
                     format_num(item.isc_mppt_a, 1),
                 ),
             )
@@ -1019,6 +1045,7 @@ class SolarOptimizerApp:
                 f"Filtres actifs : {self.panel_filter_var.get()} / {self.inverter_filter_var.get()}",
                 f"Architecture : {item.nombre_strings} strings de {item.modules_par_string} modules, repartition MPPT {item.repartition_mppt}",
                 f"Puissance DC : {format_kw(item.puissance_dc_w)} kWc ; puissance AC : {format_kw(item.inverter.puissance_ac_w)} kW ; ratio DC/AC : {format_num(item.ratio_dc_ac, 2)}",
+                f"Repere DC nominal : Umpp STC string {format_num(item.umpp_stc_v, 1)} V ; rated input {format_num(item.inverter.tension_dc_nominale_v, 1)} V ; ecart {format_signed_num(item.ecart_umpp_nominal_pct, 1)} %" if item.inverter.tension_dc_nominale_v > 0 else "Repere DC nominal : rated input non renseigne pour cet onduleur",
                 f"Surface utilisee : {format_num(item.surface_m2, 2)} m2 ({format_num(item.surface_utilisee_pct, 1)} % de la surface utile)",
                 f"Client : conso {format_num(item.consommation_client_kwh, 0)} kWh/an ; production brute {format_num(item.production_brute_kwh, 0)} kWh/an ; production nette {format_num(item.production_annuelle_kwh, 0)} kWh/an ; couverture {format_num(item.taux_couverture_pct, 1)} %",
                 f"Distribution : {item.distribution_label}, limite onduleur {format_kw(item.limite_distribution_va)} kVA",
@@ -1035,6 +1062,7 @@ class SolarOptimizerApp:
                 f"- Uoc froid = {format_num(item.uoc_froid_v, 1)} V <= tension DC max onduleur {format_num(item.inverter.tension_dc_max_v, 1)} V",
                 f"- Umpp chaud = {format_num(item.umpp_chaud_v, 1)} V >= MPPT min {format_num(item.inverter.mppt_min_v, 1)} V",
                 f"- Umpp froid = {format_num(item.umpp_froid_v, 1)} V <= MPPT max {format_num(item.inverter.mppt_max_v, 1)} V",
+                f"- Repere rated input : Umpp STC {format_num(item.umpp_stc_v, 1)} V vs nominal {format_num(item.inverter.tension_dc_nominale_v, 1)} V = {format_signed_num(item.ecart_umpp_nominal_pct, 1)} %" if item.inverter.tension_dc_nominale_v > 0 else "- Repere rated input : non renseigne, non bloquant",
                 f"- Impp par MPPT = {format_num(item.impp_mppt_a, 1)} A <= courant max {format_num(item.inverter.courant_max_mppt_a, 1)} A",
                 f"- Isc par MPPT = {format_num(item.isc_mppt_a, 1)} A <= Isc max {format_num(item.inverter.isc_max_mppt_a, 1)} A",
                 f"- Puissance PV = {format_num(item.puissance_dc_w, 0)} W <= puissance PV max {format_num(item.inverter.puissance_pv_max_w, 0)} W",
@@ -1119,6 +1147,9 @@ class SolarOptimizerApp:
                     "limite_rgie_uoc_froid_v",
                     "umpp_chaud_v",
                     "umpp_froid_v",
+                    "umpp_stc_v",
+                    "tension_dc_nominale_onduleur_v",
+                    "ecart_umpp_nominal_pct",
                     "impp_mppt_a",
                     "isc_mppt_a",
                 ]
@@ -1177,6 +1208,9 @@ class SolarOptimizerApp:
                         round(RGIE_UOC_FROID_MAX_V, 0),
                         round(item.umpp_chaud_v, 2),
                         round(item.umpp_froid_v, 2),
+                        round(item.umpp_stc_v, 2),
+                        round(item.inverter.tension_dc_nominale_v, 2),
+                        round(item.ecart_umpp_nominal_pct, 3) if item.inverter.tension_dc_nominale_v > 0 else "",
                         round(item.impp_mppt_a, 2),
                         round(item.isc_mppt_a, 2),
                     ]

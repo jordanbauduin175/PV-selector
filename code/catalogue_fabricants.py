@@ -8,7 +8,7 @@ from pathlib import Path
 from urllib.parse import quote_plus
 
 
-APP_VERSION = "0.20"
+APP_VERSION = "0.21"
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 INPUT_DIR = PROJECT_ROOT / "input"
 OUTPUT_DIR = PROJECT_ROOT / "output"
@@ -32,6 +32,7 @@ INVERTERS_HEADER = [
     "puissance_ac_w",
     "puissance_pv_max_w",
     "tension_dc_max_v",
+    "tension_dc_nominale_v",
     "mppt_min_v",
     "mppt_max_v",
     "courant_max_mppt_a",
@@ -76,15 +77,19 @@ def parse_int(value: str | float | int) -> int:
     return int(round(parse_float(value)))
 
 
+OPTIONAL_NUMERIC_FIELDS = {"tension_dc_nominale_v"}
+
 def normalize_entry(entry: dict, header: list[str], numeric_ints: set[str] | None = None) -> dict:
     numeric_ints = numeric_ints or set()
     normalized: dict = {}
     for key in header:
-        value = entry[key]
+        value = entry.get(key, "")
         if key in {"reference", "fabricant", "phase"}:
             normalized[key] = str(value).strip()
         elif key in numeric_ints:
             normalized[key] = parse_int(value)
+        elif key in OPTIONAL_NUMERIC_FIELDS and str(value).strip() == "":
+            normalized[key] = 0.0
         else:
             normalized[key] = parse_float(value)
     normalized["source_url"] = str(entry.get("source_url", "")).strip()
@@ -111,7 +116,7 @@ def read_csv_rows(path: Path) -> list[dict]:
 def write_csv_rows(path: Path, header: list[str], rows: list[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=header)
+        writer = csv.DictWriter(handle, fieldnames=header, lineterminator="\n")
         writer.writeheader()
         for row in rows:
             writer.writerow({key: row.get(key, "") for key in header})
@@ -260,7 +265,7 @@ def add_common(parser: argparse.ArgumentParser) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Catalogue fabricants PV v0.19")
+    parser = argparse.ArgumentParser(description="Catalogue fabricants PV v0.21")
     sub = parser.add_subparsers(dest="command", required=True)
 
     p = sub.add_parser("summary")
@@ -311,7 +316,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("add-panel")
     add_common(p)
     for field in PANELS_HEADER:
-        p.add_argument(f"--{field.replace('_', '-')}", required=True)
+        p.add_argument(f"--{field.replace('_', '-')}", required=field not in OPTIONAL_NUMERIC_FIELDS)
     p.add_argument("--source-url", default="")
     p.add_argument("--source-type", default="manual")
     p.add_argument("--last-verified", default=today())
@@ -321,7 +326,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("add-inverter")
     add_common(p)
     for field in INVERTERS_HEADER:
-        p.add_argument(f"--{field.replace('_', '-')}", required=True)
+        p.add_argument(f"--{field.replace('_', '-')}", required=field not in OPTIONAL_NUMERIC_FIELDS)
     p.add_argument("--source-url", default="")
     p.add_argument("--source-type", default="manual")
     p.add_argument("--last-verified", default=today())

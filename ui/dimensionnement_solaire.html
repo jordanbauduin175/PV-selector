@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Dimensionnement solaire v0.20</title>
+  <title>Dimensionnement solaire v0.21</title>
   <style>
     :root {
       --bg: #f6f7f4;
@@ -681,7 +681,7 @@
   <div class="app">
     <header>
       <div>
-        <h1>Dimensionnement solaire <span class="version-badge">v0.20</span></h1>
+        <h1>Dimensionnement solaire <span class="version-badge">v0.21</span></h1>
         <div class="subtitle">Selection panneaux / onduleurs avec controles Uoc, Isc, Umpp et plages MPPT</div>
       </div>
       <div class="toolbar">
@@ -811,7 +811,7 @@
         </div>
         <div class="aside-actions">
           <button class="button primary" id="sideCalculateBtn" type="button">Calculer</button>
-          <button class="button" id="resetCatalogsBtn" type="button">Restaurer catalogue v0.20</button>
+          <button class="button" id="resetCatalogsBtn" type="button">Restaurer catalogue v0.21</button>
         </div>
       </aside>
 
@@ -850,6 +850,7 @@
                   <th>Pertes</th>
                   <th>Uoc froid</th>
                   <th>Umpp chaud/froid</th>
+                  <th>Ecart rated</th>
                   <th>Isc/MPPT</th>
                 </tr>
               </thead>
@@ -922,20 +923,20 @@ TSM-445NEG9R.25,Trina Solar,445.0,1.134,1.762,52.6,10.71,44.3,10.05,-0.24
 TSM-450NEG9R.25,Trina Solar,450.0,1.134,1.762,52.9,10.74,44.6,10.09,-0.24
 JKM435N-54HL4R-B,jinko,435.0,1.134,1.762,39.36,13.72,32.78,13.27,-0.25`;
 
-    const DEFAULT_INVERTERS_CSV = `reference,fabricant,puissance_ac_w,puissance_pv_max_w,tension_dc_max_v,mppt_min_v,mppt_max_v,courant_max_mppt_a,isc_max_mppt_a,nombre_mppt,strings_max_par_mppt,phase
-INV-10K-TRI,Exemple,10000.0,15000.0,1000.0,180.0,850.0,26.0,32.0,2,2,tri
-INV-20K-TRI,Exemple,20000.0,30000.0,1100.0,200.0,1000.0,30.0,40.0,3,2,tri
-INV-3K-MONO,Exemple,3000.0,4500.0,600.0,80.0,550.0,16.0,20.0,2,1,mono
-INV-5K-MONO,Exemple,5000.0,7500.0,600.0,120.0,550.0,16.0,20.0,2,1,mono
-SYMO-GEN24-10.0,Fronius,10000.0,15000.0,1000.0,278.0,800.0,12.5,20.0,2,1,tri
-SUN2000-10K-MAP0,Huawei FusionSolar,10000.0,18000.0,1100.0,160.0,1000.0,16.0,22.0,2,1,tri
-SUN2000-10KTL-M1,Huawei FusionSolar,10000.0,15000.0,1100.0,140.0,980.0,13.5,19.5,2,1,tri
-SUN2000-12K-MAP0,Huawei FusionSolar,12000.0,22000.0,1100.0,160.0,1000.0,16.0,22.0,2,1,tri
-SUN2000-5K-MAP0,Huawei FusionSolar,5000.0,9000.0,1100.0,160.0,1000.0,16.0,22.0,2,1,tri
-SUN2000-5KTL-M1,Huawei FusionSolar,5000.0,7500.0,1100.0,140.0,980.0,13.5,19.5,2,1,tri
-SUN2000-6K-MAP0,Huawei FusionSolar,6000.0,11000.0,1100.0,160.0,1000.0,16.0,22.0,2,1,tri
-SUN2000-8K-MAP0,Huawei FusionSolar,8000.0,14600.0,1100.0,160.0,1000.0,16.0,22.0,2,1,tri
-SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,175.0,500.0,15.0,20.0,2,2,mono`;
+    const DEFAULT_INVERTERS_CSV = `reference,fabricant,puissance_ac_w,puissance_pv_max_w,tension_dc_max_v,tension_dc_nominale_v,mppt_min_v,mppt_max_v,courant_max_mppt_a,isc_max_mppt_a,nombre_mppt,strings_max_par_mppt,phase
+INV-10K-TRI,Exemple,10000.0,15000.0,1000.0,0.0,180.0,850.0,26.0,32.0,2,2,tri
+INV-20K-TRI,Exemple,20000.0,30000.0,1100.0,0.0,200.0,1000.0,30.0,40.0,3,2,tri
+INV-3K-MONO,Exemple,3000.0,4500.0,600.0,0.0,80.0,550.0,16.0,20.0,2,1,mono
+INV-5K-MONO,Exemple,5000.0,7500.0,600.0,0.0,120.0,550.0,16.0,20.0,2,1,mono
+SYMO-GEN24-10.0,Fronius,10000.0,15000.0,1000.0,0.0,278.0,800.0,12.5,20.0,2,1,tri
+SUN2000-10K-MAP0,Huawei FusionSolar,10000.0,18000.0,1100.0,600.0,160.0,1000.0,16.0,22.0,2,1,tri
+SUN2000-10KTL-M1,Huawei FusionSolar,10000.0,15000.0,1100.0,0.0,140.0,980.0,13.5,19.5,2,1,tri
+SUN2000-12K-MAP0,Huawei FusionSolar,12000.0,22000.0,1100.0,600.0,160.0,1000.0,16.0,22.0,2,1,tri
+SUN2000-5K-MAP0,Huawei FusionSolar,5000.0,9000.0,1100.0,600.0,160.0,1000.0,16.0,22.0,2,1,tri
+SUN2000-5KTL-M1,Huawei FusionSolar,5000.0,7500.0,1100.0,0.0,140.0,980.0,13.5,19.5,2,1,tri
+SUN2000-6K-MAP0,Huawei FusionSolar,6000.0,11000.0,1100.0,600.0,160.0,1000.0,16.0,22.0,2,1,tri
+SUN2000-8K-MAP0,Huawei FusionSolar,8000.0,14600.0,1100.0,600.0,160.0,1000.0,16.0,22.0,2,1,tri
+SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
 
     const fields = {
       occupation: document.querySelector("#occupationInput"),
@@ -990,6 +991,13 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,175.0,500.0,15.0,20.0,2,2,mono`;
       return parsed;
     }
 
+    function parseOptionalNumber(value) {
+      if (value === undefined || value === null || String(value).trim() === "") {
+        return 0;
+      }
+      return parseNumber(value);
+    }
+
     function parseCsv(text) {
       const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
       if (lines.length < 2) {
@@ -1027,6 +1035,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,175.0,500.0,15.0,20.0,2,2,mono`;
         puissanceAcW: parseNumber(row.puissance_ac_w),
         puissancePvMaxW: parseNumber(row.puissance_pv_max_w),
         tensionDcMaxV: parseNumber(row.tension_dc_max_v),
+        tensionDcNominaleV: parseOptionalNumber(row.tension_dc_nominale_v),
         mpptMinV: parseNumber(row.mppt_min_v),
         mpptMaxV: parseNumber(row.mppt_max_v),
         courantMaxMpptA: parseNumber(row.courant_max_mppt_a),
@@ -1538,6 +1547,10 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,175.0,500.0,15.0,20.0,2,2,mono`;
                 rejected.umppMax += maxStrings;
                 continue;
               }
+              const umppStc = panel.umppV * modulesParString;
+              const ecartUmppNominalPct = inverter.tensionDcNominaleV > 0
+                ? (umppStc - inverter.tensionDcNominaleV) / inverter.tensionDcNominaleV * 100
+                : 0;
 
               for (let nombreStrings = 1; nombreStrings <= maxStrings; nombreStrings += 1) {
                 const totalModules = modulesParString * nombreStrings;
@@ -1638,6 +1651,8 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,175.0,500.0,15.0,20.0,2,2,mono`;
                   orientationFactor: roofAllocation.orientationFactor,
                   slopeFactor: roofAllocation.slopeFactor,
                   ratioDcAc: puissanceAcTotalW ? puissanceDc / puissanceAcTotalW : 0,
+                  umppStcV: umppStc,
+                  ecartUmppNominalPct,
                   uocFroidV: uocFroid,
                   umppChaudV: umppChaud,
                   umppFroidV: umppFroid,
@@ -1682,6 +1697,21 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,175.0,500.0,15.0,20.0,2,2,mono`;
 
     function kwh(value) {
       return `${Math.round(value).toLocaleString("fr-BE")} kWh`;
+    }
+
+    function signedPct(value) {
+      return `${value >= 0 ? "+" : ""}${n(value, 1)} %`;
+    }
+
+    function nominalDeviationLabel(item) {
+      return item.inverter.tensionDcNominaleV > 0 ? signedPct(item.ecartUmppNominalPct) : "-";
+    }
+
+    function nominalDeviationDetail(item) {
+      if (item.inverter.tensionDcNominaleV <= 0) {
+        return "Non renseigne pour cet onduleur";
+      }
+      return `${n(item.umppStcV, 1)} V STC vs ${n(item.inverter.tensionDcNominaleV, 0)} V (${signedPct(item.ecartUmppNominalPct)})`;
     }
 
     function n(value, decimals = 1) {
@@ -1759,7 +1789,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,175.0,500.0,15.0,20.0,2,2,mono`;
       document.querySelector("#statusText").textContent = `${state.results.length} configurations valides, filtre: ${panelFilter} / ${inverterFilter}`;
 
       if (state.results.length === 0) {
-        body.innerHTML = `<tr><td colspan="15" class="empty">Aucune configuration valide.</td></tr>`;
+        body.innerHTML = `<tr><td colspan="16" class="empty">Aucune configuration valide.</td></tr>`;
         setMetrics(null);
         return;
       }
@@ -1783,6 +1813,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,175.0,500.0,15.0,20.0,2,2,mono`;
           <td>${n(item.totalLossPct, 2)} %</td>
           <td>${n(item.uocFroidV, 0)} V</td>
           <td>${n(item.umppChaudV, 0)} / ${n(item.umppFroidV, 0)} V</td>
+          <td>${nominalDeviationLabel(item)}</td>
           <td>${n(item.iscMpptA, 1)} A</td>
         `;
         row.addEventListener("click", () => {
@@ -1874,6 +1905,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,175.0,500.0,15.0,20.0,2,2,mono`;
           <div class="kv"><span>Repartition MPPT</span><strong>${item.repartition.join(" / ")}</strong></div>
           <div class="kv"><span>Affectation MPPT</span><strong>${item.mpptAssignmentLabel} (${item.mpptMode})</strong></div>
           <div class="kv"><span>Puissance</span><strong>${kwc(item.puissanceDcW)} DC ; ${kw(item.puissanceAcTotalW)} AC total</strong></div>
+          <div class="kv"><span>Rated input</span><strong>${nominalDeviationDetail(item)}</strong></div>
           <div class="kv"><span>Surface</span><strong>${n(item.surfaceM2, 2)} m2 (${n(item.surfaceUtiliseePct, 1)} % utile)</strong></div>
         </div>
         <div class="detail-block">
@@ -1907,6 +1939,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,175.0,500.0,15.0,20.0,2,2,mono`;
             ${checkLine(`Uoc froid = ${n(item.uocFroidV, 1)} V <= tension DC max ${n(item.inverter.tensionDcMaxV, 1)} V`)}
             ${checkLine(`Umpp chaud = ${n(item.umppChaudV, 1)} V >= MPPT min ${n(item.inverter.mpptMinV, 1)} V`)}
             ${checkLine(`Umpp froid = ${n(item.umppFroidV, 1)} V <= MPPT max ${n(item.inverter.mpptMaxV, 1)} V`)}
+            ${checkLine(item.inverter.tensionDcNominaleV > 0 ? `Repere rated input : Umpp STC ${n(item.umppStcV, 1)} V vs ${n(item.inverter.tensionDcNominaleV, 0)} V = ${signedPct(item.ecartUmppNominalPct)}` : "Repere rated input : non renseigne, non bloquant")}
             ${checkLine(`Impp par MPPT = ${n(item.imppMpptA, 1)} A <= courant max ${n(item.inverter.courantMaxMpptA, 1)} A`)}
             ${checkLine(`Isc par MPPT = ${n(item.iscMpptA, 1)} A <= Isc max ${n(item.inverter.iscMaxMpptA, 1)} A`)}
             ${checkLine(`Puissance PV = ${n(item.puissanceDcW, 0)} W <= PV max total ${n(item.puissancePvMaxTotalW, 0)} W`)}
@@ -2005,6 +2038,9 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,175.0,500.0,15.0,20.0,2,2,mono`;
         "limite_rgie_uoc_froid_v",
         "umpp_chaud_v",
         "umpp_froid_v",
+        "umpp_stc_v",
+        "tension_dc_nominale_onduleur_v",
+        "ecart_umpp_nominal_pct",
         "impp_mppt_a",
         "isc_mppt_a"
       ];
@@ -2068,6 +2104,9 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,175.0,500.0,15.0,20.0,2,2,mono`;
         n(RGIE_UOC_FROID_MAX_V, 0),
         n(item.umppChaudV, 2),
         n(item.umppFroidV, 2),
+        n(item.umppStcV, 2),
+        item.inverter.tensionDcNominaleV > 0 ? n(item.inverter.tensionDcNominaleV, 2) : "",
+        item.inverter.tensionDcNominaleV > 0 ? n(item.ecartUmppNominalPct, 3) : "",
         n(item.imppMpptA, 2),
         n(item.iscMpptA, 2)
       ]);
@@ -2115,7 +2154,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,175.0,500.0,15.0,20.0,2,2,mono`;
       const lines = [
         "# Note de calcul - meilleur choix solaire",
         "",
-        `Version application : v0.20`,
+        `Version application : v0.21`,
         `Date export : ${new Date().toLocaleString("fr-BE")}`,
         "",
         "## 1. Donnees d'entree",
@@ -2141,6 +2180,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,175.0,500.0,15.0,20.0,2,2,mono`;
         `- Puissance AC unitaire / totale : ${n(item.inverter.puissanceAcW, 0)} W / ${n(item.puissanceAcTotalW, 0)} W`,
         `- PV max unitaire / total : ${n(item.inverter.puissancePvMaxW, 0)} W / ${n(item.puissancePvMaxTotalW, 0)} W`,
         `- Plage MPPT : ${n(item.inverter.mpptMinV, 0)} a ${n(item.inverter.mpptMaxV, 0)} V`,
+        item.inverter.tensionDcNominaleV > 0 ? `- Tension DC nominale rated input : ${n(item.inverter.tensionDcNominaleV, 0)} V` : "- Tension DC nominale rated input : non renseignee",
         `- Courant max MPPT / Isc max MPPT : ${n(item.inverter.courantMaxMpptA, 2)} A / ${n(item.inverter.iscMaxMpptA, 2)} A`,
         "",
         "## 3. Construction de la configuration",
@@ -2164,6 +2204,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,175.0,500.0,15.0,20.0,2,2,mono`;
         `- Validation RGIE : ${n(item.uocFroidV, 2)} V <= ${n(RGIE_UOC_FROID_MAX_V, 0)} V DC`,
         `- Validation onduleur : ${n(item.uocFroidV, 2)} V <= ${n(item.inverter.tensionDcMaxV, 0)} V DC max`,
         `- Umpp string STC : ${n(item.panel.umppV, 2)} x ${item.modulesParString} = ${n(umppStringStc, 2)} V`,
+        item.inverter.tensionDcNominaleV > 0 ? `- Ecart au rated input : (${n(umppStringStc, 2)} - ${n(item.inverter.tensionDcNominaleV, 0)}) / ${n(item.inverter.tensionDcNominaleV, 0)} x 100 = ${signedPct(item.ecartUmppNominalPct)}` : "- Ecart au rated input : non calcule, tension nominale onduleur absente",
         `- Umpp chaud : ${n(umppStringStc, 2)} x ${n(factorHot, 4)} = ${n(item.umppChaudV, 2)} V >= MPPT min ${n(item.inverter.mpptMinV, 0)} V`,
         `- Umpp froid : ${n(umppStringStc, 2)} x ${n(factorCold, 4)} = ${n(item.umppFroidV, 2)} V <= MPPT max ${n(item.inverter.mpptMaxV, 0)} V`,
         `- Impp par MPPT : max(${item.repartition.join(" / ")}) x ${n(item.panel.imppA, 2)} = ${n(item.imppMpptA, 2)} A <= ${n(item.inverter.courantMaxMpptA, 2)} A`,
