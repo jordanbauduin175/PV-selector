@@ -4,7 +4,7 @@ Prototype local de dimensionnement photovoltaique.
 
 ## Structure du projet
 
-- `backend/` : serveur web deployable sur Railway.
+- `backend/` : serveur web deployable sur Railway via Docker.
 - `ui/` : interface navigateur HTML.
 - `code/` : scripts Python et modules d'import.
 - `input/` : catalogues CSV, base fabricant et datasheets sources.
@@ -40,6 +40,6 @@ python backend/server.py
 - export CSV et note de calcul ;
 - import local de datasheets fabricants.
 
-Deploiement Railway : `docs/RAILWAY_DEPLOY.md`.
+Deploiement Railway : `Dockerfile`, `railway.toml` et `docs/RAILWAY_DEPLOY.md`.
 
 Les notes detaillees sont dans `docs/README_dimensionnement_solaire.md`.

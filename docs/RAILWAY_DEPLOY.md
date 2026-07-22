@@ -1,10 +1,11 @@
 # Deploiement Railway
 
-Ce projet est pret pour Railway avec `railway.toml` a la racine.
+Ce projet est pret pour Railway avec `railway.toml` et `Dockerfile` a la racine.
 
 ## Fonctionnement
 
-- Railway lance `python backend/server.py`.
+- Railway construit le service avec le `Dockerfile`.
+- Le conteneur lance `python backend/server.py`.
 - Le backend ecoute le port fourni par la variable `PORT`.
 - `/health` repond `200` pour les healthchecks Railway.
 - `/` sert l'interface `ui/dimensionnement_solaire.html`.
@@ -20,7 +21,8 @@ Ce projet est pret pour Railway avec `railway.toml` a la racine.
 3. Selectionner `jordanbauduin175/PV-selector`.
 4. Garder la branche `main`.
 5. Verifier que le service utilise le fichier `railway.toml` a la racine.
-6. Activer le domaine public Railway si necessaire.
+6. Si Railway affiche encore Railpack, verifier que le commit contenant `Dockerfile` et `builder = "DOCKERFILE"` est bien pousse sur GitHub.
+7. Activer le domaine public Railway si necessaire.
 
 Une fois le service Railway lie au repo GitHub, chaque `git push` sur `main` redeploie automatiquement le backend.
 
