@@ -32,6 +32,13 @@ DEFAULT_HTML = UI_DIR / "dimensionnement_solaire.html"
 
 
 @dataclass
+class LoadedDatasheet:
+    text: str
+    extractor: str
+    tables: list[list[list[str]]]
+
+
+@dataclass
 class ParsedDatasheet:
     path: Path
     kind: str
@@ -46,12 +53,50 @@ class ParsedDatasheet:
         return not self.missing_fields and self.status == "ready"
 
 
+NUMBER_TOKEN_PATTERN = r"-?\d(?:[\d\s.,]*\d)?"
+
+
 def decimal(value: str | int | float | None) -> float | None:
     if value is None:
         return None
-    text = str(value).strip().replace(",", ".")
-    match = re.search(r"-?\d+(?:\.\d+)?", text)
-    return float(match.group(0)) if match else None
+    match = re.search(NUMBER_TOKEN_PATTERN, str(value).strip())
+    if not match:
+        return None
+    number = re.sub(r"\s+", "", match.group(0))
+    if not number:
+        return None
+
+    sign = ""
+    if number.startswith("-"):
+        sign = "-"
+        number = number[1:]
+
+    if "," in number and "." in number:
+        last_comma = number.rfind(",")
+        last_dot = number.rfind(".")
+        decimal_sep = "," if last_comma > last_dot else "."
+        integer_part, decimal_part = number.rsplit(decimal_sep, 1)
+        integer_part = re.sub(r"[.,]", "", integer_part)
+        normalized = f"{sign}{integer_part}.{decimal_part}"
+    elif "," in number:
+        parts = number.split(",")
+        if len(parts) > 2 or (len(parts) == 2 and len(parts[1]) == 3 and len(parts[0]) <= 3):
+            normalized = sign + "".join(parts)
+        else:
+            normalized = sign + ".".join(parts)
+    elif "." in number:
+        parts = number.split(".")
+        if len(parts) > 2 or (len(parts) == 2 and len(parts[1]) == 3 and len(parts[0]) <= 3):
+            normalized = sign + "".join(parts)
+        else:
+            normalized = sign + number
+    else:
+        normalized = sign + number
+
+    try:
+        return float(normalized)
+    except ValueError:
+        return None
 
 
 def clean_spaces(text: str) -> str:
@@ -68,7 +113,7 @@ def clean_spaces(text: str) -> str:
     return re.sub(r"\s+", " ", text)
 
 
-def load_text(path: Path) -> tuple[str, str]:
+def load_document(path: Path) -> LoadedDatasheet:
     suffix = path.suffix.lower()
     if suffix == ".pdf":
         try:
@@ -76,8 +121,9 @@ def load_text(path: Path) -> tuple[str, str]:
 
             with pdfplumber.open(path) as pdf:
                 text = "\n".join(page.extract_text() or "" for page in pdf.pages)
+                tables = [table for page in pdf.pages for table in (page.extract_tables() or []) if table]
             if text.strip():
-                return text, "pdfplumber"
+                return LoadedDatasheet(text, "pdfplumber", tables)
         except Exception:
             pass
         try:
@@ -85,10 +131,15 @@ def load_text(path: Path) -> tuple[str, str]:
 
             reader = PdfReader(str(path))
             text = "\n".join(page.extract_text() or "" for page in reader.pages)
-            return text, "pypdf"
+            return LoadedDatasheet(text, "pypdf", [])
         except Exception as exc:
             raise RuntimeError(f"PDF illisible: {exc}") from exc
-    return path.read_text(encoding="utf-8", errors="ignore"), "text"
+    return LoadedDatasheet(path.read_text(encoding="utf-8", errors="ignore"), "text", [])
+
+
+def load_text(path: Path) -> tuple[str, str]:
+    loaded = load_document(path)
+    return loaded.text, loaded.extractor
 
 
 def scan_datasheets(directory: Path) -> list[Path]:
@@ -116,6 +167,11 @@ def detect_manufacturer(text: str, path: Path, manufacturers: Iterable[str]) -> 
     for manufacturer in manufacturers:
         if manufacturer.lower() in haystack:
             return manufacturer
+    if "sun2000" in haystack or "huawei" in haystack:
+        for manufacturer in manufacturers:
+            if "huawei" in manufacturer.lower():
+                return manufacturer
+        return "Huawei FusionSolar"
     stem = re.sub(r"[_-]+", " ", path.stem).strip()
     first_words = " ".join(stem.split()[:2]).strip()
     return first_words or "A verifier"
@@ -160,7 +216,7 @@ def values_near_labels(
     compact = clean_spaces(text)
     label_group = "|".join(f"(?:{label})" for label in labels)
     unit_pattern = rf"\s*(?:{units})\b" if units else ""
-    pattern = rf"(?i)(?:{label_group}).{{0,{max_chars}}}?(-?\d+(?:[.,]\d+)?)\s*{unit_pattern}"
+    pattern = rf"(?i)(?:{label_group}).{{0,{max_chars}}}?({NUMBER_TOKEN_PATTERN})\s*{unit_pattern}"
     values = []
     for match in re.finditer(pattern, compact):
         value = decimal(match.group(1))
@@ -182,14 +238,14 @@ def max_value(text: str, labels: list[str], units: str = "", max_chars: int = 12
 def find_power(text: str, labels: list[str], max_chars: int = 140, prefer: str = "max") -> float | None:
     compact = clean_spaces(text)
     label_group = "|".join(f"(?:{label})" for label in labels)
-    pattern = rf"(?i)(?:{label_group}).{{0,{max_chars}}}?(-?\d+(?:[.,]\d+)?)\s*(kW|W|kVA|VA)\b"
+    pattern = rf"(?i)(?:{label_group}).{{0,{max_chars}}}?({NUMBER_TOKEN_PATTERN})\s*(kWp|Wp|kW|W|kVA|VA)\b"
     values: list[float] = []
     for number, unit in re.findall(pattern, compact):
         value = decimal(number)
         if value is None:
             continue
         unit = unit.lower()
-        if unit in {"kw", "kva"}:
+        if unit in {"kw", "kva", "kwp"}:
             value *= 1000
         values.append(value)
     if not values:
@@ -200,7 +256,7 @@ def find_power(text: str, labels: list[str], max_chars: int = 140, prefer: str =
 def find_range(text: str, labels: list[str], unit: str = "V", max_chars: int = 160) -> tuple[float, float] | None:
     compact = clean_spaces(text)
     label_group = "|".join(f"(?:{label})" for label in labels)
-    pattern = rf"(?i)(?:{label_group}).{{0,{max_chars}}}?(\d+(?:[.,]\d+)?)\s*(?:-|to|a)\s*(\d+(?:[.,]\d+)?)\s*{unit}\b"
+    pattern = rf"(?i)(?:{label_group}).{{0,{max_chars}}}?({NUMBER_TOKEN_PATTERN})\s*(?:{unit})?\s*(?:-|~|to|a)\s*({NUMBER_TOKEN_PATTERN})\s*{unit}\b"
     match = re.search(pattern, compact)
     if not match:
         return None
@@ -298,6 +354,303 @@ def detect_phase(text: str) -> str | None:
         return "mono"
     return None
 
+def prefer_huawei_manufacturer(manufacturer: str, text: str) -> str:
+    haystack = text.lower()
+    if "sun2000" in haystack or "huawei" in haystack:
+        return "Huawei FusionSolar"
+    return manufacturer
+
+
+def clean_cell(value: object) -> str:
+    return clean_spaces(str(value or "")).strip()
+
+
+def normalize_huawei_reference(value: str) -> str | None:
+    compact = re.sub(r"\s+", "", clean_spaces(value).upper())
+    match = re.search(r"SUN2000-?\d+(?:[.,]\d+)?K(?:TL)?-[A-Z]{1,6}\d{1,3}", compact)
+    if not match:
+        return None
+    return match.group(0).replace(",", ".")
+
+
+def huawei_family_references(text: str) -> list[str]:
+    compact = re.sub(r"\s+", "", clean_spaces(text).upper())
+    refs: list[str] = []
+    family_pattern = r"SUN2000-(\d+(?:[.,]\d+)?(?:/\d+(?:[.,]\d+)?)*)K(TL)?-([A-Z]{1,6}\d{1,3})"
+    for match in re.finditer(family_pattern, compact):
+        suffix = match.group(3)
+        tl = match.group(2) or ""
+        for rating in match.group(1).split("/"):
+            refs.append(f"SUN2000-{rating.replace(',', '.')}K{tl}-{suffix}")
+    for match in re.finditer(r"SUN2000-?\d+(?:[.,]\d+)?K(?:TL)?-[A-Z]{1,6}\d{1,3}", compact):
+        refs.append(match.group(0).replace(",", "."))
+
+    unique: dict[str, str] = {}
+    for ref in refs:
+        unique.setdefault(ref, ref)
+    return list(unique.values())
+
+
+def parse_power_cell(value: str) -> float | None:
+    match = re.search(rf"({NUMBER_TOKEN_PATTERN})\s*(kWp|Wp|kW|W|kVA|VA)\b", value, flags=re.IGNORECASE)
+    if not match:
+        return decimal(value)
+    parsed = decimal(match.group(1))
+    if parsed is None:
+        return None
+    unit = match.group(2).lower()
+    if unit in {"kw", "kva", "kwp"}:
+        parsed *= 1000
+    return parsed
+
+
+def parse_range_cell(value: str) -> tuple[float, float] | None:
+    numbers = [decimal(match.group(0)) for match in re.finditer(NUMBER_TOKEN_PATTERN, value)]
+    numbers = [number for number in numbers if number is not None]
+    if len(numbers) < 2:
+        return None
+    return (min(numbers[0], numbers[1]), max(numbers[0], numbers[1]))
+
+
+def parse_int_cell(value: str) -> int | None:
+    parsed = decimal(value)
+    if parsed is None:
+        return None
+    return max(1, round(parsed))
+
+
+def huawei_base_entry(reference: str, manufacturer: str, path: Path, source_type: str) -> dict:
+    return {
+        "reference": reference,
+        "fabricant": prefer_huawei_manufacturer(manufacturer, reference),
+        "puissance_ac_w": None,
+        "puissance_pv_max_w": None,
+        "tension_dc_max_v": None,
+        "mppt_min_v": None,
+        "mppt_max_v": None,
+        "courant_max_mppt_a": None,
+        "isc_max_mppt_a": None,
+        "nombre_mppt": None,
+        "strings_max_par_mppt": None,
+        "phase": None,
+        "source_url": path.resolve().as_uri(),
+        "source_type": source_type,
+        "last_verified": today(),
+        "notes": "Import automatique datasheet tableau Huawei SUN2000; verification technique recommandee.",
+    }
+
+
+def huawei_table_model_columns(rows: list[list[str]]) -> tuple[int, list[tuple[int, str]]]:
+    for row_index, row in enumerate(rows[:12]):
+        columns: list[tuple[int, str]] = []
+        for column_index, cell in enumerate(row):
+            ref = normalize_huawei_reference(cell)
+            if ref:
+                columns.append((column_index, ref))
+        if len(columns) >= 2:
+            return row_index, columns
+    return -1, []
+
+
+def huawei_section(row: list[str], current: str) -> str:
+    joined = " ".join(row).lower()
+    if "input" in joined and "pv" in joined and "battery" not in joined:
+        return "pv"
+    if "battery" in joined:
+        return "battery"
+    if "output" in joined and "on grid" in joined:
+        return "on_grid"
+    if "output" in joined and "off grid" in joined:
+        return "off_grid"
+    return current
+
+
+def huawei_row_label(row: list[str], model_columns: list[tuple[int, str]]) -> str:
+    model_indexes = {index for index, _ in model_columns}
+    for index, cell in enumerate(row):
+        if index in model_indexes or not cell or normalize_huawei_reference(cell):
+            continue
+        if re.search(r"[A-Za-z]", cell):
+            return cell
+    return ""
+
+
+def huawei_values_by_model(row: list[str], model_columns: list[tuple[int, str]]) -> dict[str, str]:
+    direct_values = []
+    for column_index, reference in model_columns:
+        value = row[column_index] if column_index < len(row) else ""
+        direct_values.append((reference, value))
+    non_empty_direct = [(reference, value) for reference, value in direct_values if value]
+    if len(non_empty_direct) == len(model_columns):
+        return dict(non_empty_direct)
+    if len(non_empty_direct) == 1:
+        shared = non_empty_direct[0][1]
+        return {reference: shared for _, reference in model_columns}
+
+    candidates = [cell for cell in row[1:] if cell and not normalize_huawei_reference(cell)]
+    if len(candidates) == len(model_columns):
+        return {reference: candidates[index] for index, (_, reference) in enumerate(model_columns)}
+    if len(candidates) == 1:
+        return {reference: candidates[0] for _, reference in model_columns}
+    return {reference: value for reference, value in direct_values if value}
+
+
+def set_huawei_numeric_field(
+    entries: dict[str, dict],
+    values: dict[str, str],
+    field: str,
+    parser,
+) -> None:
+    for reference, value in values.items():
+        parsed = parser(value)
+        if parsed is not None and entries[reference].get(field) in {None, ""}:
+            entries[reference][field] = parsed
+
+
+def set_huawei_range_field(entries: dict[str, dict], values: dict[str, str]) -> None:
+    for reference, value in values.items():
+        parsed = parse_range_cell(value)
+        if parsed is None:
+            continue
+        low, high = parsed
+        if entries[reference].get("mppt_min_v") in {None, ""}:
+            entries[reference]["mppt_min_v"] = low
+        if entries[reference].get("mppt_max_v") in {None, ""}:
+            entries[reference]["mppt_max_v"] = high
+
+
+def apply_huawei_row(entries: dict[str, dict], row: list[str], model_columns: list[tuple[int, str]], section: str) -> None:
+    label = huawei_row_label(row, model_columns).lower()
+    if not label:
+        return
+    values = huawei_values_by_model(row, model_columns)
+    if not values:
+        return
+
+    if section == "pv":
+        if "recommended" in label and "pv" in label and "power" in label:
+            set_huawei_numeric_field(entries, values, "puissance_pv_max_w", parse_power_cell)
+        elif "max" in label and "input voltage" in label:
+            set_huawei_numeric_field(entries, values, "tension_dc_max_v", decimal)
+        elif "operating voltage range" in label or "mpp voltage range" in label or "mppt voltage range" in label:
+            set_huawei_range_field(entries, values)
+        elif "max" in label and "input current" in label and ("mppt" in label or "mpp" in label):
+            set_huawei_numeric_field(entries, values, "courant_max_mppt_a", decimal)
+        elif "short-circuit" in label or "short circuit" in label or "isc" in label:
+            set_huawei_numeric_field(entries, values, "isc_max_mppt_a", decimal)
+        elif "number" in label and ("mpp" in label or "mppt" in label) and "tracker" in label:
+            set_huawei_numeric_field(entries, values, "nombre_mppt", parse_int_cell)
+        elif "input per" in label and ("mpp" in label or "mppt" in label):
+            set_huawei_numeric_field(entries, values, "strings_max_par_mppt", parse_int_cell)
+    elif section in {"on_grid", ""}:
+        if "rated output power" in label:
+            set_huawei_numeric_field(entries, values, "puissance_ac_w", parse_power_cell)
+        elif "grid connection" in label:
+            phase = detect_phase(" ".join(row))
+            if phase:
+                for entry in entries.values():
+                    entry["phase"] = phase
+
+
+def parse_huawei_tables(document: LoadedDatasheet, path: Path, manufacturer: str, source_type: str) -> dict[str, dict]:
+    entries: dict[str, dict] = {}
+    for table in document.tables:
+        rows = [[clean_cell(cell) for cell in row] for row in table if row]
+        header_index, model_columns = huawei_table_model_columns(rows)
+        if header_index < 0:
+            continue
+        for _, reference in model_columns:
+            entries.setdefault(reference, huawei_base_entry(reference, manufacturer, path, source_type))
+        section = ""
+        for row in rows[header_index + 1 :]:
+            next_section = huawei_section(row, section)
+            if next_section != section:
+                section = next_section
+                continue
+            apply_huawei_row(entries, row, model_columns, section)
+    return entries
+
+
+def huawei_values_from_line(line: str, references: list[str], parser) -> dict[str, str]:
+    if parser is parse_range_cell:
+        parsed = parse_range_cell(line)
+        if not parsed:
+            return {}
+        return {reference: line for reference in references}
+
+    if parser is parse_power_cell:
+        matches = [match.group(0) for match in re.finditer(rf"{NUMBER_TOKEN_PATTERN}\s*(?:kWp|Wp|kW|W|kVA|VA)\b", line, flags=re.IGNORECASE)]
+    else:
+        matches = [match.group(0) for match in re.finditer(NUMBER_TOKEN_PATTERN, line)]
+    if len(matches) >= len(references):
+        return {reference: matches[index] for index, reference in enumerate(references)}
+    if len(matches) == 1:
+        return {reference: matches[0] for reference in references}
+    return {}
+
+
+def apply_huawei_text_line(entries: dict[str, dict], line: str, references: list[str], section: str) -> None:
+    label = line.lower()
+    if section == "pv":
+        if "recommended" in label and "pv" in label and "power" in label:
+            set_huawei_numeric_field(entries, huawei_values_from_line(line, references, parse_power_cell), "puissance_pv_max_w", parse_power_cell)
+        elif "max" in label and "input voltage" in label:
+            set_huawei_numeric_field(entries, huawei_values_from_line(line, references, decimal), "tension_dc_max_v", decimal)
+        elif "operating voltage range" in label or "mpp voltage range" in label or "mppt voltage range" in label:
+            set_huawei_range_field(entries, huawei_values_from_line(line, references, parse_range_cell))
+        elif "max" in label and "input current" in label and ("mppt" in label or "mpp" in label):
+            set_huawei_numeric_field(entries, huawei_values_from_line(line, references, decimal), "courant_max_mppt_a", decimal)
+        elif "short-circuit" in label or "short circuit" in label or "isc" in label:
+            set_huawei_numeric_field(entries, huawei_values_from_line(line, references, decimal), "isc_max_mppt_a", decimal)
+        elif "number" in label and ("mpp" in label or "mppt" in label) and "tracker" in label:
+            set_huawei_numeric_field(entries, huawei_values_from_line(line, references, parse_int_cell), "nombre_mppt", parse_int_cell)
+        elif "input per" in label and ("mpp" in label or "mppt" in label):
+            set_huawei_numeric_field(entries, huawei_values_from_line(line, references, parse_int_cell), "strings_max_par_mppt", parse_int_cell)
+    elif section in {"on_grid", ""}:
+        if "rated output power" in label:
+            set_huawei_numeric_field(entries, huawei_values_from_line(line, references, parse_power_cell), "puissance_ac_w", parse_power_cell)
+        elif "grid connection" in label:
+            phase = detect_phase(line)
+            if phase:
+                for entry in entries.values():
+                    entry["phase"] = phase
+
+
+def parse_huawei_text(document: LoadedDatasheet, path: Path, manufacturer: str, source_type: str) -> dict[str, dict]:
+    references = huawei_family_references(document.text)
+    if len(references) < 2:
+        return {}
+    entries = {reference: huawei_base_entry(reference, manufacturer, path, source_type) for reference in references}
+    section = ""
+    for raw_line in document.text.splitlines():
+        line = clean_spaces(raw_line).strip()
+        if not line:
+            continue
+        next_section = huawei_section([line], section)
+        if next_section != section:
+            section = next_section
+            continue
+        apply_huawei_text_line(entries, line, references, section)
+    return entries
+
+
+def parse_huawei_multi_inverters(document: LoadedDatasheet, path: Path, manufacturer: str, source_type: str) -> list[dict]:
+    if "sun2000" not in document.text.lower():
+        return []
+    manufacturer = prefer_huawei_manufacturer(manufacturer, document.text)
+    entries = parse_huawei_tables(document, path, manufacturer, source_type)
+    text_entries = parse_huawei_text(document, path, manufacturer, source_type)
+    for reference, text_entry in text_entries.items():
+        entry = entries.setdefault(reference, huawei_base_entry(reference, manufacturer, path, source_type))
+        for field, value in text_entry.items():
+            if entry.get(field) in {None, ""} and value not in {None, ""}:
+                entry[field] = value
+    phase = detect_phase(document.text)
+    if phase:
+        for entry in entries.values():
+            if entry.get("phase") in {None, ""}:
+                entry["phase"] = phase
+    return [entry for entry in entries.values() if any(entry.get(field) not in {None, ""} for field in INVERTERS_HEADER[2:])]
 
 def parse_inverter(text: str, path: Path, manufacturer: str, source_type: str) -> dict:
     mppt_range = find_range(
@@ -430,23 +783,7 @@ def missing_fields(entry: dict, header: list[str]) -> list[str]:
     return sorted(set(missing), key=header.index)
 
 
-def parse_datasheet(path: Path, db: dict, forced_kind: str = "auto") -> ParsedDatasheet:
-    try:
-        text, extractor = load_text(path)
-    except Exception as exc:
-        return ParsedDatasheet(path, "unknown", {}, [], 0.0, "error", str(exc))
-
-    if not text.strip():
-        return ParsedDatasheet(path, "unknown", {}, [], 0.0, "error", "Aucun texte extractible.")
-
-    kind = detect_kind(text, path, forced_kind)
-    if kind == "unknown":
-        return ParsedDatasheet(path, kind, {}, [], 0.0, "skipped", "Type non detecte.")
-
-    source_type = "datasheet_pdf" if path.suffix.lower() == ".pdf" else "datasheet_text"
-    manufacturer = detect_manufacturer(text, path, known_manufacturers(db))
-    entry = parse_panel(text, path, manufacturer, source_type) if kind == "panel" else parse_inverter(text, path, manufacturer, source_type)
-    header = PANELS_HEADER if kind == "panel" else INVERTERS_HEADER
+def parsed_datasheet_item(path: Path, kind: str, entry: dict, header: list[str], extractor: str) -> ParsedDatasheet:
     missing = missing_fields(entry, header)
     confidence = round((len(header) - len(missing)) / len(header), 2)
     if missing:
@@ -454,6 +791,39 @@ def parse_datasheet(path: Path, db: dict, forced_kind: str = "auto") -> ParsedDa
         return ParsedDatasheet(path, kind, entry, missing, confidence, "review", message)
     entry["notes"] = f"{entry['notes']} Extracteur: {extractor}. Confiance: {confidence:.2f}."
     return ParsedDatasheet(path, kind, entry, [], confidence, "ready", "Pret pour import.")
+
+
+def parse_datasheets(path: Path, db: dict, forced_kind: str = "auto") -> list[ParsedDatasheet]:
+    try:
+        document = load_document(path)
+    except Exception as exc:
+        return [ParsedDatasheet(path, "unknown", {}, [], 0.0, "error", str(exc))]
+
+    text = document.text
+    if not text.strip():
+        return [ParsedDatasheet(path, "unknown", {}, [], 0.0, "error", "Aucun texte extractible.")]
+
+    kind = detect_kind(text, path, forced_kind)
+    if kind == "unknown":
+        return [ParsedDatasheet(path, kind, {}, [], 0.0, "skipped", "Type non detecte.")]
+
+    source_type = "datasheet_pdf" if path.suffix.lower() == ".pdf" else "datasheet_text"
+    manufacturer = detect_manufacturer(text, path, known_manufacturers(db))
+    header = PANELS_HEADER if kind == "panel" else INVERTERS_HEADER
+
+    if kind == "inverter":
+        entries = parse_huawei_multi_inverters(document, path, manufacturer, source_type)
+        if len(entries) >= 2:
+            return [parsed_datasheet_item(path, kind, entry, header, document.extractor) for entry in entries]
+        entry = parse_inverter(text, path, manufacturer, source_type)
+    else:
+        entry = parse_panel(text, path, manufacturer, source_type)
+
+    return [parsed_datasheet_item(path, kind, entry, header, document.extractor)]
+
+
+def parse_datasheet(path: Path, db: dict, forced_kind: str = "auto") -> ParsedDatasheet:
+    return parse_datasheets(path, db, forced_kind)[0]
 
 
 def sorted_rows(rows: list[dict]) -> list[dict]:
@@ -535,7 +905,7 @@ def import_directory(
 
     db = load_db(db_path)
     files = scan_datasheets(directory)
-    parsed_items = [parse_datasheet(path, db, kind) for path in files]
+    parsed_items = [item for path in files for item in parse_datasheets(path, db, kind)]
     ready_items = [item for item in parsed_items if item.complete]
 
     if not dry_run:

@@ -1,4 +1,4 @@
-﻿# Module catalogue fabricants v0.19
+# Module catalogue fabricants v0.19
 
 Ce module sert a rechercher localement, stocker et exporter les caracteristiques fabricants des panneaux et onduleurs. Il peut aussi importer des fiches techniques placees dans `input/datasheets`.
 
@@ -16,6 +16,8 @@ Ce module sert a rechercher localement, stocker et exporter les caracteristiques
 Le module ne valide pas une fiche technique sans source. Chaque entree peut garder la reference, le fabricant, les valeurs electriques utiles, l'URL ou le fichier source, la date de verification et des notes.
 
 Le module d'import datasheets reste conservateur : il importe seulement les fiches ou tous les champs requis sont retrouves. Les fiches incompletes sont listees dans `output/datasheet_import_report.csv`.
+
+Les fiches Huawei SUN2000 multi-modeles sont decoupees par colonne : une datasheet `SUN2000-5/6/8/10/12K-MAP0` produit une entree distincte par modele, avec les puissances, plages DC et courants repris dans la bonne colonne.
 
 ## Commandes utiles
 
