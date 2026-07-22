@@ -24,9 +24,8 @@ ui/dimensionnement_solaire.html
 ```powershell
 python code/catalogue_fabricants.py summary
 python code/datasheet_importer.py input/datasheets
-python backend/server.py --dry-run
-python code/datasheet_importer.py input/datasheets
 python backend/server.py
+Invoke-RestMethod http://localhost:8000/api/debug
 ```
 
 ## Fonctions principales
@@ -43,3 +42,12 @@ python backend/server.py
 Deploiement Railway : `Dockerfile`, `railway.toml` et `docs/RAILWAY_DEPLOY.md`.
 
 Les notes detaillees sont dans `docs/README_dimensionnement_solaire.md`.
+
+## Credits
+
+Auteur : Bauduin Jordan / Open-Elec
+Site : https://www.open-elec.be
+Support : info@open-elec.be
+Copyright (c) 2026 Bauduin Jordan / Open-Elec. Tous droits reserves.
+
+Changelog : `docs/CHANGELOG.md`.

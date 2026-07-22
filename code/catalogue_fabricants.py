@@ -8,7 +8,7 @@ from pathlib import Path
 from urllib.parse import quote_plus
 
 
-APP_VERSION = "0.21"
+APP_VERSION = "0.22"
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 INPUT_DIR = PROJECT_ROOT / "input"
 OUTPUT_DIR = PROJECT_ROOT / "output"
@@ -265,7 +265,7 @@ def add_common(parser: argparse.ArgumentParser) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Catalogue fabricants PV v0.21")
+    parser = argparse.ArgumentParser(description="Catalogue fabricants PV v0.22")
     sub = parser.add_subparsers(dest="command", required=True)
 
     p = sub.add_parser("summary")

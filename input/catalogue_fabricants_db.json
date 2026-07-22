@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.21",
+  "schema_version": "0.22",
   "updated_at": "2026-07-22",
   "manufacturers": [
     {
@@ -175,7 +175,7 @@
       "umpp_v": 44.6,
       "impp_a": 10.09,
       "coef_tension_pct_c": -0.24,
-      "source_url": "file:///home/runner/work/PV-selector/PV-selector/input/datasheets/240307_Datasheet_Vertex%20S%2B_NEG9R.25_EN_2024_PA_web.pdf",
+      "source_url": "file:///C:/Users/School/Documents/Codex/2026-06-08/ok-j-esuis-chef-de-projet/pv-selector-repo/input/datasheets/240307_Datasheet_Vertex%20S%2B_NEG9R.25_EN_2024_PA_web.pdf",
       "source_type": "datasheet_pdf",
       "last_verified": "2026-07-22",
       "notes": "Import automatique datasheet tableau Trina Vertex; valeurs STC par colonne, donnees mecaniques et coefficient Voc communs. Extracteur: pdfplumber. Confiance: 1.00."
@@ -239,7 +239,7 @@
       "umpp_v": 42.9,
       "impp_a": 9.92,
       "coef_tension_pct_c": -0.24,
-      "source_url": "file:///home/runner/work/PV-selector/PV-selector/input/datasheets/240307_Datasheet_Vertex%20S%2B_NEG9R.25_EN_2024_PA_web.pdf",
+      "source_url": "file:///C:/Users/School/Documents/Codex/2026-06-08/ok-j-esuis-chef-de-projet/pv-selector-repo/input/datasheets/240307_Datasheet_Vertex%20S%2B_NEG9R.25_EN_2024_PA_web.pdf",
       "source_type": "datasheet_pdf",
       "last_verified": "2026-07-22",
       "notes": "Import automatique datasheet tableau Trina Vertex; valeurs STC par colonne, donnees mecaniques et coefficient Voc communs. Extracteur: pdfplumber. Confiance: 1.00."
@@ -255,7 +255,7 @@
       "umpp_v": 43.2,
       "impp_a": 9.96,
       "coef_tension_pct_c": -0.24,
-      "source_url": "file:///home/runner/work/PV-selector/PV-selector/input/datasheets/240307_Datasheet_Vertex%20S%2B_NEG9R.25_EN_2024_PA_web.pdf",
+      "source_url": "file:///C:/Users/School/Documents/Codex/2026-06-08/ok-j-esuis-chef-de-projet/pv-selector-repo/input/datasheets/240307_Datasheet_Vertex%20S%2B_NEG9R.25_EN_2024_PA_web.pdf",
       "source_type": "datasheet_pdf",
       "last_verified": "2026-07-22",
       "notes": "Import automatique datasheet tableau Trina Vertex; valeurs STC par colonne, donnees mecaniques et coefficient Voc communs. Extracteur: pdfplumber. Confiance: 1.00."
@@ -271,7 +271,7 @@
       "umpp_v": 43.6,
       "impp_a": 9.99,
       "coef_tension_pct_c": -0.24,
-      "source_url": "file:///home/runner/work/PV-selector/PV-selector/input/datasheets/240307_Datasheet_Vertex%20S%2B_NEG9R.25_EN_2024_PA_web.pdf",
+      "source_url": "file:///C:/Users/School/Documents/Codex/2026-06-08/ok-j-esuis-chef-de-projet/pv-selector-repo/input/datasheets/240307_Datasheet_Vertex%20S%2B_NEG9R.25_EN_2024_PA_web.pdf",
       "source_type": "datasheet_pdf",
       "last_verified": "2026-07-22",
       "notes": "Import automatique datasheet tableau Trina Vertex; valeurs STC par colonne, donnees mecaniques et coefficient Voc communs. Extracteur: pdfplumber. Confiance: 1.00."
@@ -287,7 +287,7 @@
       "umpp_v": 44.0,
       "impp_a": 10.01,
       "coef_tension_pct_c": -0.24,
-      "source_url": "file:///home/runner/work/PV-selector/PV-selector/input/datasheets/240307_Datasheet_Vertex%20S%2B_NEG9R.25_EN_2024_PA_web.pdf",
+      "source_url": "file:///C:/Users/School/Documents/Codex/2026-06-08/ok-j-esuis-chef-de-projet/pv-selector-repo/input/datasheets/240307_Datasheet_Vertex%20S%2B_NEG9R.25_EN_2024_PA_web.pdf",
       "source_type": "datasheet_pdf",
       "last_verified": "2026-07-22",
       "notes": "Import automatique datasheet tableau Trina Vertex; valeurs STC par colonne, donnees mecaniques et coefficient Voc communs. Extracteur: pdfplumber. Confiance: 1.00."
@@ -303,7 +303,7 @@
       "umpp_v": 44.3,
       "impp_a": 10.05,
       "coef_tension_pct_c": -0.24,
-      "source_url": "file:///home/runner/work/PV-selector/PV-selector/input/datasheets/240307_Datasheet_Vertex%20S%2B_NEG9R.25_EN_2024_PA_web.pdf",
+      "source_url": "file:///C:/Users/School/Documents/Codex/2026-06-08/ok-j-esuis-chef-de-projet/pv-selector-repo/input/datasheets/240307_Datasheet_Vertex%20S%2B_NEG9R.25_EN_2024_PA_web.pdf",
       "source_type": "datasheet_pdf",
       "last_verified": "2026-07-22",
       "notes": "Import automatique datasheet tableau Trina Vertex; valeurs STC par colonne, donnees mecaniques et coefficient Voc communs. Extracteur: pdfplumber. Confiance: 1.00."
@@ -476,7 +476,7 @@
       "nombre_mppt": 2,
       "strings_max_par_mppt": 1,
       "phase": "tri",
-      "source_url": "file:///home/runner/work/PV-selector/PV-selector/input/datasheets/ondu_pv_rescert.pdf",
+      "source_url": "file:///C:/Users/School/Documents/Codex/2026-06-08/ok-j-esuis-chef-de-projet/pv-selector-repo/input/datasheets/ondu_pv_rescert.pdf",
       "source_type": "datasheet_pdf",
       "last_verified": "2026-07-22",
       "notes": "Import automatique datasheet tableau Huawei SUN2000; verification technique recommandee. Extracteur: pdfplumber. Confiance: 1.00."
@@ -495,7 +495,7 @@
       "nombre_mppt": 2,
       "strings_max_par_mppt": 1,
       "phase": "tri",
-      "source_url": "file:///home/runner/work/PV-selector/PV-selector/input/datasheets/ondu_pv_rescert.pdf",
+      "source_url": "file:///C:/Users/School/Documents/Codex/2026-06-08/ok-j-esuis-chef-de-projet/pv-selector-repo/input/datasheets/ondu_pv_rescert.pdf",
       "source_type": "datasheet_pdf",
       "last_verified": "2026-07-22",
       "notes": "Import automatique datasheet tableau Huawei SUN2000; verification technique recommandee. Extracteur: pdfplumber. Confiance: 1.00."
@@ -514,7 +514,7 @@
       "nombre_mppt": 2,
       "strings_max_par_mppt": 1,
       "phase": "tri",
-      "source_url": "file:///home/runner/work/PV-selector/PV-selector/input/datasheets/ondu_pv_rescert.pdf",
+      "source_url": "file:///C:/Users/School/Documents/Codex/2026-06-08/ok-j-esuis-chef-de-projet/pv-selector-repo/input/datasheets/ondu_pv_rescert.pdf",
       "source_type": "datasheet_pdf",
       "last_verified": "2026-07-22",
       "notes": "Import automatique datasheet tableau Huawei SUN2000; verification technique recommandee. Extracteur: pdfplumber. Confiance: 1.00."
@@ -533,7 +533,7 @@
       "nombre_mppt": 2,
       "strings_max_par_mppt": 1,
       "phase": "tri",
-      "source_url": "file:///home/runner/work/PV-selector/PV-selector/input/datasheets/ondu_pv_rescert.pdf",
+      "source_url": "file:///C:/Users/School/Documents/Codex/2026-06-08/ok-j-esuis-chef-de-projet/pv-selector-repo/input/datasheets/ondu_pv_rescert.pdf",
       "source_type": "datasheet_pdf",
       "last_verified": "2026-07-22",
       "notes": "Import automatique datasheet tableau Huawei SUN2000; verification technique recommandee. Extracteur: pdfplumber. Confiance: 1.00."
@@ -552,7 +552,7 @@
       "nombre_mppt": 2,
       "strings_max_par_mppt": 1,
       "phase": "tri",
-      "source_url": "file:///home/runner/work/PV-selector/PV-selector/input/datasheets/ondu_pv_rescert.pdf",
+      "source_url": "file:///C:/Users/School/Documents/Codex/2026-06-08/ok-j-esuis-chef-de-projet/pv-selector-repo/input/datasheets/ondu_pv_rescert.pdf",
       "source_type": "datasheet_pdf",
       "last_verified": "2026-07-22",
       "notes": "Import automatique datasheet tableau Huawei SUN2000; verification technique recommandee. Extracteur: pdfplumber. Confiance: 1.00."

@@ -10,8 +10,13 @@ from tkinter import BOTH, END, LEFT, RIGHT, TOP, X, Y, filedialog, messagebox, t
 import tkinter as tk
 
 
-APP_VERSION = "v0.21"
+APP_VERSION = "v0.22"
 APP_TITLE = f"Dimensionnement solaire {APP_VERSION} - selection panneaux / onduleurs"
+APP_AUTHOR = "Bauduin Jordan"
+APP_OWNER = "Open-Elec"
+APP_URL = "https://www.open-elec.be"
+SUPPORT_EMAIL = "info@open-elec.be"
+COPYRIGHT_NOTICE = f"Copyright (c) 2026 {APP_AUTHOR} / {APP_OWNER}. Tous droits reserves."
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 INPUT_DIR = PROJECT_ROOT / "input"
 ALL_PANELS_LABEL = "Tous les panneaux"
@@ -620,6 +625,9 @@ def build_calculation_report(
         "# Note de calcul - meilleur choix solaire",
         "",
         f"Version application : {APP_VERSION}",
+        f"Auteur : {APP_AUTHOR}",
+        f"Site : {APP_URL}",
+        COPYRIGHT_NOTICE,
         f"Date export : {datetime.now().strftime('%Y-%m-%d %H:%M')}",
         "",
         "## 1. Donnees d'entree",

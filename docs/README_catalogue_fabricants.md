@@ -1,6 +1,10 @@
-# Module catalogue fabricants v0.21
+# Module catalogue fabricants v0.22
 
 Ce module sert a rechercher localement, stocker et exporter les caracteristiques fabricants des panneaux et onduleurs. Il peut aussi importer des fiches techniques placees dans `input/datasheets`.
+
+## Version 0.22
+
+Le schema catalogue reste synchronise avec l'application v0.22. Les exports generes peuvent etre associes au changelog et aux informations de support Open-Elec pour faciliter le diagnostic.
 
 ## Structure liee au catalogue
 

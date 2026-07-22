@@ -1,6 +1,6 @@
-# Dimensionnement solaire - prototype GUI v0.21
+# Dimensionnement solaire - prototype GUI v0.22
 
-Ce dossier contient la version `v0.21` du programme :
+Ce dossier contient la version `v0.22` du programme :
 
 - `ui/dimensionnement_solaire.html` : interface graphique locale a ouvrir dans un navigateur.
 - `code/solar_optimizer_gui.py` : interface graphique Python et moteur de selection.
@@ -9,6 +9,10 @@ Ce dossier contient la version `v0.21` du programme :
 - `code/catalogue_fabricants.py` : module de recherche locale, stockage et export des fiches fabricant.
 - `code/datasheet_importer.py` : module d'import local de datasheets PDF/TXT.
 - `input/catalogue_fabricants_db.json` : base locale des fabricants, panneaux et onduleurs.
+
+## Version 0.22
+
+Cette version ajoute les credits Open-Elec dans l'interface et dans les exports, un lien direct vers le changelog, un bouton `Reporter un probleme` vers `info@open-elec.be` et des informations de debug dans le mail de support, l'export CSV et la note de calcul. Elle aligne aussi les versions UI, backend, catalogue et scripts sur `0.22`.
 
 ## Version 0.21
 
@@ -25,6 +29,7 @@ Cette version reorganise le depot : ui/ pour l'interface, code/ pour les scripts
 ## Version 0.18
 
 Cette version ajoute un module d'import local des datasheets fabricants. Il lit un repertoire de fiches techniques PDF/TXT/MD, detecte autant que possible panneau ou onduleur, extrait les caracteristiques necessaires au dimensionnement, importe uniquement les fiches completes dans le catalogue, exporte `panneaux.csv` et `onduleurs.csv`, puis peut synchroniser le catalogue embarque dans l'interface HTML. Les fiches incompletes sont listees dans `datasheet_import_report.csv`.
+
 ## Version 0.17
 
 Cette version ameliore l'UX de l'interface navigateur. Les toitures sont ajoutees avec un bouton `+ Toiture` jusqu'a 8 zones, les emplacements onduleurs avec un bouton `+ Onduleur`, et les limites restent appliquees : 2 emplacements maximum en mono/biphase, 3 en tri delta ou tetra. L'affectation MPPT est proposee automatiquement, puis peut etre modifiee manuellement string par string. Le moteur recalcule alors les configurations valides avec cette affectation imposee.
@@ -56,6 +61,10 @@ Cette version ajoute un schema simple `PV -> onduleur -> TD -> compteur` dans le
 ## Version 0.1
 
 Cette version fige le prototype avec interface graphique locale, selection panneaux/onduleurs, contraintes RGIE et reseau, consommation client, exposition toiture, pertes DC/AC et export CSV.
+
+## Credits et support
+
+Le footer de l'interface affiche l'auteur Bauduin Jordan, Open-Elec, le site https://www.open-elec.be, le copyright et le lien vers le changelog. Le bouton Reporter un probleme ouvre un email vers info@open-elec.be avec les versions utilisees, le contexte de calcul et les compteurs de rejet utiles au debug.
 
 ## Regles verifiees
 

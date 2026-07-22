@@ -4,6 +4,8 @@ import csv
 import json
 import mimetypes
 import os
+import sys
+from datetime import datetime, timezone
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -14,7 +16,13 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 UI_DIR = PROJECT_ROOT / "ui"
 INPUT_DIR = PROJECT_ROOT / "input"
 DOCS_DIR = PROJECT_ROOT / "docs"
-APP_VERSION = "0.20"
+APP_VERSION = "0.22"
+UI_VERSION = "v0.22"
+APP_AUTHOR = "Bauduin Jordan"
+APP_OWNER = "Open-Elec"
+APP_URL = "https://www.open-elec.be"
+SUPPORT_EMAIL = "info@open-elec.be"
+COPYRIGHT_NOTICE = f"Copyright (c) 2026 {APP_AUTHOR} / {APP_OWNER}. Tous droits reserves."
 
 
 def read_csv(path: Path) -> list[dict[str, str]]:
@@ -35,8 +43,59 @@ def safe_child(base_dir: Path, relative_path: str) -> Path | None:
     return candidate if candidate.is_file() else None
 
 
+def catalog_summary() -> dict:
+    db_path = INPUT_DIR / "catalogue_fabricants_db.json"
+    try:
+        db = json.loads(db_path.read_text(encoding="utf-8-sig"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        db = {}
+    return {
+        "schema_version": db.get("schema_version"),
+        "updated_at": db.get("updated_at"),
+        "manufacturers": len(db.get("manufacturers", [])),
+        "panels": len(db.get("panels", [])),
+        "inverters": len(db.get("inverters", [])),
+    }
+
+
+def csv_count(path: Path) -> int | None:
+    try:
+        return len(read_csv(path))
+    except (FileNotFoundError, csv.Error, UnicodeDecodeError):
+        return None
+
+
+def debug_payload() -> dict:
+    return {
+        "application": "PV Selector",
+        "app_version": APP_VERSION,
+        "backend_version": APP_VERSION,
+        "ui_version": UI_VERSION,
+        "catalog": catalog_summary(),
+        "author": APP_AUTHOR,
+        "owner": APP_OWNER,
+        "url": APP_URL,
+        "support_email": SUPPORT_EMAIL,
+        "copyright": COPYRIGHT_NOTICE,
+        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "python_version": sys.version.split()[0],
+        "port": os.environ.get("PORT", "8000"),
+        "files": {
+            "ui": (UI_DIR / "dimensionnement_solaire.html").exists(),
+            "panels_csv": (INPUT_DIR / "panneaux.csv").exists(),
+            "inverters_csv": (INPUT_DIR / "onduleurs.csv").exists(),
+            "catalog_json": (INPUT_DIR / "catalogue_fabricants_db.json").exists(),
+            "changelog": (DOCS_DIR / "CHANGELOG.md").exists(),
+        },
+        "csv_rows": {
+            "panels": csv_count(INPUT_DIR / "panneaux.csv"),
+            "inverters": csv_count(INPUT_DIR / "onduleurs.csv"),
+        },
+    }
+
+
 class PVSelectorHandler(BaseHTTPRequestHandler):
-    server_version = "PVSelectorBackend/0.20"
+    server_version = f"PVSelectorBackend/{APP_VERSION}"
 
     def do_GET(self) -> None:
         path = urlparse(self.path).path
@@ -44,7 +103,10 @@ class PVSelectorHandler(BaseHTTPRequestHandler):
             self.send_file(UI_DIR / "dimensionnement_solaire.html", "text/html; charset=utf-8")
             return
         if path == "/health":
-            self.send_json({"status": "ok", "version": APP_VERSION})
+            self.send_json({"status": "ok", **debug_payload()})
+            return
+        if path == "/api/debug":
+            self.send_json(debug_payload())
             return
         if path == "/api/catalog/panels":
             self.send_json(read_csv(INPUT_DIR / "panneaux.csv"))
@@ -53,16 +115,7 @@ class PVSelectorHandler(BaseHTTPRequestHandler):
             self.send_json(read_csv(INPUT_DIR / "onduleurs.csv"))
             return
         if path == "/api/catalog/summary":
-            db_path = INPUT_DIR / "catalogue_fabricants_db.json"
-            db = json.loads(db_path.read_text(encoding="utf-8-sig"))
-            self.send_json(
-                {
-                    "schema_version": db.get("schema_version"),
-                    "manufacturers": len(db.get("manufacturers", [])),
-                    "panels": len(db.get("panels", [])),
-                    "inverters": len(db.get("inverters", [])),
-                }
-            )
+            self.send_json(catalog_summary())
             return
         if path == "/input/panneaux.csv":
             self.send_file(INPUT_DIR / "panneaux.csv", "text/csv; charset=utf-8")
@@ -116,7 +169,7 @@ class PVSelectorHandler(BaseHTTPRequestHandler):
 def main() -> None:
     port = int(os.environ.get("PORT", "8000"))
     server = ThreadingHTTPServer(("0.0.0.0", port), PVSelectorHandler)
-    print(f"PV Selector backend listening on 0.0.0.0:{port}")
+    print(f"PV Selector backend {APP_VERSION} listening on 0.0.0.0:{port}")
     server.serve_forever()
 
 

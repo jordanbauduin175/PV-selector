@@ -26,7 +26,7 @@ from catalogue_fabricants import (
 )
 
 
-APP_VERSION = "0.21"
+APP_VERSION = "0.22"
 SUPPORTED_EXTENSIONS = {".pdf", ".txt", ".text", ".md"}
 DEFAULT_REPORT = OUTPUT_DIR / "datasheet_import_report.csv"
 DEFAULT_PANELS_OUT = INPUT_DIR / "panneaux.csv"
