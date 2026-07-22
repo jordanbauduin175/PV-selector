@@ -908,7 +908,7 @@ def import_directory(
     parsed_items = [item for path in files for item in parse_datasheets(path, db, kind)]
     ready_items = [item for item in parsed_items if item.complete]
 
-    if not dry_run:
+    if not dry_run and ready_items:
         for item in ready_items:
             if item.kind == "panel":
                 entry = normalize_entry(item.entry, PANELS_HEADER)
@@ -937,7 +937,7 @@ def import_directory(
         "dry_run": dry_run,
         "panels_out": str(panels_out),
         "inverters_out": str(inverters_out),
-        "html_synced": bool(html_path and not dry_run),
+        "html_synced": bool(html_path and not dry_run and ready_items),
     }
 
 
@@ -975,10 +975,12 @@ def main() -> None:
     print(f"Ignorer : {summary['skipped']}")
     print(f"Erreurs : {summary['errors']}")
     print(f"Rapport : {summary['report']}")
-    if not summary["dry_run"]:
+    if not summary["dry_run"] and summary["ready"]:
         print(f"CSV panneaux : {summary['panels_out']}")
         print(f"CSV onduleurs : {summary['inverters_out']}")
         print(f"HTML synchronise : {'oui' if summary['html_synced'] else 'non'}")
+    elif not summary["dry_run"]:
+        print("Aucun fichier catalogue modifie : aucune fiche complete a importer.")
 
 
 if __name__ == "__main__":

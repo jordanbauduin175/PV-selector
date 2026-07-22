@@ -53,4 +53,8 @@ Analyser sans modifier le catalogue :
 python code/datasheet_importer.py input/datasheets --dry-run
 ```
 
+## CI GitHub
+
+Le workflow `.github/workflows/regenerate-catalog.yml` se lance quand une fiche est ajoutee ou modifiee dans `input/datasheets/`. Sur un `push`, il regenere `input/catalogue_fabricants_db.json`, `input/panneaux.csv`, `input/onduleurs.csv` et le catalogue embarque dans `ui/dimensionnement_solaire.html`, puis commit automatiquement les changements si necessaire. Sur une pull request, il verifie que ces fichiers sont deja a jour.
+
 Note : quand une fiche onduleur donne des MPPT asymetriques et que l'application ne sait pas encore modeliser chaque MPPT separement, l'entree stockee utilise la valeur limitante.

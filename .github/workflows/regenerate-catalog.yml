@@ -1,0 +1,108 @@
+name: Regenerate PV catalogs
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "input/datasheets/*.pdf"
+      - "input/datasheets/**/*.pdf"
+      - "input/datasheets/*.txt"
+      - "input/datasheets/**/*.txt"
+      - "input/datasheets/*.md"
+      - "input/datasheets/**/*.md"
+      - "code/datasheet_importer.py"
+      - "code/catalogue_fabricants.py"
+      - "requirements-datasheets.txt"
+      - ".github/workflows/regenerate-catalog.yml"
+  pull_request:
+    paths:
+      - "input/datasheets/*.pdf"
+      - "input/datasheets/**/*.pdf"
+      - "input/datasheets/*.txt"
+      - "input/datasheets/**/*.txt"
+      - "input/datasheets/*.md"
+      - "input/datasheets/**/*.md"
+      - "code/datasheet_importer.py"
+      - "code/catalogue_fabricants.py"
+      - "requirements-datasheets.txt"
+      - ".github/workflows/regenerate-catalog.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: requirements-datasheets.txt
+
+      - name: Install datasheet dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-datasheets.txt
+
+      - name: Regenerate catalogs from datasheets
+        run: python code/datasheet_importer.py input/datasheets --report output/datasheet_import_report.csv
+
+      - name: Publish import report in summary
+        if: always()
+        run: |
+          {
+            echo "## Datasheet import report"
+            echo
+            if [ -f output/datasheet_import_report.csv ]; then
+              echo '```csv'
+              cat output/datasheet_import_report.csv
+              echo '```'
+            else
+              echo "No import report was generated."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload import report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: datasheet-import-report
+          path: output/datasheet_import_report.csv
+          if-no-files-found: ignore
+
+      - name: Check generated catalogs on pull requests
+        if: github.event_name == 'pull_request'
+        run: |
+          git diff --exit-code -- \
+            input/catalogue_fabricants_db.json \
+            input/panneaux.csv \
+            input/onduleurs.csv \
+            ui/dimensionnement_solaire.html
+
+      - name: Commit regenerated catalogs
+        if: github.event_name == 'push'
+        run: |
+          if git diff --quiet -- \
+            input/catalogue_fabricants_db.json \
+            input/panneaux.csv \
+            input/onduleurs.csv \
+            ui/dimensionnement_solaire.html; then
+            echo "No catalog update needed."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            input/catalogue_fabricants_db.json \
+            input/panneaux.csv \
+            input/onduleurs.csv \
+            ui/dimensionnement_solaire.html
+          git commit -m "Regenerate PV catalogs from datasheets"
+          git push origin HEAD:${{ github.ref_name }}
