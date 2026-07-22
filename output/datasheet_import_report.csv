@@ -1,5 +1,10 @@
 file,kind,status,confidence,fabricant,reference,missing_fields,message
-input/datasheets/240307_Datasheet_Vertex S+_NEG9R.25_EN_2024_PA_web.pdf,panel,review,0.4,Trina Solar,i-TOPCon-POWER-RANGE,puissance_w;uoc_v;isc_a;umpp_v;impp_a;coef_tension_pct_c,"Champs manquants: puissance_w, uoc_v, isc_a, umpp_v, impp_a, coef_tension_pct_c"
+input/datasheets/240307_Datasheet_Vertex S+_NEG9R.25_EN_2024_PA_web.pdf,panel,ready,1.0,Trina Solar,TSM-425NEG9R.25,,Pret pour import.
+input/datasheets/240307_Datasheet_Vertex S+_NEG9R.25_EN_2024_PA_web.pdf,panel,ready,1.0,Trina Solar,TSM-430NEG9R.25,,Pret pour import.
+input/datasheets/240307_Datasheet_Vertex S+_NEG9R.25_EN_2024_PA_web.pdf,panel,ready,1.0,Trina Solar,TSM-435NEG9R.25,,Pret pour import.
+input/datasheets/240307_Datasheet_Vertex S+_NEG9R.25_EN_2024_PA_web.pdf,panel,ready,1.0,Trina Solar,TSM-440NEG9R.25,,Pret pour import.
+input/datasheets/240307_Datasheet_Vertex S+_NEG9R.25_EN_2024_PA_web.pdf,panel,ready,1.0,Trina Solar,TSM-445NEG9R.25,,Pret pour import.
+input/datasheets/240307_Datasheet_Vertex S+_NEG9R.25_EN_2024_PA_web.pdf,panel,ready,1.0,Trina Solar,TSM-450NEG9R.25,,Pret pour import.
 input/datasheets/FusionSolar-SUN2000-3-10KTL-M1-High Current Version-Datasheet.pdf,inverter,review,0.92,Huawei FusionSolar,SUN2000-3KTL-M1,strings_max_par_mppt,Champs manquants: strings_max_par_mppt
 input/datasheets/FusionSolar-SUN2000-3-10KTL-M1-High Current Version-Datasheet.pdf,inverter,review,0.92,Huawei FusionSolar,SUN2000-4KTL-M1,strings_max_par_mppt,Champs manquants: strings_max_par_mppt
 input/datasheets/FusionSolar-SUN2000-3-10KTL-M1-High Current Version-Datasheet.pdf,inverter,review,0.92,Huawei FusionSolar,SUN2000-5KTL-M1,strings_max_par_mppt,Champs manquants: strings_max_par_mppt

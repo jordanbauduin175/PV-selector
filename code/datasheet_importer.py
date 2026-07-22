@@ -38,6 +38,7 @@ class LoadedDatasheet:
     text: str
     extractor: str
     tables: list[list[list[str]]]
+    words: list[dict] | None = None
 
 
 @dataclass
@@ -61,7 +62,8 @@ NUMBER_TOKEN_PATTERN = r"-?\d(?:[\d\s.,]*\d)?"
 def decimal(value: str | int | float | None) -> float | None:
     if value is None:
         return None
-    match = re.search(NUMBER_TOKEN_PATTERN, str(value).strip())
+    source = str(value).strip().replace("\u2013", "-").replace("\u2014", "-").replace("\u2212", "-")
+    match = re.search(NUMBER_TOKEN_PATTERN, source)
     if not match:
         return None
     number = re.sub(r"\s+", "", match.group(0))
@@ -124,8 +126,9 @@ def load_document(path: Path) -> LoadedDatasheet:
             with pdfplumber.open(path) as pdf:
                 text = "\n".join(page.extract_text() or "" for page in pdf.pages)
                 tables = [table for page in pdf.pages for table in (page.extract_tables() or []) if table]
+                words = [word for page in pdf.pages for word in (page.extract_words(x_tolerance=1, y_tolerance=3) or [])]
             if text.strip():
-                return LoadedDatasheet(text, "pdfplumber", tables)
+                return LoadedDatasheet(text, "pdfplumber", tables, words)
         except Exception:
             pass
         try:
@@ -347,6 +350,120 @@ def parse_panel(text: str, path: Path, manufacturer: str, source_type: str) -> d
         "notes": "Import automatique datasheet; verification technique recommandee.",
     }
 
+
+def positive_number_values(value: str) -> list[float]:
+    values: list[float] = []
+    for match in re.finditer(r"(?<![A-Za-z])\d+(?:[.,]\d+)?", clean_spaces(value)):
+        parsed = decimal(match.group(0))
+        if parsed is not None:
+            values.append(parsed)
+    return values
+
+
+def table_lines(document: LoadedDatasheet) -> list[str]:
+    lines: list[str] = []
+    for table in document.tables:
+        for row in table:
+            for cell in row:
+                if cell:
+                    lines.extend(clean_spaces(part).strip() for part in str(cell).splitlines() if part.strip())
+    lines.extend(clean_spaces(line).strip() for line in document.text.splitlines() if line.strip())
+    return lines
+
+
+def first_line_values(document: LoadedDatasheet, required_tokens: list[str], min_values: int = 2) -> list[float]:
+    for line in table_lines(document):
+        compact = compact_label(line)
+        if all(token in compact for token in required_tokens):
+            values = positive_number_values(line)
+            if len(values) >= min_values:
+                return values
+    return []
+
+
+def trina_vertex_suffix(text: str) -> str:
+    match = re.search(r"(?i)\bTSM[-\s]*(NEG[0-9A-Z.]+)", text)
+    if match:
+        return match.group(1).upper()
+    match = re.search(r"(?i)\b(NEG[0-9A-Z.]+)\b", text)
+    return match.group(1).upper() if match else "NEG9R.25"
+
+
+def rows_from_words(words: list[dict] | None) -> list[list[dict]]:
+    rows: list[list[dict]] = []
+    for word in sorted(words or [], key=lambda item: (item.get("doctop", item.get("top", 0)), item.get("x0", 0))):
+        top = float(word.get("doctop", word.get("top", 0)))
+        for row in rows:
+            row_top = float(row[0].get("doctop", row[0].get("top", 0)))
+            if abs(row_top - top) < 3:
+                row.append(word)
+                break
+        else:
+            rows.append([word])
+    return rows
+
+
+def trina_voc_temperature_coefficient(document: LoadedDatasheet) -> float | None:
+    for row in rows_from_words(document.words):
+        row_text = " ".join(str(word.get("text", "")) for word in sorted(row, key=lambda item: item.get("x0", 0)))
+        compact = compact_label(row_text)
+        if "temperaturecoefficientofvoc" not in compact:
+            continue
+        for word in sorted(row, key=lambda item: item.get("x0", 0)):
+            parsed = decimal(str(word.get("text", "")))
+            if parsed is not None and abs(parsed) < 2:
+                return parsed
+    fallback = first_value(
+        document.text,
+        [r"temperature\s+coefficient\s+of\s+voc", r"temp\.?\s+coefficient.{0,40}\bvoc\b"],
+        r"%/?(?:degC|deg C|C|K)",
+        180,
+    )
+    return fallback
+
+
+def parse_trina_vertex_panels(document: LoadedDatasheet, path: Path, manufacturer: str, source_type: str) -> list[dict]:
+    text = document.text
+    if "tsm-" not in text.lower() or "neg" not in text.lower():
+        return []
+
+    pmax = first_line_values(document, ["peakpower", "pmax"], 2)
+    vmpp = first_line_values(document, ["maximumpowervoltage", "vmpp"], 2)
+    impp = first_line_values(document, ["maximumpowercurrent", "impp"], 2)
+    voc = first_line_values(document, ["opencircuitvoltage", "voc"], 2)
+    isc = first_line_values(document, ["shortcircuitcurrent", "isc"], 2)
+    count = min(len(pmax), len(vmpp), len(impp), len(voc), len(isc))
+    if count < 2:
+        return []
+
+    width_m, height_m = find_dimensions_m(text)
+    coef_voc = trina_voc_temperature_coefficient(document)
+    suffix = trina_vertex_suffix(text)
+    manufacturer = "Trina Solar" if "trina" in text.lower() or "trina" in manufacturer.lower() else manufacturer
+
+    entries: list[dict] = []
+    for index in range(count):
+        power = pmax[index]
+        reference_power = int(round(power))
+        entries.append(
+            {
+                "reference": f"TSM-{reference_power}{suffix}",
+                "fabricant": manufacturer,
+                "puissance_w": power,
+                "largeur_m": width_m,
+                "hauteur_m": height_m,
+                "uoc_v": voc[index],
+                "isc_a": isc[index],
+                "umpp_v": vmpp[index],
+                "impp_a": impp[index],
+                "coef_tension_pct_c": coef_voc,
+                "source_url": path.resolve().as_uri(),
+                "source_type": source_type,
+                "last_verified": today(),
+                "notes": "Import automatique datasheet tableau Trina Vertex; valeurs STC par colonne, donnees mecaniques et coefficient Voc communs.",
+            }
+        )
+    return entries
 
 def detect_phase(text: str) -> str | None:
     compact = clean_spaces(text).lower()
@@ -832,6 +949,9 @@ def parse_datasheets(path: Path, db: dict, forced_kind: str = "auto") -> list[Pa
             return [parsed_datasheet_item(path, kind, entry, header, document.extractor) for entry in entries]
         entry = parse_inverter(text, path, manufacturer, source_type)
     else:
+        entries = parse_trina_vertex_panels(document, path, manufacturer, source_type)
+        if len(entries) >= 2:
+            return [parsed_datasheet_item(path, kind, entry, header, document.extractor) for entry in entries]
         entry = parse_panel(text, path, manufacturer, source_type)
 
     return [parsed_datasheet_item(path, kind, entry, header, document.extractor)]
