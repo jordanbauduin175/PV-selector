@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import argparse
 import csv
@@ -23,7 +23,7 @@ from catalogue_fabricants import (
 )
 
 
-APP_VERSION = "0.19"
+APP_VERSION = "0.20"
 SUPPORTED_EXTENSIONS = {".pdf", ".txt", ".text", ".md"}
 DEFAULT_REPORT = OUTPUT_DIR / "datasheet_import_report.csv"
 DEFAULT_PANELS_OUT = INPUT_DIR / "panneaux.csv"
@@ -613,4 +613,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

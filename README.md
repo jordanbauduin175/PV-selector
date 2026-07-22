@@ -1,9 +1,10 @@
-﻿# PV Selector
+# PV Selector
 
 Prototype local de dimensionnement photovoltaique.
 
 ## Structure du projet
 
+- `backend/` : serveur web deployable sur Railway.
 - `ui/` : interface navigateur HTML.
 - `code/` : scripts Python et modules d'import.
 - `input/` : catalogues CSV, base fabricant et datasheets sources.
@@ -22,8 +23,10 @@ ui/dimensionnement_solaire.html
 
 ```powershell
 python code/catalogue_fabricants.py summary
-python code/datasheet_importer.py input/datasheets --dry-run
 python code/datasheet_importer.py input/datasheets
+python backend/server.py --dry-run
+python code/datasheet_importer.py input/datasheets
+python backend/server.py
 ```
 
 ## Fonctions principales
@@ -36,5 +39,7 @@ python code/datasheet_importer.py input/datasheets
 - affectation MPP automatique ou manuelle ;
 - export CSV et note de calcul ;
 - import local de datasheets fabricants.
+
+Deploiement Railway : `docs/RAILWAY_DEPLOY.md`.
 
 Les notes detaillees sont dans `docs/README_dimensionnement_solaire.md`.

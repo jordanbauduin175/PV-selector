@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import argparse
 import csv
@@ -8,7 +8,7 @@ from pathlib import Path
 from urllib.parse import quote_plus
 
 
-APP_VERSION = "0.19"
+APP_VERSION = "0.20"
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 INPUT_DIR = PROJECT_ROOT / "input"
 OUTPUT_DIR = PROJECT_ROOT / "output"
@@ -339,4 +339,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
