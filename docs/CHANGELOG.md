@@ -2,6 +2,15 @@
 
 Toutes les modifications notables de PV Selector sont tracees ici.
 
+## v0.23 - 2026-07-22
+
+- Ajout du module de calpinage toiture dans l'interface.
+- Calcul de la toiture nette avec marges 30 cm laterales, 30 cm egout et 10 cm faitage.
+- Proposition portrait/paysage avec 2 cm de clame entre panneaux.
+- Calcul des rangees, rails, metres lineaires de rails et crochets.
+- Choix de l'entraxe chevrons 45 cm ou 60 cm, avec crochets tous les 90 cm ou 1,20 m.
+- Ajout du calpinage dans le detail, la metrique, la note de calcul et le debug.
+
 ## v0.22 - 2026-07-22
 
 - Ajout des credits Open-Elec, du site https://www.open-elec.be et du copyright 2026 dans l'interface.

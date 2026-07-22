@@ -1,6 +1,6 @@
-# Dimensionnement solaire - prototype GUI v0.22
+# Dimensionnement solaire - prototype GUI v0.23
 
-Ce dossier contient la version `v0.22` du programme :
+Ce dossier contient la version `v0.23` du programme :
 
 - `ui/dimensionnement_solaire.html` : interface graphique locale a ouvrir dans un navigateur.
 - `code/solar_optimizer_gui.py` : interface graphique Python et moteur de selection.
@@ -9,6 +9,10 @@ Ce dossier contient la version `v0.22` du programme :
 - `code/catalogue_fabricants.py` : module de recherche locale, stockage et export des fiches fabricant.
 - `code/datasheet_importer.py` : module d'import local de datasheets PDF/TXT.
 - `input/catalogue_fabricants_db.json` : base locale des fabricants, panneaux et onduleurs.
+
+## Version 0.23
+
+Cette version ajoute un module de calpinage toiture dans l'interface navigateur. Le module part de la longueur et de la largeur brutes du rampant, retire `30 cm` de chaque cote lateral, `30 cm` cote egout et `10 cm` cote faitage, puis propose un calpinage portrait/paysage pour le nombre de panneaux retenu ou force. Il compte `2 cm` de clame entre panneaux, calcule `2 rails` par rangee de panneaux, les metres lineaires de rails et le nombre de crochets avec un espacement maximum de `90 cm` pour entraxe chevrons `45 cm`, ou `1,20 m` pour entraxe chevrons `60 cm`.
 
 ## Version 0.22
 
@@ -103,6 +107,7 @@ Pour chaque combinaison panneau / onduleur / nombre de modules / nombre de strin
 - En mode MPPT manuel, le nombre d'affectations renseigne doit correspondre au nombre de strings de la configuration retenue.
 - Les pourcentages de chute de tension AC sont calcules par rapport a `230 V` reseau. En tetra, la chute affichee est la chute phase-neutre utilisee pour ce pourcentage.
 - La production annuelle affichee est nette des pertes cables ; la production brute avant pertes reste visible dans le detail de configuration.
+- Le calpinage toiture utilise la longueur comme axe horizontal gauche-droite et la largeur comme axe de rampant egout-faitage. Les marges appliquees sont 30 cm a gauche, 30 cm a droite, 30 cm a l'egout et 10 cm au faitage.
 - Les lignes `Exemple` des CSV sont fictives ; les lignes Trina Solar, Jinko Solar, LONGi, SMA, Huawei FusionSolar et Fronius proviennent de fiches fabricant verifiees.
 - Certaines fiches onduleur ont des MPPT asymetriques. Quand le modele actuel ne permet pas de distinguer MPPT 1 et MPPT 2, la valeur limitante est utilisee pour rester conservateur.
 
