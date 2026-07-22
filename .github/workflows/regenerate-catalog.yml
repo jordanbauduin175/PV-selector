@@ -83,7 +83,8 @@ jobs:
             input/catalogue_fabricants_db.json \
             input/panneaux.csv \
             input/onduleurs.csv \
-            ui/dimensionnement_solaire.html
+            ui/dimensionnement_solaire.html \
+            output/datasheet_import_report.csv
 
       - name: Commit regenerated catalogs
         if: github.event_name == 'push'
@@ -92,7 +93,8 @@ jobs:
             input/catalogue_fabricants_db.json \
             input/panneaux.csv \
             input/onduleurs.csv \
-            ui/dimensionnement_solaire.html; then
+            ui/dimensionnement_solaire.html \
+            output/datasheet_import_report.csv; then
             echo "No catalog update needed."
             exit 0
           fi
@@ -103,6 +105,7 @@ jobs:
             input/catalogue_fabricants_db.json \
             input/panneaux.csv \
             input/onduleurs.csv \
-            ui/dimensionnement_solaire.html
+            ui/dimensionnement_solaire.html \
+            output/datasheet_import_report.csv
           git commit -m "Regenerate PV catalogs from datasheets"
           git push origin HEAD:${{ github.ref_name }}

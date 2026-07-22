@@ -9,6 +9,7 @@ from typing import Iterable
 
 from catalogue_fabricants import (
     DEFAULT_DB,
+    PROJECT_ROOT,
     INPUT_DIR,
     OUTPUT_DIR,
     UI_DIR,
@@ -16,6 +17,7 @@ from catalogue_fabricants import (
     PANELS_HEADER,
     load_db,
     normalize_entry,
+    read_csv_rows,
     save_db,
     today,
     upsert,
@@ -365,6 +367,10 @@ def clean_cell(value: object) -> str:
     return clean_spaces(str(value or "")).strip()
 
 
+def compact_label(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", clean_spaces(value).lower())
+
+
 def normalize_huawei_reference(value: str) -> str | None:
     compact = re.sub(r"\s+", "", clean_spaces(value).upper())
     match = re.search(r"SUN2000-?\d+(?:[.,]\d+)?K(?:TL)?-[A-Z]{1,6}\d{1,3}", compact)
@@ -405,7 +411,7 @@ def parse_power_cell(value: str) -> float | None:
 
 
 def parse_range_cell(value: str) -> tuple[float, float] | None:
-    numbers = [decimal(match.group(0)) for match in re.finditer(NUMBER_TOKEN_PATTERN, value)]
+    numbers = [decimal(match.group(0)) for match in re.finditer(r"\d(?:[\d\s.,]*\d)?", value)]
     numbers = [number for number in numbers if number is not None]
     if len(numbers) < 2:
         return None
@@ -453,14 +459,14 @@ def huawei_table_model_columns(rows: list[list[str]]) -> tuple[int, list[tuple[i
 
 
 def huawei_section(row: list[str], current: str) -> str:
-    joined = " ".join(row).lower()
-    if "input" in joined and "pv" in joined and "battery" not in joined:
+    compact = compact_label(" ".join(row))
+    if "inputpv" in compact:
         return "pv"
-    if "battery" in joined:
+    if "inputdcbattery" in compact or "battery" in compact:
         return "battery"
-    if "output" in joined and "on grid" in joined:
+    if "outputongrid" in compact:
         return "on_grid"
-    if "output" in joined and "off grid" in joined:
+    if "outputoffgrid" in compact:
         return "off_grid"
     return current
 
@@ -521,6 +527,7 @@ def set_huawei_range_field(entries: dict[str, dict], values: dict[str, str]) -> 
 
 def apply_huawei_row(entries: dict[str, dict], row: list[str], model_columns: list[tuple[int, str]], section: str) -> None:
     label = huawei_row_label(row, model_columns).lower()
+    compact = compact_label(label)
     if not label:
         return
     values = huawei_values_by_model(row, model_columns)
@@ -528,24 +535,24 @@ def apply_huawei_row(entries: dict[str, dict], row: list[str], model_columns: li
         return
 
     if section == "pv":
-        if "recommended" in label and "pv" in label and "power" in label:
+        if "recommended" in compact and "pv" in compact and "power" in compact:
             set_huawei_numeric_field(entries, values, "puissance_pv_max_w", parse_power_cell)
-        elif "max" in label and "input voltage" in label:
+        elif "maxinputvoltage" in compact:
             set_huawei_numeric_field(entries, values, "tension_dc_max_v", decimal)
-        elif "operating voltage range" in label or "mpp voltage range" in label or "mppt voltage range" in label:
+        elif "operatingvoltagerange" in compact or "mppvoltagerange" in compact or "mpptvoltagerange" in compact:
             set_huawei_range_field(entries, values)
-        elif "max" in label and "input current" in label and ("mppt" in label or "mpp" in label):
+        elif "maxinputcurrent" in compact and ("mppt" in compact or "mpp" in compact):
             set_huawei_numeric_field(entries, values, "courant_max_mppt_a", decimal)
-        elif "short-circuit" in label or "short circuit" in label or "isc" in label:
+        elif "shortcircuitcurrent" in compact or "maxisc" in compact:
             set_huawei_numeric_field(entries, values, "isc_max_mppt_a", decimal)
-        elif "number" in label and ("mpp" in label or "mppt" in label) and "tracker" in label:
+        elif "numberofmpptrackers" in compact or "numberofmppt" in compact:
             set_huawei_numeric_field(entries, values, "nombre_mppt", parse_int_cell)
-        elif "input per" in label and ("mpp" in label or "mppt" in label):
+        elif "inputpermpp" in compact or "inputpermppt" in compact:
             set_huawei_numeric_field(entries, values, "strings_max_par_mppt", parse_int_cell)
     elif section in {"on_grid", ""}:
-        if "rated output power" in label:
+        if "ratedoutputpower" in compact:
             set_huawei_numeric_field(entries, values, "puissance_ac_w", parse_power_cell)
-        elif "grid connection" in label:
+        elif "gridconnection" in compact:
             phase = detect_phase(" ".join(row))
             if phase:
                 for entry in entries.values():
@@ -571,17 +578,24 @@ def parse_huawei_tables(document: LoadedDatasheet, path: Path, manufacturer: str
     return entries
 
 
+def huawei_number_tokens(line: str) -> list[str]:
+    pattern = r"(?<![A-Za-z])(\d(?:[\d\s.,]*\d)?)"
+    return [match.group(1) for match in re.finditer(pattern, line)]
+
+
 def huawei_values_from_line(line: str, references: list[str], parser) -> dict[str, str]:
     if parser is parse_range_cell:
-        parsed = parse_range_cell(line)
-        if not parsed:
+        matches = huawei_number_tokens(line)
+        if len(matches) < 2:
             return {}
-        return {reference: line for reference in references}
+        value = f"{matches[0]}-{matches[1]}"
+        return {reference: value for reference in references}
 
     if parser is parse_power_cell:
-        matches = [match.group(0) for match in re.finditer(rf"{NUMBER_TOKEN_PATTERN}\s*(?:kWp|Wp|kW|W|kVA|VA)\b", line, flags=re.IGNORECASE)]
+        pattern = rf"(?<![A-Za-z]){NUMBER_TOKEN_PATTERN}\s*(?:kWp|Wp|kW|W|kVA|VA)\b"
+        matches = [match.group(0) for match in re.finditer(pattern, line, flags=re.IGNORECASE)]
     else:
-        matches = [match.group(0) for match in re.finditer(NUMBER_TOKEN_PATTERN, line)]
+        matches = huawei_number_tokens(line)
     if len(matches) >= len(references):
         return {reference: matches[index] for index, reference in enumerate(references)}
     if len(matches) == 1:
@@ -591,25 +605,26 @@ def huawei_values_from_line(line: str, references: list[str], parser) -> dict[st
 
 def apply_huawei_text_line(entries: dict[str, dict], line: str, references: list[str], section: str) -> None:
     label = line.lower()
+    compact = compact_label(label)
     if section == "pv":
-        if "recommended" in label and "pv" in label and "power" in label:
+        if "recommended" in compact and "pv" in compact and "power" in compact:
             set_huawei_numeric_field(entries, huawei_values_from_line(line, references, parse_power_cell), "puissance_pv_max_w", parse_power_cell)
-        elif "max" in label and "input voltage" in label:
+        elif "maxinputvoltage" in compact:
             set_huawei_numeric_field(entries, huawei_values_from_line(line, references, decimal), "tension_dc_max_v", decimal)
-        elif "operating voltage range" in label or "mpp voltage range" in label or "mppt voltage range" in label:
+        elif "operatingvoltagerange" in compact or "mppvoltagerange" in compact or "mpptvoltagerange" in compact:
             set_huawei_range_field(entries, huawei_values_from_line(line, references, parse_range_cell))
-        elif "max" in label and "input current" in label and ("mppt" in label or "mpp" in label):
+        elif "maxinputcurrent" in compact and ("mppt" in compact or "mpp" in compact):
             set_huawei_numeric_field(entries, huawei_values_from_line(line, references, decimal), "courant_max_mppt_a", decimal)
-        elif "short-circuit" in label or "short circuit" in label or "isc" in label:
+        elif "shortcircuitcurrent" in compact or "maxisc" in compact:
             set_huawei_numeric_field(entries, huawei_values_from_line(line, references, decimal), "isc_max_mppt_a", decimal)
-        elif "number" in label and ("mpp" in label or "mppt" in label) and "tracker" in label:
+        elif "numberofmpptrackers" in compact or "numberofmppt" in compact:
             set_huawei_numeric_field(entries, huawei_values_from_line(line, references, parse_int_cell), "nombre_mppt", parse_int_cell)
-        elif "input per" in label and ("mpp" in label or "mppt" in label):
+        elif "inputpermpp" in compact or "inputpermppt" in compact:
             set_huawei_numeric_field(entries, huawei_values_from_line(line, references, parse_int_cell), "strings_max_par_mppt", parse_int_cell)
     elif section in {"on_grid", ""}:
-        if "rated output power" in label:
+        if "ratedoutputpower" in compact:
             set_huawei_numeric_field(entries, huawei_values_from_line(line, references, parse_power_cell), "puissance_ac_w", parse_power_cell)
-        elif "grid connection" in label:
+        elif "gridconnection" in compact:
             phase = detect_phase(line)
             if phase:
                 for entry in entries.values():
@@ -826,6 +841,28 @@ def parse_datasheet(path: Path, db: dict, forced_kind: str = "auto") -> ParsedDa
     return parse_datasheets(path, db, forced_kind)[0]
 
 
+def merge_existing_app_csvs(db: dict, panels_csv: Path, inverters_csv: Path) -> None:
+    if panels_csv.exists():
+        for row in read_csv_rows(panels_csv):
+            try:
+                entry = normalize_entry(row, PANELS_HEADER)
+            except (KeyError, ValueError):
+                continue
+            entry["source_type"] = row.get("source_type", "").strip() or entry.get("source_type", "app_csv")
+            upsert(db["panels"], entry)
+    if inverters_csv.exists():
+        for row in read_csv_rows(inverters_csv):
+            try:
+                entry = normalize_entry(
+                    row,
+                    INVERTERS_HEADER,
+                    numeric_ints={"nombre_mppt", "strings_max_par_mppt"},
+                )
+            except (KeyError, ValueError):
+                continue
+            entry["source_type"] = row.get("source_type", "").strip() or entry.get("source_type", "app_csv")
+            upsert(db["inverters"], entry)
+
 def sorted_rows(rows: list[dict]) -> list[dict]:
     return sorted(rows, key=lambda item: (str(item.get("fabricant", "")), str(item.get("reference", ""))))
 
@@ -859,6 +896,13 @@ def sync_html_catalogs(html_path: Path, panels_csv: Path, inverters_csv: Path) -
     return True
 
 
+def report_file_label(path: Path) -> str:
+    try:
+        return str(path.resolve().relative_to(PROJECT_ROOT)).replace("\\", "/")
+    except ValueError:
+        return str(path)
+
+
 def write_report(path: Path, parsed_items: list[ParsedDatasheet]) -> None:
     header = [
         "file",
@@ -877,7 +921,7 @@ def write_report(path: Path, parsed_items: list[ParsedDatasheet]) -> None:
         for item in parsed_items:
             writer.writerow(
                 {
-                    "file": str(item.path),
+                    "file": report_file_label(item.path),
                     "kind": item.kind,
                     "status": item.status,
                     "confidence": item.confidence,
@@ -909,6 +953,7 @@ def import_directory(
     ready_items = [item for item in parsed_items if item.complete]
 
     if not dry_run and ready_items:
+        merge_existing_app_csvs(db, panels_out, inverters_out)
         for item in ready_items:
             if item.kind == "panel":
                 entry = normalize_entry(item.entry, PANELS_HEADER)

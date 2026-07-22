@@ -1,5 +1,6 @@
-﻿__pycache__/
+__pycache__/
 *.pyc
 output/*
 !output/.gitkeep
+!output/datasheet_import_report.csv
 outputs/
