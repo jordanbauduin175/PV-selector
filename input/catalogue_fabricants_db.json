@@ -387,7 +387,7 @@
       "nombre_mppt": 2,
       "strings_max_par_mppt": 1,
       "phase": "tri",
-      "source_url": "file:///C:/Users/School/Documents/Codex/2026-06-08/ok-j-esuis-chef-de-projet/pv-selector-repo/input/datasheets/ondu_pv_rescert.pdf",
+      "source_url": "file:///home/runner/work/PV-selector/PV-selector/input/datasheets/ondu_pv_rescert.pdf",
       "source_type": "datasheet_pdf",
       "last_verified": "2026-07-22",
       "notes": "Import automatique datasheet tableau Huawei SUN2000; verification technique recommandee. Extracteur: pdfplumber. Confiance: 1.00."
@@ -405,7 +405,7 @@
       "nombre_mppt": 2,
       "strings_max_par_mppt": 1,
       "phase": "tri",
-      "source_url": "file:///C:/Users/School/Documents/Codex/2026-06-08/ok-j-esuis-chef-de-projet/pv-selector-repo/input/datasheets/ondu_pv_rescert.pdf",
+      "source_url": "file:///home/runner/work/PV-selector/PV-selector/input/datasheets/ondu_pv_rescert.pdf",
       "source_type": "datasheet_pdf",
       "last_verified": "2026-07-22",
       "notes": "Import automatique datasheet tableau Huawei SUN2000; verification technique recommandee. Extracteur: pdfplumber. Confiance: 1.00."
@@ -423,7 +423,7 @@
       "nombre_mppt": 2,
       "strings_max_par_mppt": 1,
       "phase": "tri",
-      "source_url": "file:///C:/Users/School/Documents/Codex/2026-06-08/ok-j-esuis-chef-de-projet/pv-selector-repo/input/datasheets/ondu_pv_rescert.pdf",
+      "source_url": "file:///home/runner/work/PV-selector/PV-selector/input/datasheets/ondu_pv_rescert.pdf",
       "source_type": "datasheet_pdf",
       "last_verified": "2026-07-22",
       "notes": "Import automatique datasheet tableau Huawei SUN2000; verification technique recommandee. Extracteur: pdfplumber. Confiance: 1.00."
@@ -441,7 +441,7 @@
       "nombre_mppt": 2,
       "strings_max_par_mppt": 1,
       "phase": "tri",
-      "source_url": "file:///C:/Users/School/Documents/Codex/2026-06-08/ok-j-esuis-chef-de-projet/pv-selector-repo/input/datasheets/ondu_pv_rescert.pdf",
+      "source_url": "file:///home/runner/work/PV-selector/PV-selector/input/datasheets/ondu_pv_rescert.pdf",
       "source_type": "datasheet_pdf",
       "last_verified": "2026-07-22",
       "notes": "Import automatique datasheet tableau Huawei SUN2000; verification technique recommandee. Extracteur: pdfplumber. Confiance: 1.00."
@@ -459,7 +459,7 @@
       "nombre_mppt": 2,
       "strings_max_par_mppt": 1,
       "phase": "tri",
-      "source_url": "file:///C:/Users/School/Documents/Codex/2026-06-08/ok-j-esuis-chef-de-projet/pv-selector-repo/input/datasheets/ondu_pv_rescert.pdf",
+      "source_url": "file:///home/runner/work/PV-selector/PV-selector/input/datasheets/ondu_pv_rescert.pdf",
       "source_type": "datasheet_pdf",
       "last_verified": "2026-07-22",
       "notes": "Import automatique datasheet tableau Huawei SUN2000; verification technique recommandee. Extracteur: pdfplumber. Confiance: 1.00."
