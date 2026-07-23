@@ -11,10 +11,10 @@ input/datasheets/FusionSolar-SUN2000-3-10KTL-M1-High Current Version-Datasheet.p
 input/datasheets/FusionSolar-SUN2000-3-10KTL-M1-High Current Version-Datasheet.pdf,inverter,review,0.92,Huawei FusionSolar,SUN2000-6KTL-M1,strings_max_par_mppt,Champs manquants: strings_max_par_mppt
 input/datasheets/FusionSolar-SUN2000-3-10KTL-M1-High Current Version-Datasheet.pdf,inverter,review,0.92,Huawei FusionSolar,SUN2000-8KTL-M1,strings_max_par_mppt,Champs manquants: strings_max_par_mppt
 input/datasheets/FusionSolar-SUN2000-3-10KTL-M1-High Current Version-Datasheet.pdf,inverter,review,0.92,Huawei FusionSolar,SUN2000-10KTL-M1,strings_max_par_mppt,Champs manquants: strings_max_par_mppt
+input/datasheets/SE_DS_Fronius_Symo_GEN24_GEN24Plus_3_to_10_kW_FR.pdf,panel,review,0.27,Fronius,stockage-la-batterie-et-la-classe-capacit,puissance_w;largeur_m;hauteur_m;uoc_v;isc_a;umpp_v;impp_a;coef_tension_pct_c,"Champs manquants: puissance_w, largeur_m, hauteur_m, uoc_v, isc_a, umpp_v, impp_a, coef_tension_pct_c"
 input/datasheets/ondu_pv_rescert.pdf,inverter,ready,1.0,Huawei FusionSolar,SUN2000-5K-MAP0,,Pret pour import.
 input/datasheets/ondu_pv_rescert.pdf,inverter,ready,1.0,Huawei FusionSolar,SUN2000-6K-MAP0,,Pret pour import.
 input/datasheets/ondu_pv_rescert.pdf,inverter,ready,1.0,Huawei FusionSolar,SUN2000-8K-MAP0,,Pret pour import.
 input/datasheets/ondu_pv_rescert.pdf,inverter,ready,1.0,Huawei FusionSolar,SUN2000-10K-MAP0,,Pret pour import.
 input/datasheets/ondu_pv_rescert.pdf,inverter,ready,1.0,Huawei FusionSolar,SUN2000-12K-MAP0,,Pret pour import.
 input/datasheets/pv_panneaux.pdf,panel,review,0.45,LONGi,TaiRay-wafer,puissance_w;uoc_v;isc_a;umpp_v;impp_a;coef_tension_pct_c,"Champs manquants: puissance_w, uoc_v, isc_a, umpp_v, impp_a, coef_tension_pct_c"
-input/datasheets/SE_DS_Fronius_Symo_GEN24_GEN24Plus_3_to_10_kW_FR.pdf,panel,review,0.27,Fronius,stockage-la-batterie-et-la-classe-capacit,puissance_w;largeur_m;hauteur_m;uoc_v;isc_a;umpp_v;impp_a;coef_tension_pct_c,"Champs manquants: puissance_w, largeur_m, hauteur_m, uoc_v, isc_a, umpp_v, impp_a, coef_tension_pct_c"
