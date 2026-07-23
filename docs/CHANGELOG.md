@@ -2,6 +2,14 @@
 
 Toutes les modifications notables de PV Selector sont tracees ici.
 
+## v0.24 - 2026-07-22
+
+- Correction du calcul `Umpp` chaud/froid : formule additive basee sur `Uoc` et le coefficient `Uoc/Voc`.
+- Ajout du coefficient panneau `coef_isc_pct_c` pour les corrections courant.
+- Correction du calcul `Impp` chaud/froid : formule additive basee sur `Isc` et le coefficient `Isc` de la datasheet.
+- Controle `Isc` MPPT avec correction temperature quand le coefficient Isc est disponible.
+- Affichage des temperatures froid/chaud saisies dans les entetes, controles et note de calcul.
+- Regeneration du catalogue : les panneaux Trina Vertex portent `coef_isc_pct_c = 0.04`.
 ## v0.23 - 2026-07-22
 
 - Ajout du module de calpinage toiture dans l'interface.

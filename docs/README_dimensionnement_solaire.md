@@ -1,6 +1,6 @@
-# Dimensionnement solaire - prototype GUI v0.23
+# Dimensionnement solaire - prototype GUI v0.24
 
-Ce dossier contient la version `v0.23` du programme :
+Ce dossier contient la version `v0.24` du programme :
 
 - `ui/dimensionnement_solaire.html` : interface graphique locale a ouvrir dans un navigateur.
 - `code/solar_optimizer_gui.py` : interface graphique Python et moteur de selection.
@@ -10,6 +10,9 @@ Ce dossier contient la version `v0.23` du programme :
 - `code/datasheet_importer.py` : module d'import local de datasheets PDF/TXT.
 - `input/catalogue_fabricants_db.json` : base locale des fabricants, panneaux et onduleurs.
 
+## Version 0.24
+
+Cette version corrige les calculs temperature panneau : le coefficient `coef_tension_pct_c` est traite comme coefficient `Uoc/Voc`, et `Umpp chaud/froid` est calcule par formule additive `Umpp(T) = Umpp STC + Uoc STC x coef Uoc x (T - 25)`. Elle ajoute `coef_isc_pct_c` au catalogue panneaux et calcule `Impp(T) = Impp STC + Isc STC x coef Isc x (T - 25)`. Les entetes et validations affichent maintenant les temperatures réellement saisies, par exemple froid `-10 C` et chaud `70 C`.
 ## Version 0.23
 
 Cette version ajoute un module de calpinage toiture dans l'interface navigateur. Le module part de la longueur et de la largeur brutes du rampant, retire `30 cm` de chaque cote lateral, `30 cm` cote egout et `10 cm` cote faitage, puis propose un calpinage portrait/paysage pour le nombre de panneaux retenu ou force. Il compte `2 cm` de clame entre panneaux, calcule `2 rails` par rangee de panneaux, les metres lineaires de rails et le nombre de crochets avec un espacement maximum de `90 cm` pour entraxe chevrons `45 cm`, ou `1,20 m` pour entraxe chevrons `60 cm`.
@@ -77,10 +80,10 @@ Pour chaque combinaison panneau / onduleur / nombre de modules / nombre de strin
 - surface totale des panneaux inferieure a la surface utile ;
 - `Uoc` froid du string inferieur ou egal a `750 V DC` pour la limite RGIE ;
 - `Uoc` du string a temperature minimale inferieur a la tension DC max de l'onduleur ;
-- `Umpp` du string a temperature module haute superieur au MPPT min ;
-- `Umpp` du string a temperature minimale inferieur au MPPT max ;
-- `Impp` par MPPT inferieur au courant max MPPT ;
-- `Isc` par MPPT inferieur au courant de court-circuit max MPPT ;
+- `Umpp` du string a temperature module haute superieur au MPPT min, avec correction basee sur `Uoc` et le coefficient `Uoc/Voc` ;
+- `Umpp` du string a temperature minimale inferieur au MPPT max, avec correction basee sur `Uoc` et le coefficient `Uoc/Voc` ;
+- `Impp` par MPPT inferieur au courant max MPPT, avec correction basee sur `Isc` et le coefficient `Isc` quand il est disponible ;
+- `Isc` par MPPT inferieur au courant de court-circuit max MPPT, avec correction par le coefficient `Isc` quand il est disponible ;
 - puissance PV DC inferieure a la puissance PV max acceptee par l'onduleur.
 - onduleur `tri` interdit sur distribution mono ou biphase.
 - limite de puissance AC unitaire selon le type de distribution : `5 kVA` en mono/biphase, `10 kVA` en tri delta ou tetra.
@@ -92,8 +95,8 @@ Pour chaque combinaison panneau / onduleur / nombre de modules / nombre de strin
 ## Hypotheses du prototype
 
 - La temperature minimale est appliquee au calcul de tension ouverte `Uoc`.
-- La temperature module maximale est appliquee au controle `Umpp` bas.
-- Le coefficient de temperature tension du panneau est reutilise pour approximer `Umpp`.
+- La temperature module maximale est appliquee au controle `Umpp` bas et aux courants corriges.
+- `Umpp(T)` est calcule avec `Umpp STC + Uoc STC x coef Uoc x (T - 25)`. `Impp(T)` est calcule avec `Impp STC + Isc STC x coef Isc x (T - 25)`.
 - Le coefficient d'exposition combine l'orientation de toiture et la pente, avec une orientation sud et une pente de 35 degres comme reference favorable.
 - En multi-toitures, les modules sont places en priorite sur la toiture au meilleur coefficient d'exposition. Le coefficient de production est ensuite pondere selon le nombre de modules places sur chaque toiture.
 - La production annuelle estimee utilise : `puissance kWc x gisement reference x coefficient exposition`.

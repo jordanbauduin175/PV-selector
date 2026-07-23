@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Dimensionnement solaire v0.23</title>
+  <title>Dimensionnement solaire v0.24</title>
   <style>
     :root {
       --bg: #f6f7f4;
@@ -762,7 +762,7 @@
   <div class="app">
     <header>
       <div>
-        <h1>Dimensionnement solaire <span class="version-badge">v0.23</span></h1>
+        <h1>Dimensionnement solaire <span class="version-badge">v0.24</span></h1>
         <div class="subtitle">Selection panneaux / onduleurs avec controles Uoc, Isc, Umpp et plages MPPT</div>
       </div>
       <div class="toolbar">
@@ -953,10 +953,10 @@
                   <th>Pac</th>
                   <th>DC/AC</th>
                   <th>Pertes</th>
-                  <th>Uoc froid</th>
-                  <th>Umpp chaud/froid</th>
+                  <th id="uocFroidHeader">Uoc froid</th>
+                  <th id="umppTempHeader">Umpp chaud/froid</th>
                   <th>Ecart rated</th>
-                  <th>Isc/MPPT</th>
+                  <th id="currentTempHeader">Impp/Isc MPPT</th>
                 </tr>
               </thead>
               <tbody id="resultBody"></tbody>
@@ -1000,14 +1000,14 @@
     <footer class="app-footer">
       <div><strong>Open-Elec</strong> - Auteur : Bauduin Jordan - <a href="https://www.open-elec.be" target="_blank" rel="noopener">www.open-elec.be</a></div>
       <div>Copyright (c) 2026 Bauduin Jordan / Open-Elec. Tous droits reserves.</div>
-      <div>UI v0.23 - Backend 0.23 - Schema catalogue 0.22 - <a id="footerChangelogLink" href="../docs/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+      <div>UI v0.24 - Backend 0.24 - Schema catalogue 0.24 - <a id="footerChangelogLink" href="../docs/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
     </footer>
   </div>
 
   <script>
-    const APP_VERSION = "v0.23";
-    const BACKEND_VERSION = "0.23";
-    const CATALOG_SCHEMA_VERSION = "0.22";
+    const APP_VERSION = "v0.24";
+    const BACKEND_VERSION = "0.24";
+    const CATALOG_SCHEMA_VERSION = "0.24";
     const APP_AUTHOR = "Bauduin Jordan";
     const APP_OWNER = "Open-Elec";
     const APP_URL = "https://www.open-elec.be";
@@ -1030,20 +1030,20 @@
       tetra: { label: "Tetra (3x400 + N)", maxAcVa: 10000 }
     };
 
-    const DEFAULT_PANELS_CSV = `reference,fabricant,puissance_w,largeur_m,hauteur_m,uoc_v,isc_a,umpp_v,impp_a,coef_tension_pct_c
-PV-BIFACIAL-500,Exemple,500.0,1.134,1.95,45.6,13.9,38.2,13.1,-0.29
-PV-HET-410,Exemple,410.0,1.04,1.755,50.0,10.5,42.0,9.76,-0.24
-PV-MONO-430,Exemple,430.0,1.134,1.722,39.8,13.7,33.1,13.0,-0.28
-PV-MONO-455,Exemple,455.0,1.134,1.762,41.2,14.0,34.5,13.2,-0.28
-JKM580N-72HL4-BDV,Jinko Solar,580.0,1.134,2.278,51.47,14.37,42.59,13.62,-0.25
-LR7-60HVH-560M,LONGi,560.0,1.134,1.99,45.28,15.65,37.51,14.93,-0.2
-TSM-425NEG9R.25,Trina Solar,425.0,1.134,1.762,50.9,10.56,42.9,9.92,-0.24
-TSM-430NEG9R.25,Trina Solar,430.0,1.134,1.762,51.4,10.59,43.2,9.96,-0.24
-TSM-435NEG9R.25,Trina Solar,435.0,1.134,1.762,51.8,10.64,43.6,9.99,-0.24
-TSM-440NEG9R.25,Trina Solar,440.0,1.134,1.762,52.2,10.67,44.0,10.01,-0.24
-TSM-445NEG9R.25,Trina Solar,445.0,1.134,1.762,52.6,10.71,44.3,10.05,-0.24
-TSM-450NEG9R.25,Trina Solar,450.0,1.134,1.762,52.9,10.74,44.6,10.09,-0.24
-JKM435N-54HL4R-B,jinko,435.0,1.134,1.762,39.36,13.72,32.78,13.27,-0.25`;
+    const DEFAULT_PANELS_CSV = `reference,fabricant,puissance_w,largeur_m,hauteur_m,uoc_v,isc_a,umpp_v,impp_a,coef_isc_pct_c,coef_tension_pct_c
+PV-BIFACIAL-500,Exemple,500.0,1.134,1.95,45.6,13.9,38.2,13.1,0.0,-0.29
+PV-HET-410,Exemple,410.0,1.04,1.755,50.0,10.5,42.0,9.76,0.0,-0.24
+PV-MONO-430,Exemple,430.0,1.134,1.722,39.8,13.7,33.1,13.0,0.0,-0.28
+PV-MONO-455,Exemple,455.0,1.134,1.762,41.2,14.0,34.5,13.2,0.0,-0.28
+JKM580N-72HL4-BDV,Jinko Solar,580.0,1.134,2.278,51.47,14.37,42.59,13.62,0.0,-0.25
+LR7-60HVH-560M,LONGi,560.0,1.134,1.99,45.28,15.65,37.51,14.93,0.0,-0.2
+TSM-425NEG9R.25,Trina Solar,425.0,1.134,1.762,50.9,10.56,42.9,9.92,0.04,-0.24
+TSM-430NEG9R.25,Trina Solar,430.0,1.134,1.762,51.4,10.59,43.2,9.96,0.04,-0.24
+TSM-435NEG9R.25,Trina Solar,435.0,1.134,1.762,51.8,10.64,43.6,9.99,0.04,-0.24
+TSM-440NEG9R.25,Trina Solar,440.0,1.134,1.762,52.2,10.67,44.0,10.01,0.04,-0.24
+TSM-445NEG9R.25,Trina Solar,445.0,1.134,1.762,52.6,10.71,44.3,10.05,0.04,-0.24
+TSM-450NEG9R.25,Trina Solar,450.0,1.134,1.762,52.9,10.74,44.6,10.09,0.04,-0.24
+JKM435N-54HL4R-B,jinko,435.0,1.134,1.762,39.36,13.72,32.78,13.27,0.0,-0.25`;
 
     const DEFAULT_INVERTERS_CSV = `reference,fabricant,puissance_ac_w,puissance_pv_max_w,tension_dc_max_v,tension_dc_nominale_v,mppt_min_v,mppt_max_v,courant_max_mppt_a,isc_max_mppt_a,nombre_mppt,strings_max_par_mppt,phase
 INV-10K-TRI,Exemple,10000.0,15000.0,1000.0,0.0,180.0,850.0,26.0,32.0,2,2,tri
@@ -1147,6 +1147,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         iscA: parseNumber(row.isc_a),
         umppV: parseNumber(row.umpp_v),
         imppA: parseNumber(row.impp_a),
+        coefIscPctC: parseOptionalNumber(row.coef_isc_pct_c),
         coefTensionPctC: parseNumber(row.coef_tension_pct_c),
         get surfaceM2() {
           return this.largeurM * this.hauteurM;
@@ -1208,6 +1209,28 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
 
     function voltageAtTemperature(voltageStc, coefPctC, temperatureC) {
       return voltageStc * (1 + (coefPctC / 100) * (temperatureC - 25));
+    }
+
+    function mppVoltageAtTemperature(umppStc, uocStc, coefPctC, temperatureC) {
+      return umppStc + (uocStc * (coefPctC / 100) * (temperatureC - 25));
+    }
+
+    function mppCurrentAtTemperature(imppStc, iscStc, coefIscPctC, temperatureC) {
+      return imppStc + (iscStc * (coefIscPctC / 100) * (temperatureC - 25));
+    }
+
+    function shortCircuitCurrentAtTemperature(iscStc, coefIscPctC, temperatureC) {
+      return iscStc * (1 + (coefIscPctC / 100) * (temperatureC - 25));
+    }
+
+    function celsiusLabel(value) {
+      return `${n(value, 0)} \u00B0C`;
+    }
+
+    function updateTemperatureHeaders(params) {
+      document.querySelector("#uocFroidHeader").textContent = `Uoc froid (${celsiusLabel(params.tmin)})`;
+      document.querySelector("#umppTempHeader").textContent = `Umpp chaud/froid (${celsiusLabel(params.tmax)} / ${celsiusLabel(params.tmin)})`;
+      document.querySelector("#currentTempHeader").textContent = `Impp/Isc MPPT (${celsiusLabel(params.tmax)} / ${celsiusLabel(params.tmin)})`;
     }
 
     function clamp(value, min, max) {
@@ -1397,11 +1420,11 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
       const dcResistanceOhm =
         cableResistance(dcMainLengthM, params.dcSectionMm2) +
         cableResistance(dcPanelCordLengthM, 4);
-      const dcCurrentA = panel.imppA;
+      const dcCurrentA = mppCurrentAtTemperature(panel.imppA, panel.iscA, panel.coefIscPctC, params.tmax);
       const dcVoltageDropV = dcCurrentA * dcResistanceOhm;
       const dcLossPerStringW = dcCurrentA * dcCurrentA * dcResistanceOhm;
       const dcLossW = dcLossPerStringW * nombreStrings;
-      const dcStringVoltageV = panel.umppV * modulesParString;
+      const dcStringVoltageV = mppVoltageAtTemperature(panel.umppV * modulesParString, panel.uocV * modulesParString, panel.coefTensionPctC, params.tmax);
       const dcVoltageDropPct = dcStringVoltageV > 0 ? dcVoltageDropV / dcStringVoltageV * 100 : 0;
 
       const acModel = acElectricalModel(inverter, params.distributionValue);
@@ -1653,9 +1676,11 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
             const mpptTotal = inverter.nombreMppt * inverterCount;
             const maxStrings = mpptTotal * inverter.stringsMaxParMppt;
             for (let modulesParString = 1; modulesParString <= maxModulesSurface; modulesParString += 1) {
-              const uocFroid = voltageAtTemperature(panel.uocV * modulesParString, panel.coefTensionPctC, params.tmin);
-              const umppChaud = voltageAtTemperature(panel.umppV * modulesParString, panel.coefTensionPctC, params.tmax);
-              const umppFroid = voltageAtTemperature(panel.umppV * modulesParString, panel.coefTensionPctC, params.tmin);
+              const uocStringStc = panel.uocV * modulesParString;
+              const umppStc = panel.umppV * modulesParString;
+              const uocFroid = voltageAtTemperature(uocStringStc, panel.coefTensionPctC, params.tmin);
+              const umppChaud = mppVoltageAtTemperature(umppStc, uocStringStc, panel.coefTensionPctC, params.tmax);
+              const umppFroid = mppVoltageAtTemperature(umppStc, uocStringStc, panel.coefTensionPctC, params.tmin);
 
               if (uocFroid > RGIE_UOC_FROID_MAX_V) {
                 rejected.uocRgie += maxStrings;
@@ -1673,7 +1698,6 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
                 rejected.umppMax += maxStrings;
                 continue;
               }
-              const umppStc = panel.umppV * modulesParString;
               const ecartUmppNominalPct = inverter.tensionDcNominaleV > 0
                 ? (umppStc - inverter.tensionDcNominaleV) / inverter.tensionDcNominaleV * 100
                 : 0;
@@ -1703,8 +1727,15 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
                   continue;
                 }
 
-                const imppMppt = Math.max(...repartition) * panel.imppA;
-                const iscMppt = Math.max(...repartition) * panel.iscA;
+                const stringsMaxParMpptReel = Math.max(...repartition);
+                const imppChaud = mppCurrentAtTemperature(panel.imppA, panel.iscA, panel.coefIscPctC, params.tmax);
+                const imppFroid = mppCurrentAtTemperature(panel.imppA, panel.iscA, panel.coefIscPctC, params.tmin);
+                const imppControle = Math.max(panel.imppA, imppChaud, imppFroid);
+                const iscChaud = shortCircuitCurrentAtTemperature(panel.iscA, panel.coefIscPctC, params.tmax);
+                const iscFroid = shortCircuitCurrentAtTemperature(panel.iscA, panel.coefIscPctC, params.tmin);
+                const iscControle = Math.max(panel.iscA, iscChaud, iscFroid);
+                const imppMppt = stringsMaxParMpptReel * imppControle;
+                const iscMppt = stringsMaxParMpptReel * iscControle;
                 if (imppMppt > inverter.courantMaxMpptA || iscMppt > inverter.iscMaxMpptA) {
                   rejected.courant += 1;
                   continue;
@@ -1779,9 +1810,17 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
                   ratioDcAc: puissanceAcTotalW ? puissanceDc / puissanceAcTotalW : 0,
                   umppStcV: umppStc,
                   ecartUmppNominalPct,
+                  temperatureFroidC: params.tmin,
+                  temperatureChaudC: params.tmax,
                   uocFroidV: uocFroid,
                   umppChaudV: umppChaud,
                   umppFroidV: umppFroid,
+                  imppChaudA: imppChaud,
+                  imppFroidA: imppFroid,
+                  imppControleA: imppControle,
+                  iscChaudA: iscChaud,
+                  iscFroidA: iscFroid,
+                  iscControleA: iscControle,
                   imppMpptA: imppMppt,
                   iscMpptA: iscMppt
                 });
@@ -2052,6 +2091,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         ) {
           throw new Error("Verifie la conso, le gisement, la pente et les distances cables.");
         }
+        updateTemperatureHeaders(params);
         const limit = Math.max(1, Math.round(parseNumber(fields.limit.value)));
         const outcome = optimize(material.panels, material.inverters, params);
         state.results = outcome.results;
@@ -2099,7 +2139,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
           <td>${n(item.uocFroidV, 0)} V</td>
           <td>${n(item.umppChaudV, 0)} / ${n(item.umppFroidV, 0)} V</td>
           <td>${nominalDeviationLabel(item)}</td>
-          <td>${n(item.iscMpptA, 1)} A</td>
+          <td>${n(item.imppMpptA, 1)} / ${n(item.iscMpptA, 1)} A</td>
         `;
         row.addEventListener("click", () => {
           state.selectedIndex = index;
@@ -2223,13 +2263,13 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         <div class="detail-block">
           <h3>Controles valides</h3>
           <div class="checks">
-            ${checkLine(`Uoc froid = ${n(item.uocFroidV, 1)} V <= limite RGIE ${n(RGIE_UOC_FROID_MAX_V, 0)} V DC`)}
-            ${checkLine(`Uoc froid = ${n(item.uocFroidV, 1)} V <= tension DC max ${n(item.inverter.tensionDcMaxV, 1)} V`)}
-            ${checkLine(`Umpp chaud = ${n(item.umppChaudV, 1)} V >= MPPT min ${n(item.inverter.mpptMinV, 1)} V`)}
-            ${checkLine(`Umpp froid = ${n(item.umppFroidV, 1)} V <= MPPT max ${n(item.inverter.mpptMaxV, 1)} V`)}
+            ${checkLine(`Uoc froid (${celsiusLabel(item.temperatureFroidC)}) = ${n(item.uocFroidV, 1)} V <= limite RGIE ${n(RGIE_UOC_FROID_MAX_V, 0)} V DC`)}
+            ${checkLine(`Uoc froid (${celsiusLabel(item.temperatureFroidC)}) = ${n(item.uocFroidV, 1)} V <= tension DC max ${n(item.inverter.tensionDcMaxV, 1)} V`)}
+            ${checkLine(`Umpp chaud (${celsiusLabel(item.temperatureChaudC)}) = ${n(item.umppChaudV, 1)} V >= MPPT min ${n(item.inverter.mpptMinV, 1)} V`)}
+            ${checkLine(`Umpp froid (${celsiusLabel(item.temperatureFroidC)}) = ${n(item.umppFroidV, 1)} V <= MPPT max ${n(item.inverter.mpptMaxV, 1)} V`)}
             ${checkLine(item.inverter.tensionDcNominaleV > 0 ? `Repere rated input : Umpp STC ${n(item.umppStcV, 1)} V vs ${n(item.inverter.tensionDcNominaleV, 0)} V = ${signedPct(item.ecartUmppNominalPct)}` : "Repere rated input : non renseigne, non bloquant")}
-            ${checkLine(`Impp par MPPT = ${n(item.imppMpptA, 1)} A <= courant max ${n(item.inverter.courantMaxMpptA, 1)} A`)}
-            ${checkLine(`Isc par MPPT = ${n(item.iscMpptA, 1)} A <= Isc max ${n(item.inverter.iscMaxMpptA, 1)} A`)}
+            ${checkLine(`Impp max par MPPT = ${n(item.imppMpptA, 1)} A (chaud ${n(item.imppChaudA, 1)} A / froid ${n(item.imppFroidA, 1)} A / STC ${n(item.panel.imppA, 1)} A) <= courant max ${n(item.inverter.courantMaxMpptA, 1)} A`)}
+            ${checkLine(`Isc max par MPPT = ${n(item.iscMpptA, 1)} A (chaud ${n(item.iscChaudA, 1)} A / froid ${n(item.iscFroidA, 1)} A / STC ${n(item.panel.iscA, 1)} A) <= Isc max ${n(item.inverter.iscMaxMpptA, 1)} A`)}
             ${checkLine(`Puissance PV = ${n(item.puissanceDcW, 0)} W <= PV max total ${n(item.puissancePvMaxTotalW, 0)} W`)}
             ${checkLine(`Puissance AC unitaire = ${kva(item.inverter.puissanceAcW)} <= limite distribution ${kva(item.maxInverterAcVa)}`)}
             ${checkLine(`Nombre onduleurs = ${item.inverterCount} <= maximum choisi ${item.maxInverterCount}`)}
@@ -2401,6 +2441,10 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         "puissance_ac_unitaire_kw",
         "puissance_ac_totale_kw",
         "ratio_dc_ac",
+        "temperature_froid_c",
+        "temperature_chaud_c",
+        "coef_uoc_pct_c",
+        "coef_isc_pct_c",
         "uoc_froid_v",
         "limite_rgie_uoc_froid_v",
         "umpp_chaud_v",
@@ -2409,6 +2453,12 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         "tension_dc_nominale_onduleur_v",
         "ecart_umpp_nominal_pct",
         "impp_mppt_a",
+        "impp_chaud_a",
+        "impp_froid_a",
+        "impp_controle_a",
+        "isc_chaud_a",
+        "isc_froid_a",
+        "isc_controle_a",
         "isc_mppt_a",
         "app_version",
         "backend_version",
@@ -2473,6 +2523,10 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         n(item.inverter.puissanceAcW / 1000, 3),
         n(item.puissanceAcTotalW / 1000, 3),
         n(item.ratioDcAc, 3),
+        n(item.temperatureFroidC, 0),
+        n(item.temperatureChaudC, 0),
+        n(item.panel.coefTensionPctC, 3),
+        n(item.panel.coefIscPctC, 3),
         n(item.uocFroidV, 2),
         n(RGIE_UOC_FROID_MAX_V, 0),
         n(item.umppChaudV, 2),
@@ -2481,6 +2535,12 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         item.inverter.tensionDcNominaleV > 0 ? n(item.inverter.tensionDcNominaleV, 2) : "",
         item.inverter.tensionDcNominaleV > 0 ? n(item.ecartUmppNominalPct, 3) : "",
         n(item.imppMpptA, 2),
+        n(item.imppChaudA, 2),
+        n(item.imppFroidA, 2),
+        n(item.imppControleA, 2),
+        n(item.iscChaudA, 2),
+        n(item.iscFroidA, 2),
+        n(item.iscControleA, 2),
         n(item.iscMpptA, 2),
         APP_VERSION,
         BACKEND_VERSION,
@@ -2517,11 +2577,19 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
       const tmin = parseNumber(fields.tmin.value);
       const tmax = parseNumber(fields.tmax.value);
       const coefPct = item.panel.coefTensionPctC;
+      const coefIscPct = item.panel.coefIscPctC;
       const factorCold = 1 + (coefPct / 100) * (tmin - 25);
       const factorHot = 1 + (coefPct / 100) * (tmax - 25);
       const uocStringStc = item.panel.uocV * item.modulesParString;
       const umppStringStc = item.panel.umppV * item.modulesParString;
-      const dcStringVoltage = item.panel.umppV * item.modulesParString;
+      const umppDeltaHot = uocStringStc * (coefPct / 100) * (tmax - 25);
+      const umppDeltaCold = uocStringStc * (coefPct / 100) * (tmin - 25);
+      const imppDeltaHot = item.panel.iscA * (coefIscPct / 100) * (tmax - 25);
+      const imppDeltaCold = item.panel.iscA * (coefIscPct / 100) * (tmin - 25);
+      const iscFactorHot = 1 + (coefIscPct / 100) * (tmax - 25);
+      const iscFactorCold = 1 + (coefIscPct / 100) * (tmin - 25);
+      const stringsMaxParMppt = Math.max(...item.repartition);
+      const dcStringVoltage = item.umppChaudV;
       const dcReturnLength = item.modulesParString * item.dcReturnPerPanelM;
       const dcMainBaseLength = 2 * item.dcDistanceM;
       const acTotalDistance = item.acInvTdDistanceM + item.acTdMeterDistanceM;
@@ -2551,7 +2619,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         `- Consommation client : ${n(item.consumptionKwh, 0)} kWh/an`,
         `- Distribution : ${item.distributionLabel}, limite ${kva(item.maxInverterAcVa)} par onduleur, ${item.maxInverterCount} onduleur(s) max choisi(s)`,
         `- Gisement reference : ${n(item.referenceYieldKwhKwc, 0)} kWh/kWc/an`,
-        `- Temperature min / module max : ${n(tmin, 0)} C / ${n(tmax, 0)} C`,
+        `- Temperature froid / chaud module : ${celsiusLabel(tmin)} / ${celsiusLabel(tmax)}`,
         `- Filtres materiel : ${item.panelFilterLabel} / ${item.inverterFilterLabel}`,
         "",
         "## 2. Materiel retenu",
@@ -2560,7 +2628,8 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         `- Puissance panneau : ${n(item.panel.puissanceW, 0)} Wc`,
         `- Dimensions panneau : ${n(item.panel.largeurM, 3)} x ${n(item.panel.hauteurM, 3)} m = ${n(item.panel.surfaceM2, 3)} m2`,
         `- Uoc / Isc / Umpp / Impp : ${n(item.panel.uocV, 2)} V / ${n(item.panel.iscA, 2)} A / ${n(item.panel.umppV, 2)} V / ${n(item.panel.imppA, 2)} A`,
-        `- Coefficient tension : ${n(coefPct, 2)} %/C`,
+        `- Coefficient Uoc/Voc : ${n(coefPct, 2)} %/C`,
+        `- Coefficient Isc : ${n(coefIscPct, 2)} %/C`,
         `- Onduleur : ${item.inverterCount} x ${item.inverter.reference} (${item.inverter.fabricant}, ${item.inverter.phase})`,
         `- Puissance AC unitaire / totale : ${n(item.inverter.puissanceAcW, 0)} W / ${n(item.puissanceAcTotalW, 0)} W`,
         `- PV max unitaire / total : ${n(item.inverter.puissancePvMaxW, 0)} W / ${n(item.puissancePvMaxTotalW, 0)} W`,
@@ -2582,18 +2651,21 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         "",
         "## 4. Validations electriques DC",
         "",
-        `- Facteur froid : 1 + (${n(coefPct, 2)} / 100) x (${n(tmin, 0)} - 25) = ${n(factorCold, 4)}`,
-        `- Facteur chaud : 1 + (${n(coefPct, 2)} / 100) x (${n(tmax, 0)} - 25) = ${n(factorHot, 4)}`,
+        `- Facteur Uoc froid (${celsiusLabel(tmin)}) : 1 + (${n(coefPct, 2)} / 100) x (${n(tmin, 0)} - 25) = ${n(factorCold, 4)}`,
+        `- Facteur Uoc chaud (${celsiusLabel(tmax)}) : 1 + (${n(coefPct, 2)} / 100) x (${n(tmax, 0)} - 25) = ${n(factorHot, 4)}`,
         `- Uoc string STC : ${n(item.panel.uocV, 2)} x ${item.modulesParString} = ${n(uocStringStc, 2)} V`,
-        `- Uoc froid : ${n(uocStringStc, 2)} x ${n(factorCold, 4)} = ${n(item.uocFroidV, 2)} V`,
+        `- Uoc froid (${celsiusLabel(tmin)}) : ${n(uocStringStc, 2)} x ${n(factorCold, 4)} = ${n(item.uocFroidV, 2)} V`,
         `- Validation RGIE : ${n(item.uocFroidV, 2)} V <= ${n(RGIE_UOC_FROID_MAX_V, 0)} V DC`,
         `- Validation onduleur : ${n(item.uocFroidV, 2)} V <= ${n(item.inverter.tensionDcMaxV, 0)} V DC max`,
         `- Umpp string STC : ${n(item.panel.umppV, 2)} x ${item.modulesParString} = ${n(umppStringStc, 2)} V`,
         item.inverter.tensionDcNominaleV > 0 ? `- Ecart au rated input : (${n(umppStringStc, 2)} - ${n(item.inverter.tensionDcNominaleV, 0)}) / ${n(item.inverter.tensionDcNominaleV, 0)} x 100 = ${signedPct(item.ecartUmppNominalPct)}` : "- Ecart au rated input : non calcule, tension nominale onduleur absente",
-        `- Umpp chaud : ${n(umppStringStc, 2)} x ${n(factorHot, 4)} = ${n(item.umppChaudV, 2)} V >= MPPT min ${n(item.inverter.mpptMinV, 0)} V`,
-        `- Umpp froid : ${n(umppStringStc, 2)} x ${n(factorCold, 4)} = ${n(item.umppFroidV, 2)} V <= MPPT max ${n(item.inverter.mpptMaxV, 0)} V`,
-        `- Impp par MPPT : max(${item.repartition.join(" / ")}) x ${n(item.panel.imppA, 2)} = ${n(item.imppMpptA, 2)} A <= ${n(item.inverter.courantMaxMpptA, 2)} A`,
-        `- Isc par MPPT : max(${item.repartition.join(" / ")}) x ${n(item.panel.iscA, 2)} = ${n(item.iscMpptA, 2)} A <= ${n(item.inverter.iscMaxMpptA, 2)} A`,
+        `- Umpp chaud (${celsiusLabel(tmax)}) : ${n(umppStringStc, 2)} + (${n(uocStringStc, 2)} x ${n(coefPct, 2)} / 100 x (${n(tmax, 0)} - 25)) = ${n(umppStringStc, 2)} + ${n(umppDeltaHot, 2)} = ${n(item.umppChaudV, 2)} V >= MPPT min ${n(item.inverter.mpptMinV, 0)} V`,
+        `- Umpp froid (${celsiusLabel(tmin)}) : ${n(umppStringStc, 2)} + (${n(uocStringStc, 2)} x ${n(coefPct, 2)} / 100 x (${n(tmin, 0)} - 25)) = ${n(umppStringStc, 2)} + ${n(umppDeltaCold, 2)} = ${n(item.umppFroidV, 2)} V <= MPPT max ${n(item.inverter.mpptMaxV, 0)} V`,
+        `- Impp chaud (${celsiusLabel(tmax)}) : ${n(item.panel.imppA, 2)} + (${n(item.panel.iscA, 2)} x ${n(coefIscPct, 2)} / 100 x (${n(tmax, 0)} - 25)) = ${n(item.panel.imppA, 2)} + ${n(imppDeltaHot, 3)} = ${n(item.imppChaudA, 2)} A`,
+        `- Impp froid (${celsiusLabel(tmin)}) : ${n(item.panel.imppA, 2)} + (${n(item.panel.iscA, 2)} x ${n(coefIscPct, 2)} / 100 x (${n(tmin, 0)} - 25)) = ${n(item.panel.imppA, 2)} + ${n(imppDeltaCold, 3)} = ${n(item.imppFroidA, 2)} A`,
+        `- Impp max par MPPT : ${stringsMaxParMppt} x ${n(item.imppControleA, 2)} = ${n(item.imppMpptA, 2)} A <= ${n(item.inverter.courantMaxMpptA, 2)} A`,
+        `- Isc chaud (${celsiusLabel(tmax)}) : ${n(item.panel.iscA, 2)} x ${n(iscFactorHot, 4)} = ${n(item.iscChaudA, 2)} A ; Isc froid (${celsiusLabel(tmin)}) : ${n(item.panel.iscA, 2)} x ${n(iscFactorCold, 4)} = ${n(item.iscFroidA, 2)} A`,
+        `- Isc max par MPPT : ${stringsMaxParMppt} x ${n(item.iscControleA, 2)} = ${n(item.iscMpptA, 2)} A <= ${n(item.inverter.iscMaxMpptA, 2)} A`,
         `- Puissance PV max onduleurs : ${n(item.puissanceDcW, 0)} W <= ${n(item.puissancePvMaxTotalW, 0)} W`,
         "",
         "## 5. Pertes cables DC",
@@ -2602,7 +2674,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         `- Cordons panneaux : ${item.modulesParString} x ${n(item.panelCordM, 2)} = ${n(item.dcPanelCordLengthM, 2)} m en 4 mm2`,
         `- Resistance DC/string : rho x L / S = ${n(item.dcResistanceOhm, 5)} ohm`,
         `- Chute tension DC/string : I x R = ${n(item.dcCurrentA, 2)} x ${n(item.dcResistanceOhm, 5)} = ${n(item.dcVoltageDropV, 3)} V`,
-        `- Reference tension string : ${n(dcStringVoltage, 2)} V ; chute = ${n(item.dcVoltageDropPct, 3)} %`,
+        `- Reference tension string chaud (${celsiusLabel(tmax)}) : ${n(dcStringVoltage, 2)} V ; chute = ${n(item.dcVoltageDropPct, 3)} %`,
         `- Perte Joule DC : I2 x R x strings = ${n(item.dcCurrentA, 2)}2 x ${n(item.dcResistanceOhm, 5)} x ${item.nombreStrings} = ${n(item.dcLossW, 2)} W`,
         "",
         "## 6. Pertes cables AC",

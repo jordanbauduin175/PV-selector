@@ -26,7 +26,7 @@ from catalogue_fabricants import (
 )
 
 
-APP_VERSION = "0.22"
+APP_VERSION = "0.24"
 SUPPORTED_EXTENSIONS = {".pdf", ".txt", ".text", ".md"}
 DEFAULT_REPORT = OUTPUT_DIR / "datasheet_import_report.csv"
 DEFAULT_PANELS_OUT = INPUT_DIR / "panneaux.csv"
@@ -334,6 +334,17 @@ def parse_panel(text: str, path: Path, manufacturer: str, source_type: str) -> d
         "isc_a": first_value(text, [r"short\s*[- ]?circuit\s+current", r"\bisc\b"], "A"),
         "umpp_v": first_value(text, [r"voltage\s+at\s+maximum\s+power", r"\bvmp\b", r"\bvmpp\b", r"\bumpp\b"], "V"),
         "impp_a": first_value(text, [r"current\s+at\s+maximum\s+power", r"\bimp\b", r"\bimpp\b"], "A"),
+        "coef_isc_pct_c": first_value(
+            text,
+            [
+                r"temperature\s+coefficient.{0,40}\bisc\b",
+                r"temp\.?\s+coefficient.{0,40}\bisc\b",
+                r"\bisc\b.{0,40}temperature\s+coefficient",
+                r"\balpha.{0,20}isc\b",
+            ],
+            r"%/?(?:degC|deg C|C|K)",
+            160,
+        ),
         "coef_tension_pct_c": first_value(
             text,
             [
@@ -423,6 +434,25 @@ def trina_voc_temperature_coefficient(document: LoadedDatasheet) -> float | None
     return fallback
 
 
+
+def trina_isc_temperature_coefficient(document: LoadedDatasheet) -> float | None:
+    for row in rows_from_words(document.words):
+        row_text = " ".join(str(word.get("text", "")) for word in sorted(row, key=lambda item: item.get("x0", 0)))
+        compact = compact_label(row_text)
+        if "temperaturecoefficientofisc" not in compact:
+            continue
+        for word in sorted(row, key=lambda item: item.get("x0", 0)):
+            parsed = decimal(str(word.get("text", "")))
+            if parsed is not None and abs(parsed) < 2:
+                return parsed
+    fallback = first_value(
+        document.text,
+        [r"temperature\s+coefficient\s+of\s+isc", r"temp\.?\s+coefficient.{0,40}\bisc\b"],
+        r"%/?(?:degC|deg C|C|K)",
+        180,
+    )
+    return fallback
+
 def parse_trina_vertex_panels(document: LoadedDatasheet, path: Path, manufacturer: str, source_type: str) -> list[dict]:
     text = document.text
     if "tsm-" not in text.lower() or "neg" not in text.lower():
@@ -439,6 +469,7 @@ def parse_trina_vertex_panels(document: LoadedDatasheet, path: Path, manufacture
 
     width_m, height_m = find_dimensions_m(text)
     coef_voc = trina_voc_temperature_coefficient(document)
+    coef_isc = trina_isc_temperature_coefficient(document)
     suffix = trina_vertex_suffix(text)
     manufacturer = "Trina Solar" if "trina" in text.lower() or "trina" in manufacturer.lower() else manufacturer
 
@@ -457,11 +488,12 @@ def parse_trina_vertex_panels(document: LoadedDatasheet, path: Path, manufacture
                 "isc_a": isc[index],
                 "umpp_v": vmpp[index],
                 "impp_a": impp[index],
+                "coef_isc_pct_c": coef_isc,
                 "coef_tension_pct_c": coef_voc,
                 "source_url": path.resolve().as_uri(),
                 "source_type": source_type,
                 "last_verified": today(),
-                "notes": "Import automatique datasheet tableau Trina Vertex; valeurs STC par colonne, donnees mecaniques et coefficient Voc communs.",
+                "notes": "Import automatique datasheet tableau Trina Vertex; valeurs STC par colonne, donnees mecaniques et coefficients Voc/Isc communs.",
             }
         )
     return entries

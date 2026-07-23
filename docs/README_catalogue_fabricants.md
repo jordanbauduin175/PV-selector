@@ -1,7 +1,10 @@
-# Module catalogue fabricants v0.22
+# Module catalogue fabricants v0.24
 
 Ce module sert a rechercher localement, stocker et exporter les caracteristiques fabricants des panneaux et onduleurs. Il peut aussi importer des fiches techniques placees dans `input/datasheets`.
 
+## Version 0.24
+
+Le schema catalogue panneaux ajoute `coef_isc_pct_c`, coefficient de temperature du courant de court-circuit. L'import datasheet extrait ce coefficient quand il est disponible ; les panneaux Trina Vertex importes depuis la fiche fournissent maintenant `0.04 %/C`. Le champ historique `coef_tension_pct_c` reste le coefficient `Uoc/Voc`.
 ## Version 0.22
 
 Le schema catalogue reste synchronise avec l'application v0.22. Les exports generes peuvent etre associes au changelog et aux informations de support Open-Elec pour faciliter le diagnostic.

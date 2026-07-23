@@ -8,7 +8,7 @@ from pathlib import Path
 from urllib.parse import quote_plus
 
 
-APP_VERSION = "0.22"
+APP_VERSION = "0.24"
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 INPUT_DIR = PROJECT_ROOT / "input"
 OUTPUT_DIR = PROJECT_ROOT / "output"
@@ -24,6 +24,7 @@ PANELS_HEADER = [
     "isc_a",
     "umpp_v",
     "impp_a",
+    "coef_isc_pct_c",
     "coef_tension_pct_c",
 ]
 INVERTERS_HEADER = [
@@ -77,7 +78,7 @@ def parse_int(value: str | float | int) -> int:
     return int(round(parse_float(value)))
 
 
-OPTIONAL_NUMERIC_FIELDS = {"tension_dc_nominale_v"}
+OPTIONAL_NUMERIC_FIELDS = {"tension_dc_nominale_v", "coef_isc_pct_c"}
 
 def normalize_entry(entry: dict, header: list[str], numeric_ints: set[str] | None = None) -> dict:
     numeric_ints = numeric_ints or set()

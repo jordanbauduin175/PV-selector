@@ -10,7 +10,7 @@ from tkinter import BOTH, END, LEFT, RIGHT, TOP, X, Y, filedialog, messagebox, t
 import tkinter as tk
 
 
-APP_VERSION = "v0.22"
+APP_VERSION = "v0.24"
 APP_TITLE = f"Dimensionnement solaire {APP_VERSION} - selection panneaux / onduleurs"
 APP_AUTHOR = "Bauduin Jordan"
 APP_OWNER = "Open-Elec"
@@ -55,6 +55,7 @@ class Panel:
     isc_a: float
     umpp_v: float
     impp_a: float
+    coef_isc_pct_c: float
     coef_tension_pct_c: float
 
     @property
@@ -169,6 +170,7 @@ def load_panels(path: Path) -> list[Panel]:
                     isc_a=parse_float(row["isc_a"]),
                     umpp_v=parse_float(row["umpp_v"]),
                     impp_a=parse_float(row["impp_a"]),
+                    coef_isc_pct_c=parse_optional_float(row.get("coef_isc_pct_c")),
                     coef_tension_pct_c=parse_float(row["coef_tension_pct_c"]),
                 )
             )
@@ -202,6 +204,18 @@ def load_inverters(path: Path) -> list[Inverter]:
 def voltage_at_temperature(voltage_stc: float, coef_pct_c: float, temperature_c: float) -> float:
     return voltage_stc * (1 + (coef_pct_c / 100.0) * (temperature_c - 25.0))
 
+
+
+def mpp_voltage_at_temperature(umpp_stc: float, uoc_stc: float, coef_pct_c: float, temperature_c: float) -> float:
+    return umpp_stc + (uoc_stc * (coef_pct_c / 100.0) * (temperature_c - 25.0))
+
+
+def mpp_current_at_temperature(impp_stc: float, isc_stc: float, coef_isc_pct_c: float, temperature_c: float) -> float:
+    return impp_stc + (isc_stc * (coef_isc_pct_c / 100.0) * (temperature_c - 25.0))
+
+
+def short_circuit_current_at_temperature(isc_stc: float, coef_isc_pct_c: float, temperature_c: float) -> float:
+    return isc_stc * (1 + (coef_isc_pct_c / 100.0) * (temperature_c - 25.0))
 
 def clamp(value: float, min_value: float, max_value: float) -> float:
     return min(max_value, max(min_value, value))
@@ -258,16 +272,22 @@ def calculate_cable_losses(
     ac_inv_td_section_mm2: float,
     ac_td_meter_distance_m: float,
     ac_td_meter_section_mm2: float,
+    temperature_max_module_c: float,
 ) -> dict[str, float]:
     dc_main_length_m = (2 * dc_distance_m) + (modules_par_string * dc_return_per_panel_m)
     dc_panel_cord_length_m = modules_par_string * panel_cord_m
     dc_resistance = cable_resistance(dc_main_length_m, dc_section_mm2) + cable_resistance(
         dc_panel_cord_length_m, 4.0
     )
-    dc_current = panel.impp_a
+    dc_current = mpp_current_at_temperature(panel.impp_a, panel.isc_a, panel.coef_isc_pct_c, temperature_max_module_c)
     dc_voltage_drop = dc_current * dc_resistance
     dc_loss = dc_current * dc_current * dc_resistance * nombre_strings
-    dc_string_voltage = panel.umpp_v * modules_par_string
+    dc_string_voltage = mpp_voltage_at_temperature(
+        panel.umpp_v * modules_par_string,
+        panel.uoc_v * modules_par_string,
+        panel.coef_tension_pct_c,
+        temperature_max_module_c,
+    )
     dc_voltage_drop_pct = (dc_voltage_drop / dc_string_voltage * 100.0) if dc_string_voltage else 0.0
 
     ac_voltage, ac_current, ac_conductors, ac_drop_factor = ac_electrical_model(inverter, distribution_label)
@@ -366,22 +386,25 @@ def optimize(
                 rejected["distribution"] += max_modules_surface * max_strings
                 continue
             for modules_par_string in range(1, max_modules_surface + 1):
+                uoc_stc = panel.uoc_v * modules_par_string
+                umpp_stc = panel.umpp_v * modules_par_string
                 uoc_froid = voltage_at_temperature(
-                    panel.uoc_v * modules_par_string,
+                    uoc_stc,
                     panel.coef_tension_pct_c,
                     temperature_min_c,
                 )
-                umpp_chaud = voltage_at_temperature(
-                    panel.umpp_v * modules_par_string,
+                umpp_chaud = mpp_voltage_at_temperature(
+                    umpp_stc,
+                    uoc_stc,
                     panel.coef_tension_pct_c,
                     temperature_max_module_c,
                 )
-                umpp_froid = voltage_at_temperature(
-                    panel.umpp_v * modules_par_string,
+                umpp_froid = mpp_voltage_at_temperature(
+                    umpp_stc,
+                    uoc_stc,
                     panel.coef_tension_pct_c,
                     temperature_min_c,
                 )
-                umpp_stc = panel.umpp_v * modules_par_string
                 ecart_umpp_nominal_pct = (
                     (umpp_stc - inverter.tension_dc_nominale_v) / inverter.tension_dc_nominale_v * 100.0
                     if inverter.tension_dc_nominale_v > 0
@@ -413,8 +436,23 @@ def optimize(
                         rejected["courant"] += 1
                         continue
 
-                    impp_mppt = max(repartition) * panel.impp_a
-                    isc_mppt = max(repartition) * panel.isc_a
+                    strings_max_mppt = max(repartition)
+                    impp_chaud = mpp_current_at_temperature(
+                        panel.impp_a, panel.isc_a, panel.coef_isc_pct_c, temperature_max_module_c
+                    )
+                    impp_froid = mpp_current_at_temperature(
+                        panel.impp_a, panel.isc_a, panel.coef_isc_pct_c, temperature_min_c
+                    )
+                    impp_controle = max(panel.impp_a, impp_chaud, impp_froid)
+                    isc_chaud = short_circuit_current_at_temperature(
+                        panel.isc_a, panel.coef_isc_pct_c, temperature_max_module_c
+                    )
+                    isc_froid = short_circuit_current_at_temperature(
+                        panel.isc_a, panel.coef_isc_pct_c, temperature_min_c
+                    )
+                    isc_controle = max(panel.isc_a, isc_chaud, isc_froid)
+                    impp_mppt = strings_max_mppt * impp_controle
+                    isc_mppt = strings_max_mppt * isc_controle
                     if impp_mppt > inverter.courant_max_mppt_a or isc_mppt > inverter.isc_max_mppt_a:
                         rejected["courant"] += 1
                         continue
@@ -438,6 +476,7 @@ def optimize(
                         ac_inv_td_section_mm2,
                         ac_td_meter_distance_m,
                         ac_td_meter_section_mm2,
+                        temperature_max_module_c,
                     )
                     total_loss_pct = (
                         losses["total_loss_w"] / puissance_dc * 100.0 if puissance_dc > 0 else 0.0
@@ -595,17 +634,31 @@ def build_calculation_report(
     surface_utile = max(0.0, surface_disponible_m2 * taux_occupation_pct / 100.0)
     max_modules_surface = math.floor(surface_utile / item.panel.surface_m2) if item.panel.surface_m2 > 0 else 0
     coef_pct = item.panel.coef_tension_pct_c
+    coef_isc_pct = item.panel.coef_isc_pct_c
     factor_cold = 1 + (coef_pct / 100.0) * (temperature_min_c - 25.0)
     factor_hot = 1 + (coef_pct / 100.0) * (temperature_max_module_c - 25.0)
     uoc_string_stc = item.panel.uoc_v * item.modules_par_string
     umpp_string_stc = item.panel.umpp_v * item.modules_par_string
-    dc_string_voltage = item.panel.umpp_v * item.modules_par_string
+    umpp_delta_hot = uoc_string_stc * (coef_pct / 100.0) * (temperature_max_module_c - 25.0)
+    umpp_delta_cold = uoc_string_stc * (coef_pct / 100.0) * (temperature_min_c - 25.0)
+    impp_delta_hot = item.panel.isc_a * (coef_isc_pct / 100.0) * (temperature_max_module_c - 25.0)
+    impp_delta_cold = item.panel.isc_a * (coef_isc_pct / 100.0) * (temperature_min_c - 25.0)
+    impp_chaud = mpp_current_at_temperature(item.panel.impp_a, item.panel.isc_a, coef_isc_pct, temperature_max_module_c)
+    impp_froid = mpp_current_at_temperature(item.panel.impp_a, item.panel.isc_a, coef_isc_pct, temperature_min_c)
+    impp_controle = max(item.panel.impp_a, impp_chaud, impp_froid)
+    isc_factor_hot = 1 + (coef_isc_pct / 100.0) * (temperature_max_module_c - 25.0)
+    isc_factor_cold = 1 + (coef_isc_pct / 100.0) * (temperature_min_c - 25.0)
+    isc_chaud = short_circuit_current_at_temperature(item.panel.isc_a, coef_isc_pct, temperature_max_module_c)
+    isc_froid = short_circuit_current_at_temperature(item.panel.isc_a, coef_isc_pct, temperature_min_c)
+    isc_controle = max(item.panel.isc_a, isc_chaud, isc_froid)
+    strings_max_mppt = max(item.repartition_mppt)
+    dc_string_voltage = item.umpp_chaud_v
     dc_return_length = item.modules_par_string * item.dc_return_per_panel_m
     dc_main_base_length = 2 * item.dc_distance_m
     dc_resistance = cable_resistance(item.dc_main_length_m, item.dc_section_mm2) + cable_resistance(
         item.dc_panel_cord_length_m, 4.0
     )
-    dc_current = item.panel.impp_a
+    dc_current = impp_chaud
     ac_voltage, ac_current, _ac_conductors, _ac_drop_factor = ac_electrical_model(
         item.inverter, item.distribution_label
     )
@@ -639,7 +692,7 @@ def build_calculation_report(
         f"- Distribution : {item.distribution_label}, limite onduleur {format_kw(item.limite_distribution_va)} kVA",
         f"- Orientation / pente : {item.orientation_label}, {format_num(item.pente_deg, 0)} degres",
         f"- Gisement reference : {format_num(item.gisement_reference_kwh_kwc, 0)} kWh/kWc/an",
-        f"- Temperature min / module max : {format_num(temperature_min_c, 0)} C / {format_num(temperature_max_module_c, 0)} C",
+        f"- Temperature froid / chaud module : {format_num(temperature_min_c, 0)} C / {format_num(temperature_max_module_c, 0)} C",
         f"- Filtres materiel : {panel_filter} / {inverter_filter}",
         "",
         "## 2. Materiel retenu",
@@ -648,7 +701,8 @@ def build_calculation_report(
         f"- Puissance panneau : {format_num(item.panel.puissance_w, 0)} Wc",
         f"- Dimensions panneau : {format_num(item.panel.largeur_m, 3)} x {format_num(item.panel.hauteur_m, 3)} m = {format_num(item.panel.surface_m2, 3)} m2",
         f"- Uoc / Isc / Umpp / Impp : {format_num(item.panel.uoc_v, 2)} V / {format_num(item.panel.isc_a, 2)} A / {format_num(item.panel.umpp_v, 2)} V / {format_num(item.panel.impp_a, 2)} A",
-        f"- Coefficient tension : {format_num(coef_pct, 2)} %/C",
+        f"- Coefficient Uoc/Voc : {format_num(coef_pct, 2)} %/C",
+        f"- Coefficient Isc : {format_num(coef_isc_pct, 2)} %/C",
         f"- Onduleur : {item.inverter.reference} ({item.inverter.fabricant}, {item.inverter.phase})",
         f"- Puissance AC / PV max : {format_num(item.inverter.puissance_ac_w, 0)} W / {format_num(item.inverter.puissance_pv_max_w, 0)} W",
         f"- Plage MPPT : {format_num(item.inverter.mppt_min_v, 0)} a {format_num(item.inverter.mppt_max_v, 0)} V",
@@ -666,18 +720,21 @@ def build_calculation_report(
         "",
         "## 4. Validations electriques DC",
         "",
-        f"- Facteur froid : 1 + ({format_num(coef_pct, 2)} / 100) x ({format_num(temperature_min_c, 0)} - 25) = {format_num(factor_cold, 4)}",
-        f"- Facteur chaud : 1 + ({format_num(coef_pct, 2)} / 100) x ({format_num(temperature_max_module_c, 0)} - 25) = {format_num(factor_hot, 4)}",
+        f"- Facteur Uoc froid : 1 + ({format_num(coef_pct, 2)} / 100) x ({format_num(temperature_min_c, 0)} - 25) = {format_num(factor_cold, 4)}",
+        f"- Facteur Uoc chaud : 1 + ({format_num(coef_pct, 2)} / 100) x ({format_num(temperature_max_module_c, 0)} - 25) = {format_num(factor_hot, 4)}",
         f"- Uoc string STC : {format_num(item.panel.uoc_v, 2)} x {item.modules_par_string} = {format_num(uoc_string_stc, 2)} V",
         f"- Uoc froid : {format_num(uoc_string_stc, 2)} x {format_num(factor_cold, 4)} = {format_num(item.uoc_froid_v, 2)} V",
         f"- Validation RGIE : {format_num(item.uoc_froid_v, 2)} V <= {format_num(RGIE_UOC_FROID_MAX_V, 0)} V DC",
         f"- Validation onduleur : {format_num(item.uoc_froid_v, 2)} V <= {format_num(item.inverter.tension_dc_max_v, 0)} V DC max",
         f"- Umpp string STC : {format_num(item.panel.umpp_v, 2)} x {item.modules_par_string} = {format_num(umpp_string_stc, 2)} V",
         f"- Ecart au rated input : ({format_num(umpp_string_stc, 2)} - {format_num(item.inverter.tension_dc_nominale_v, 0)}) / {format_num(item.inverter.tension_dc_nominale_v, 0)} x 100 = {format_signed_num(item.ecart_umpp_nominal_pct, 2)} %" if item.inverter.tension_dc_nominale_v > 0 else "- Ecart au rated input : non calcule, tension nominale onduleur absente",
-        f"- Umpp chaud : {format_num(umpp_string_stc, 2)} x {format_num(factor_hot, 4)} = {format_num(item.umpp_chaud_v, 2)} V >= MPPT min {format_num(item.inverter.mppt_min_v, 0)} V",
-        f"- Umpp froid : {format_num(umpp_string_stc, 2)} x {format_num(factor_cold, 4)} = {format_num(item.umpp_froid_v, 2)} V <= MPPT max {format_num(item.inverter.mppt_max_v, 0)} V",
-        f"- Impp par MPPT : max({' / '.join(str(value) for value in item.repartition_mppt)}) x {format_num(item.panel.impp_a, 2)} = {format_num(item.impp_mppt_a, 2)} A <= {format_num(item.inverter.courant_max_mppt_a, 2)} A",
-        f"- Isc par MPPT : max({' / '.join(str(value) for value in item.repartition_mppt)}) x {format_num(item.panel.isc_a, 2)} = {format_num(item.isc_mppt_a, 2)} A <= {format_num(item.inverter.isc_max_mppt_a, 2)} A",
+        f"- Umpp chaud : {format_num(umpp_string_stc, 2)} + ({format_num(uoc_string_stc, 2)} x {format_num(coef_pct, 2)} / 100 x ({format_num(temperature_max_module_c, 0)} - 25)) = {format_num(umpp_string_stc, 2)} + {format_num(umpp_delta_hot, 2)} = {format_num(item.umpp_chaud_v, 2)} V >= MPPT min {format_num(item.inverter.mppt_min_v, 0)} V",
+        f"- Umpp froid : {format_num(umpp_string_stc, 2)} + ({format_num(uoc_string_stc, 2)} x {format_num(coef_pct, 2)} / 100 x ({format_num(temperature_min_c, 0)} - 25)) = {format_num(umpp_string_stc, 2)} + {format_num(umpp_delta_cold, 2)} = {format_num(item.umpp_froid_v, 2)} V <= MPPT max {format_num(item.inverter.mppt_max_v, 0)} V",
+        f"- Impp chaud : {format_num(item.panel.impp_a, 2)} + ({format_num(item.panel.isc_a, 2)} x {format_num(coef_isc_pct, 2)} / 100 x ({format_num(temperature_max_module_c, 0)} - 25)) = {format_num(item.panel.impp_a, 2)} + {format_num(impp_delta_hot, 3)} = {format_num(impp_chaud, 2)} A",
+        f"- Impp froid : {format_num(item.panel.impp_a, 2)} + ({format_num(item.panel.isc_a, 2)} x {format_num(coef_isc_pct, 2)} / 100 x ({format_num(temperature_min_c, 0)} - 25)) = {format_num(item.panel.impp_a, 2)} + {format_num(impp_delta_cold, 3)} = {format_num(impp_froid, 2)} A",
+        f"- Impp max par MPPT : {strings_max_mppt} x {format_num(impp_controle, 2)} = {format_num(item.impp_mppt_a, 2)} A <= {format_num(item.inverter.courant_max_mppt_a, 2)} A",
+        f"- Isc chaud : {format_num(item.panel.isc_a, 2)} x {format_num(isc_factor_hot, 4)} = {format_num(isc_chaud, 2)} A ; Isc froid : {format_num(item.panel.isc_a, 2)} x {format_num(isc_factor_cold, 4)} = {format_num(isc_froid, 2)} A",
+        f"- Isc max par MPPT : {strings_max_mppt} x {format_num(isc_controle, 2)} = {format_num(item.isc_mppt_a, 2)} A <= {format_num(item.inverter.isc_max_mppt_a, 2)} A",
         f"- Puissance PV max onduleur : {format_num(item.puissance_dc_w, 0)} W <= {format_num(item.inverter.puissance_pv_max_w, 0)} W",
         "",
         "## 5. Pertes cables DC",
@@ -686,7 +743,7 @@ def build_calculation_report(
         f"- Cordons panneaux : {item.modules_par_string} x {format_num(item.panel_cord_m, 2)} = {format_num(item.dc_panel_cord_length_m, 2)} m en 4 mm2",
         f"- Resistance DC/string : rho x L / S = {format_num(dc_resistance, 5)} ohm",
         f"- Chute tension DC/string : I x R = {format_num(dc_current, 2)} x {format_num(dc_resistance, 5)} = {format_num(item.dc_voltage_drop_v, 3)} V",
-        f"- Reference tension string : {format_num(dc_string_voltage, 2)} V ; chute = {format_num(item.dc_voltage_drop_pct, 3)} %",
+        f"- Reference tension string chaud : {format_num(dc_string_voltage, 2)} V ; chute = {format_num(item.dc_voltage_drop_pct, 3)} %",
         f"- Perte Joule DC : I2 x R x strings = {format_num(dc_current, 2)}2 x {format_num(dc_resistance, 5)} x {item.nombre_strings} = {format_num(item.dc_loss_w, 2)} W",
         "",
         "## 6. Pertes cables AC",
