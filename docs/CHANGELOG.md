@@ -2,6 +2,31 @@
 
 Toutes les modifications notables de PV Selector sont tracees ici.
 
+## v0.27 - 2026-09-01
+
+- Ajout du champ onduleur `startup_input_voltage_v` dans le catalogue CSV/JSON et la base SQLite.
+- Extraction datasheet des libelles `startup input voltage`, `start-up voltage` et `starting voltage`.
+- Controle de redemarrage ete : `Uoc chaud` de la string doit rester superieur ou egal a la tension de demarrage de l'onduleur quand elle est renseignee.
+- Ajout de la colonne `Startup ete` dans le tableau, du controle detaille, des rejets dedies et des valeurs dans les exports CSV/note de calcul.
+- Conservation d'un mode non bloquant pour les anciens onduleurs dont la tension de demarrage n'est pas encore renseignee.
+
+## v0.26 - 2026-08-31
+
+- Correction de l'import des datasheets SMA Sunny Boy Smart Energy multi-modeles.
+- Extraction de `SBSE3.6-50`, `SBSE4.0-50`, `SBSE5.0-50` et `SBSE6.0-50` depuis une meme fiche.
+- Propagation des valeurs communes DC/MPPT/Isc et conservation des puissances AC/PV propres a chaque modele.
+- Correction de la detection fabricant SMA pour eviter les collisions avec du texte parasite de sections batterie.
+- Detection de phase etendue aux notations `1-phase` et `3-phase`.
+- Normalisation plus robuste des champs numeriques optionnels vides ou `None`.
+
+## v0.25 - 2026-08-31
+
+- Ajout d'une base SQLite persistante pour stocker panneaux et onduleurs dans `storage/` ou `/storage` sur Railway.
+- Ajout d'un module UI d'upload datasheet PDF/TXT/MD avec formulaire pre-rempli avant insertion.
+- Ajout des endpoints backend `/api/datasheets/preview`, `/api/db/insert`, `/api/db/panels`, `/api/db/inverters` et `/api/db/summary`.
+- Chargement possible de la base SQLite dans le calcul courant depuis l'onglet Catalogues.
+- Ajout des dependances PDF au backend Docker/Railway.
+
 ## v0.24 - 2026-07-22
 
 - Correction du calcul `Umpp` chaud/froid : formule additive basee sur `Uoc` et le coefficient `Uoc/Voc`.

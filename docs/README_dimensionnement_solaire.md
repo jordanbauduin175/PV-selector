@@ -1,6 +1,6 @@
-# Dimensionnement solaire - prototype GUI v0.24
+# Dimensionnement solaire - prototype GUI v0.27
 
-Ce dossier contient la version `v0.24` du programme :
+Ce dossier contient la version `v0.27` du programme :
 
 - `ui/dimensionnement_solaire.html` : interface graphique locale a ouvrir dans un navigateur.
 - `code/solar_optimizer_gui.py` : interface graphique Python et moteur de selection.
@@ -9,6 +9,19 @@ Ce dossier contient la version `v0.24` du programme :
 - `code/catalogue_fabricants.py` : module de recherche locale, stockage et export des fiches fabricant.
 - `code/datasheet_importer.py` : module d'import local de datasheets PDF/TXT.
 - `input/catalogue_fabricants_db.json` : base locale des fabricants, panneaux et onduleurs.
+- `storage/pv_selector.sqlite3` : base SQLite runtime creee localement, ou `/storage/pv_selector.sqlite3` sur Railway.
+
+## Version 0.27
+
+Cette version ajoute la tension de demarrage onduleur `startup_input_voltage_v`. Le moteur calcule maintenant `Uoc chaud` avec la temperature chaude saisie, puis rejette une string si cette tension a vide en ete est inferieure au `startup input voltage` de l'onduleur. Le controle simule le cas d'une coupure reseau : l'onduleur etant arrete, il doit pouvoir redemarrer sur la tension a vide disponible. Les anciens onduleurs sans valeur renseignee restent non bloquants, mais l'UI signale ce manque dans les controles.
+
+## Version 0.26
+
+Cette version corrige l'import des datasheets SMA Sunny Boy Smart Energy multi-modeles. Les variantes `SBSE3.6-50`, `SBSE4.0-50`, `SBSE5.0-50` et `SBSE6.0-50` sont separees en quatre fiches pre-remplies avec puissance AC/PV propre au modele, valeurs DC communes, courants MPPT/Isc, nombre MPPT, strings par MPPT et phase mono.
+
+## Version 0.25
+
+Cette version ajoute un module d'import controle depuis l'interface. L'utilisateur charge une datasheet PDF/TXT/MD, le backend extrait les caracteristiques panneau ou onduleur, puis l'UI presente un formulaire pre-rempli et editable. L'insertion en SQLite se fait seulement apres validation manuelle. La base SQLite peut ensuite etre rechargee dans le calcul courant depuis l'onglet Catalogues.
 
 ## Version 0.24
 

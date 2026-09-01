@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Dimensionnement solaire v0.24</title>
+  <title>Dimensionnement solaire v0.27</title>
   <style>
     :root {
       --bg: #f6f7f4;
@@ -365,6 +365,18 @@
       text-align: right;
     }
 
+    .status.success {
+      color: var(--green);
+    }
+
+    .status.warning {
+      color: var(--amber);
+    }
+
+    .status.error {
+      color: var(--red);
+    }
+
     .table-wrap {
       overflow: auto;
       max-height: 430px;
@@ -672,6 +684,101 @@
       background: transparent;
     }
 
+    .datasheet-module {
+      grid-column: 1 / -1;
+      display: grid;
+      gap: 12px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcf8;
+    }
+
+    .datasheet-toolbar {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) minmax(150px, 0.35fr) auto auto;
+      gap: 8px;
+      align-items: end;
+    }
+
+    .datasheet-toolbar input[type="file"] {
+      min-height: auto;
+      padding: 8px;
+      background: var(--panel);
+    }
+
+    .datasheet-review {
+      display: grid;
+      gap: 10px;
+    }
+
+    .datasheet-card {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    .datasheet-card.ready {
+      border-color: rgba(47, 125, 69, 0.55);
+    }
+
+    .datasheet-card.review {
+      border-color: rgba(173, 116, 30, 0.55);
+    }
+
+    .datasheet-card.error,
+    .datasheet-card.skipped {
+      border-color: rgba(184, 66, 53, 0.55);
+    }
+
+    .datasheet-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .datasheet-card-header strong {
+      font-size: 14px;
+    }
+
+    .datasheet-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: #eef3ea;
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .datasheet-message {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .datasheet-form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 8px;
+    }
+
+    .datasheet-form .wide-field {
+      grid-column: 1 / -1;
+    }
+
+    .datasheet-form textarea {
+      min-height: 82px;
+    }
+
     .rejects {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
@@ -722,7 +829,8 @@
       }
 
       .schema-flow,
-      .schema-total {
+      .schema-total,
+      .datasheet-toolbar {
         grid-template-columns: 1fr;
       }
 
@@ -762,7 +870,7 @@
   <div class="app">
     <header>
       <div>
-        <h1>Dimensionnement solaire <span class="version-badge">v0.24</span></h1>
+        <h1>Dimensionnement solaire <span class="version-badge">v0.27</span></h1>
         <div class="subtitle">Selection panneaux / onduleurs avec controles Uoc, Isc, Umpp et plages MPPT</div>
       </div>
       <div class="toolbar">
@@ -915,7 +1023,7 @@
         </div>
         <div class="aside-actions">
           <button class="button primary" id="sideCalculateBtn" type="button">Calculer</button>
-          <button class="button" id="resetCatalogsBtn" type="button">Restaurer catalogue v0.22</button>
+          <button class="button" id="resetCatalogsBtn" type="button">Restaurer catalogue integre</button>
         </div>
       </aside>
 
@@ -954,6 +1062,7 @@
                   <th>DC/AC</th>
                   <th>Pertes</th>
                   <th id="uocFroidHeader">Uoc froid</th>
+                  <th id="startupHeader">Startup ete</th>
                   <th id="umppTempHeader">Umpp chaud/froid</th>
                   <th>Ecart rated</th>
                   <th id="currentTempHeader">Impp/Isc MPPT</th>
@@ -993,6 +1102,27 @@
                 <input id="invertersFile" type="file" accept=".csv,text/csv">
               </div>
             </div>
+            <div class="datasheet-module">
+              <div class="section-title">Import datasheet vers SQLite</div>
+              <div class="datasheet-toolbar">
+                <label>
+                  Datasheet PDF/TXT/MD
+                  <input id="datasheetFileInput" type="file" accept=".pdf,.txt,.text,.md,application/pdf,text/plain">
+                </label>
+                <label>
+                  Type
+                  <select id="datasheetKindInput">
+                    <option value="auto" selected>Auto</option>
+                    <option value="panel">Panneau</option>
+                    <option value="inverter">Onduleur</option>
+                  </select>
+                </label>
+                <button class="button primary" id="previewDatasheetBtn" type="button">Analyser fiche</button>
+                <button class="button" id="loadDbCatalogsBtn" type="button">Charger SQLite</button>
+              </div>
+              <div class="status" id="dbStatusText">SQLite disponible via le backend.</div>
+              <div class="datasheet-review empty" id="datasheetReviewArea">Charge une datasheet pour preparer une insertion controlee.</div>
+            </div>
           </div>
         </section>
       </section>
@@ -1000,14 +1130,14 @@
     <footer class="app-footer">
       <div><strong>Open-Elec</strong> - Auteur : Bauduin Jordan - <a href="https://www.open-elec.be" target="_blank" rel="noopener">www.open-elec.be</a></div>
       <div>Copyright (c) 2026 Bauduin Jordan / Open-Elec. Tous droits reserves.</div>
-      <div>UI v0.24 - Backend 0.24 - Schema catalogue 0.24 - <a id="footerChangelogLink" href="../docs/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+      <div>UI v0.27 - Backend 0.27 - Schema catalogue 0.27 - <a id="footerChangelogLink" href="../docs/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
     </footer>
   </div>
 
   <script>
-    const APP_VERSION = "v0.24";
-    const BACKEND_VERSION = "0.24";
-    const CATALOG_SCHEMA_VERSION = "0.24";
+    const APP_VERSION = "v0.27";
+    const BACKEND_VERSION = "0.27";
+    const CATALOG_SCHEMA_VERSION = "0.27";
     const APP_AUTHOR = "Bauduin Jordan";
     const APP_OWNER = "Open-Elec";
     const APP_URL = "https://www.open-elec.be";
@@ -1045,20 +1175,89 @@ TSM-445NEG9R.25,Trina Solar,445.0,1.134,1.762,52.6,10.71,44.3,10.05,0.04,-0.24
 TSM-450NEG9R.25,Trina Solar,450.0,1.134,1.762,52.9,10.74,44.6,10.09,0.04,-0.24
 JKM435N-54HL4R-B,jinko,435.0,1.134,1.762,39.36,13.72,32.78,13.27,0.0,-0.25`;
 
-    const DEFAULT_INVERTERS_CSV = `reference,fabricant,puissance_ac_w,puissance_pv_max_w,tension_dc_max_v,tension_dc_nominale_v,mppt_min_v,mppt_max_v,courant_max_mppt_a,isc_max_mppt_a,nombre_mppt,strings_max_par_mppt,phase
-INV-10K-TRI,Exemple,10000.0,15000.0,1000.0,0.0,180.0,850.0,26.0,32.0,2,2,tri
-INV-20K-TRI,Exemple,20000.0,30000.0,1100.0,0.0,200.0,1000.0,30.0,40.0,3,2,tri
-INV-3K-MONO,Exemple,3000.0,4500.0,600.0,0.0,80.0,550.0,16.0,20.0,2,1,mono
-INV-5K-MONO,Exemple,5000.0,7500.0,600.0,0.0,120.0,550.0,16.0,20.0,2,1,mono
-SYMO-GEN24-10.0,Fronius,10000.0,15000.0,1000.0,0.0,278.0,800.0,12.5,20.0,2,1,tri
-SUN2000-10K-MAP0,Huawei FusionSolar,10000.0,18000.0,1100.0,600.0,160.0,1000.0,16.0,22.0,2,1,tri
-SUN2000-10KTL-M1,Huawei FusionSolar,10000.0,15000.0,1100.0,0.0,140.0,980.0,13.5,19.5,2,1,tri
-SUN2000-12K-MAP0,Huawei FusionSolar,12000.0,22000.0,1100.0,600.0,160.0,1000.0,16.0,22.0,2,1,tri
-SUN2000-5K-MAP0,Huawei FusionSolar,5000.0,9000.0,1100.0,600.0,160.0,1000.0,16.0,22.0,2,1,tri
-SUN2000-5KTL-M1,Huawei FusionSolar,5000.0,7500.0,1100.0,0.0,140.0,980.0,13.5,19.5,2,1,tri
-SUN2000-6K-MAP0,Huawei FusionSolar,6000.0,11000.0,1100.0,600.0,160.0,1000.0,16.0,22.0,2,1,tri
-SUN2000-8K-MAP0,Huawei FusionSolar,8000.0,14600.0,1100.0,600.0,160.0,1000.0,16.0,22.0,2,1,tri
-SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
+    const DEFAULT_INVERTERS_CSV = `reference,fabricant,puissance_ac_w,puissance_pv_max_w,tension_dc_max_v,tension_dc_nominale_v,startup_input_voltage_v,mppt_min_v,mppt_max_v,courant_max_mppt_a,isc_max_mppt_a,nombre_mppt,strings_max_par_mppt,phase
+INV-10K-TRI,Exemple,10000.0,15000.0,1000.0,0.0,0.0,180.0,850.0,26.0,32.0,2,2,tri
+INV-20K-TRI,Exemple,20000.0,30000.0,1100.0,0.0,0.0,200.0,1000.0,30.0,40.0,3,2,tri
+INV-3K-MONO,Exemple,3000.0,4500.0,600.0,0.0,0.0,80.0,550.0,16.0,20.0,2,1,mono
+INV-5K-MONO,Exemple,5000.0,7500.0,600.0,0.0,0.0,120.0,550.0,16.0,20.0,2,1,mono
+SYMO-GEN24-10.0,Fronius,10000.0,15000.0,1000.0,0.0,0.0,278.0,800.0,12.5,20.0,2,1,tri
+SUN2000-10K-MAP0,Huawei FusionSolar,10000.0,18000.0,1100.0,600.0,160.0,160.0,1000.0,16.0,22.0,2,1,tri
+SUN2000-10KTL-M1,Huawei FusionSolar,10000.0,15000.0,1100.0,0.0,0.0,140.0,980.0,13.5,19.5,2,1,tri
+SUN2000-12K-MAP0,Huawei FusionSolar,12000.0,22000.0,1100.0,600.0,160.0,160.0,1000.0,16.0,22.0,2,1,tri
+SUN2000-5K-MAP0,Huawei FusionSolar,5000.0,9000.0,1100.0,600.0,160.0,160.0,1000.0,16.0,22.0,2,1,tri
+SUN2000-5KTL-M1,Huawei FusionSolar,5000.0,7500.0,1100.0,0.0,0.0,140.0,980.0,13.5,19.5,2,1,tri
+SUN2000-6K-MAP0,Huawei FusionSolar,6000.0,11000.0,1100.0,600.0,160.0,160.0,1000.0,16.0,22.0,2,1,tri
+SUN2000-8K-MAP0,Huawei FusionSolar,8000.0,14600.0,1100.0,600.0,160.0,160.0,1000.0,16.0,22.0,2,1,tri
+SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
+
+    const PANEL_CSV_COLUMNS = [
+      "reference",
+      "fabricant",
+      "puissance_w",
+      "largeur_m",
+      "hauteur_m",
+      "uoc_v",
+      "isc_a",
+      "umpp_v",
+      "impp_a",
+      "coef_isc_pct_c",
+      "coef_tension_pct_c"
+    ];
+    const INVERTER_CSV_COLUMNS = [
+      "reference",
+      "fabricant",
+      "puissance_ac_w",
+      "puissance_pv_max_w",
+      "tension_dc_max_v",
+      "tension_dc_nominale_v",
+      "startup_input_voltage_v",
+      "mppt_min_v",
+      "mppt_max_v",
+      "courant_max_mppt_a",
+      "isc_max_mppt_a",
+      "nombre_mppt",
+      "strings_max_par_mppt",
+      "phase"
+    ];
+    const DB_META_COLUMNS = ["source_url", "source_type", "last_verified", "notes"];
+    const DB_COLUMNS_BY_KIND = {
+      panel: PANEL_CSV_COLUMNS,
+      inverter: INVERTER_CSV_COLUMNS
+    };
+    const DB_FIELDS_BY_KIND = {
+      panel: PANEL_CSV_COLUMNS.concat(DB_META_COLUMNS),
+      inverter: INVERTER_CSV_COLUMNS.concat(DB_META_COLUMNS)
+    };
+    const DB_FIELD_LABELS = {
+      reference: "Reference",
+      fabricant: "Fabricant",
+      puissance_w: "Puissance W",
+      largeur_m: "Largeur m",
+      hauteur_m: "Hauteur m",
+      uoc_v: "Uoc V",
+      isc_a: "Isc A",
+      umpp_v: "Umpp V",
+      impp_a: "Impp A",
+      coef_isc_pct_c: "Coef Isc %/C",
+      coef_tension_pct_c: "Coef Uoc %/C",
+      puissance_ac_w: "Puissance AC W",
+      puissance_pv_max_w: "Puissance PV max W",
+      tension_dc_max_v: "Tension DC max V",
+      tension_dc_nominale_v: "Tension DC nominale V",
+      startup_input_voltage_v: "Startup input V",
+      mppt_min_v: "MPPT min V",
+      mppt_max_v: "MPPT max V",
+      courant_max_mppt_a: "Courant MPPT A",
+      isc_max_mppt_a: "Isc max MPPT A",
+      nombre_mppt: "Nombre MPPT",
+      strings_max_par_mppt: "Strings max/MPPT",
+      phase: "Phase",
+      source_url: "Source",
+      source_type: "Type source",
+      last_verified: "Verifie le",
+      notes: "Notes"
+    };
+    const DB_WIDE_FIELDS = new Set(["source_url", "notes"]);
 
     const fields = {
       occupation: document.querySelector("#occupationInput"),
@@ -1091,7 +1290,13 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
       tmax: document.querySelector("#tmaxInput"),
       limit: document.querySelector("#limitInput"),
       panelsCsv: document.querySelector("#panelsCsv"),
-      invertersCsv: document.querySelector("#invertersCsv")
+      invertersCsv: document.querySelector("#invertersCsv"),
+      datasheetFile: document.querySelector("#datasheetFileInput"),
+      datasheetKind: document.querySelector("#datasheetKindInput"),
+      previewDatasheet: document.querySelector("#previewDatasheetBtn"),
+      loadDbCatalogs: document.querySelector("#loadDbCatalogsBtn"),
+      dbStatus: document.querySelector("#dbStatusText"),
+      datasheetReview: document.querySelector("#datasheetReviewArea")
     };
 
     const state = {
@@ -1106,7 +1311,8 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
       inverterSlots: [
         { id: 1 }
       ],
-      mpptDirty: false
+      mpptDirty: false,
+      datasheetPreviews: []
     };
 
     function parseNumber(value) {
@@ -1136,6 +1342,242 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
       });
     }
 
+    function backendAvailable() {
+      return window.location.protocol !== "file:";
+    }
+
+    function setDbStatus(message, tone = "") {
+      fields.dbStatus.textContent = message;
+      fields.dbStatus.className = `status${tone ? ` ${tone}` : ""}`;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function csvEscape(value) {
+      const text = String(value ?? "");
+      if (/[",\r\n]/.test(text)) {
+        return `"${text.replace(/"/g, '""')}"`;
+      }
+      return text;
+    }
+
+    function rowsToCsv(rows, columns) {
+      const lines = [columns.join(",")];
+      for (const row of rows) {
+        lines.push(columns.map((column) => csvEscape(row[column])).join(","));
+      }
+      return lines.join("\n");
+    }
+
+    async function apiJson(path, options = {}) {
+      const response = await fetch(path, options);
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload.error || payload.detail || response.statusText);
+      }
+      return payload;
+    }
+
+    async function refreshDbSummary() {
+      if (!backendAvailable()) {
+        setDbStatus("SQLite indisponible en ouverture fichier. Lance le backend puis ouvre http://localhost:8000.", "warning");
+        return;
+      }
+      try {
+        const payload = await apiJson("/api/db/summary");
+        setDbStatus(
+          `SQLite: ${payload.panels} panneaux, ${payload.inverters} onduleurs - ${payload.path}`,
+          "success"
+        );
+      } catch (error) {
+        setDbStatus(`SQLite non disponible: ${error.message}`, "error");
+      }
+    }
+
+    async function loadDbCatalogs(showMessage = true) {
+      if (!backendAvailable()) {
+        setDbStatus("Charge SQLite possible uniquement via le backend.", "warning");
+        return;
+      }
+      const [panelsPayload, invertersPayload] = await Promise.all([
+        apiJson("/api/db/panels"),
+        apiJson("/api/db/inverters")
+      ]);
+      const panels = panelsPayload.items || [];
+      const inverters = invertersPayload.items || [];
+      if (panels.length) {
+        fields.panelsCsv.value = rowsToCsv(panels, PANEL_CSV_COLUMNS);
+      }
+      if (inverters.length) {
+        fields.invertersCsv.value = rowsToCsv(inverters, INVERTER_CSV_COLUMNS);
+      }
+      calculate();
+      if (showMessage) {
+        setDbStatus(`SQLite charge dans le calcul: ${panels.length} panneaux, ${inverters.length} onduleurs.`, "success");
+      }
+    }
+
+    function entryTitle(item) {
+      const entry = item.entry || {};
+      const kindLabel = item.kind === "panel" ? "Panneau" : item.kind === "inverter" ? "Onduleur" : "Datasheet";
+      const reference = entry.reference || "reference a verifier";
+      const fabricant = entry.fabricant || "fabricant a verifier";
+      return `${kindLabel} - ${reference} - ${fabricant}`;
+    }
+
+    function renderDatasheetField(index, name, value) {
+      const label = DB_FIELD_LABELS[name] || name;
+      const fieldClass = DB_WIDE_FIELDS.has(name) ? "wide-field" : "";
+      const safeValue = escapeHtml(value);
+      if (name === "phase") {
+        return `
+          <label class="${fieldClass}">
+            ${label}
+            <select data-db-field="${name}">
+              <option value="mono" ${String(value).toLowerCase() === "mono" ? "selected" : ""}>Mono</option>
+              <option value="tri" ${String(value).toLowerCase() === "tri" ? "selected" : ""}>Tri</option>
+            </select>
+          </label>
+        `;
+      }
+      if (name === "notes") {
+        return `
+          <label class="${fieldClass}">
+            ${label}
+            <textarea data-db-field="${name}">${safeValue}</textarea>
+          </label>
+        `;
+      }
+      return `
+        <label class="${fieldClass}">
+          ${label}
+          <input data-db-field="${name}" type="text" value="${safeValue}">
+        </label>
+      `;
+    }
+
+    function renderDatasheetCard(item, index) {
+      const fieldsForKind = DB_FIELDS_BY_KIND[item.kind] || [];
+      const status = item.status || "review";
+      const confidence = Math.round(Number(item.confidence || 0) * 100);
+      const missing = item.missing_fields?.length ? `Champs a verifier: ${item.missing_fields.join(", ")}` : "";
+      const form = fieldsForKind.map((fieldName) => renderDatasheetField(index, fieldName, item.entry?.[fieldName] ?? "")).join("");
+      const canInsert = item.kind === "panel" || item.kind === "inverter";
+      return `
+        <div class="datasheet-card ${escapeHtml(status)}" data-preview-index="${index}">
+          <div class="datasheet-card-header">
+            <strong>${escapeHtml(entryTitle(item))}</strong>
+            <span class="datasheet-pill">${escapeHtml(status)} - ${confidence}%</span>
+          </div>
+          <div class="datasheet-message">
+            ${escapeHtml(item.message || "")}${missing ? `<br>${escapeHtml(missing)}` : ""}
+          </div>
+          ${form ? `<div class="datasheet-form">${form}</div>` : ""}
+          ${canInsert ? `<button class="button primary" type="button" data-insert-preview="${index}">Inserer dans SQLite</button>` : ""}
+        </div>
+      `;
+    }
+
+    function renderDatasheetPreviews(payload) {
+      state.datasheetPreviews = payload.items || [];
+      if (!state.datasheetPreviews.length) {
+        fields.datasheetReview.className = "datasheet-review empty";
+        fields.datasheetReview.textContent = "Aucune entree exploitable trouvee dans la datasheet.";
+        return;
+      }
+      fields.datasheetReview.className = "datasheet-review";
+      fields.datasheetReview.innerHTML = state.datasheetPreviews.map(renderDatasheetCard).join("");
+      fields.datasheetReview.querySelectorAll("[data-insert-preview]").forEach((button) => {
+        button.addEventListener("click", () => insertDatasheetPreview(Number(button.dataset.insertPreview)));
+      });
+    }
+
+    function collectDatasheetEntry(index) {
+      const card = fields.datasheetReview.querySelector(`[data-preview-index="${index}"]`);
+      if (!card) {
+        throw new Error("Formulaire introuvable.");
+      }
+      const entry = {};
+      card.querySelectorAll("[data-db-field]").forEach((input) => {
+        entry[input.dataset.dbField] = input.value;
+      });
+      return entry;
+    }
+
+    async function previewDatasheetFile() {
+      if (!backendAvailable()) {
+        setDbStatus("Analyse datasheet possible uniquement via le backend.", "warning");
+        return;
+      }
+      const file = fields.datasheetFile.files?.[0];
+      if (!file) {
+        setDbStatus("Selectionne d'abord une datasheet PDF/TXT/MD.", "warning");
+        return;
+      }
+      const formData = new FormData();
+      formData.append("datasheet", file);
+      formData.append("kind", fields.datasheetKind.value);
+      fields.previewDatasheet.disabled = true;
+      setDbStatus("Analyse de la datasheet en cours...", "warning");
+      try {
+        const payload = await apiJson("/api/datasheets/preview", {
+          method: "POST",
+          body: formData
+        });
+        renderDatasheetPreviews(payload);
+        const count = payload.items?.length || 0;
+        setDbStatus(`Analyse terminee: ${count} entree${count > 1 ? "s" : ""} a valider.`, "success");
+      } catch (error) {
+        fields.datasheetReview.className = "datasheet-review empty";
+        fields.datasheetReview.textContent = error.message;
+        setDbStatus(`Analyse impossible: ${error.message}`, "error");
+      } finally {
+        fields.previewDatasheet.disabled = false;
+      }
+    }
+
+    async function insertDatasheetPreview(index) {
+      const item = state.datasheetPreviews[index];
+      if (!item) {
+        return;
+      }
+      const button = fields.datasheetReview.querySelector(`[data-insert-preview="${index}"]`);
+      if (button) {
+        button.disabled = true;
+        button.textContent = "Insertion...";
+      }
+      try {
+        const payload = await apiJson("/api/db/insert", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            kind: item.kind,
+            entry: collectDatasheetEntry(index)
+          })
+        });
+        state.datasheetPreviews[index].entry = payload.entry;
+        if (button) {
+          button.textContent = "Insere dans SQLite";
+        }
+        setDbStatus(`Enregistre: ${payload.entry.reference} - ${payload.entry.fabricant}.`, "success");
+        await loadDbCatalogs(false);
+        await refreshDbSummary();
+      } catch (error) {
+        if (button) {
+          button.disabled = false;
+          button.textContent = "Inserer dans SQLite";
+        }
+        setDbStatus(`Insertion refusee: ${error.message}`, "error");
+      }
+    }
+
     function loadPanels() {
       return parseCsv(fields.panelsCsv.value).map((row) => ({
         reference: row.reference,
@@ -1163,6 +1605,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         puissancePvMaxW: parseNumber(row.puissance_pv_max_w),
         tensionDcMaxV: parseNumber(row.tension_dc_max_v),
         tensionDcNominaleV: parseOptionalNumber(row.tension_dc_nominale_v),
+        startupInputVoltageV: parseOptionalNumber(row.startup_input_voltage_v),
         mpptMinV: parseNumber(row.mppt_min_v),
         mpptMaxV: parseNumber(row.mppt_max_v),
         courantMaxMpptA: parseNumber(row.courant_max_mppt_a),
@@ -1229,6 +1672,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
 
     function updateTemperatureHeaders(params) {
       document.querySelector("#uocFroidHeader").textContent = `Uoc froid (${celsiusLabel(params.tmin)})`;
+      document.querySelector("#startupHeader").textContent = `Startup ete (${celsiusLabel(params.tmax)})`;
       document.querySelector("#umppTempHeader").textContent = `Umpp chaud/froid (${celsiusLabel(params.tmax)} / ${celsiusLabel(params.tmin)})`;
       document.querySelector("#currentTempHeader").textContent = `Impp/Isc MPPT (${celsiusLabel(params.tmax)} / ${celsiusLabel(params.tmin)})`;
     }
@@ -1645,6 +2089,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         distribution: 0,
         uocRgie: 0,
         uoc: 0,
+        startup: 0,
         umppMin: 0,
         umppMax: 0,
         courant: 0,
@@ -1679,6 +2124,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
               const uocStringStc = panel.uocV * modulesParString;
               const umppStc = panel.umppV * modulesParString;
               const uocFroid = voltageAtTemperature(uocStringStc, panel.coefTensionPctC, params.tmin);
+              const uocChaud = voltageAtTemperature(uocStringStc, panel.coefTensionPctC, params.tmax);
               const umppChaud = mppVoltageAtTemperature(umppStc, uocStringStc, panel.coefTensionPctC, params.tmax);
               const umppFroid = mppVoltageAtTemperature(umppStc, uocStringStc, panel.coefTensionPctC, params.tmin);
 
@@ -1688,6 +2134,10 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
               }
               if (uocFroid > inverter.tensionDcMaxV) {
                 rejected.uoc += maxStrings;
+                continue;
+              }
+              if (inverter.startupInputVoltageV > 0 && uocChaud < inverter.startupInputVoltageV) {
+                rejected.startup += maxStrings;
                 continue;
               }
               if (umppChaud < inverter.mpptMinV) {
@@ -1813,6 +2263,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
                   temperatureFroidC: params.tmin,
                   temperatureChaudC: params.tmax,
                   uocFroidV: uocFroid,
+                  uocChaudV: uocChaud,
                   umppChaudV: umppChaud,
                   umppFroidV: umppFroid,
                   imppChaudA: imppChaud,
@@ -1877,6 +2328,19 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         return "Non renseigne pour cet onduleur";
       }
       return `${n(item.umppStcV, 1)} V STC vs ${n(item.inverter.tensionDcNominaleV, 0)} V (${signedPct(item.ecartUmppNominalPct)})`;
+    }
+
+    function startupVoltageLabel(item) {
+      return item.inverter.startupInputVoltageV > 0
+        ? `${n(item.uocChaudV, 0)} / ${n(item.inverter.startupInputVoltageV, 0)} V`
+        : "-";
+    }
+
+    function startupVoltageDetail(item) {
+      if (item.inverter.startupInputVoltageV <= 0) {
+        return "Startup input non renseigne, controle non bloquant";
+      }
+      return `Redemarrage ete : Uoc chaud ${n(item.uocChaudV, 1)} V >= startup input ${n(item.inverter.startupInputVoltageV, 1)} V`;
     }
 
     function hookSpacingForRafters(rafterSpacingCm) {
@@ -2114,7 +2578,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
       document.querySelector("#statusText").textContent = `${state.results.length} configurations valides, filtre: ${panelFilter} / ${inverterFilter}`;
 
       if (state.results.length === 0) {
-        body.innerHTML = `<tr><td colspan="16" class="empty">Aucune configuration valide.</td></tr>`;
+        body.innerHTML = `<tr><td colspan="17" class="empty">Aucune configuration valide.</td></tr>`;
         setMetrics(null);
         return;
       }
@@ -2137,6 +2601,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
           <td>${n(item.ratioDcAc, 2)}</td>
           <td>${n(item.totalLossPct, 2)} %</td>
           <td>${n(item.uocFroidV, 0)} V</td>
+          <td>${startupVoltageLabel(item)}</td>
           <td>${n(item.umppChaudV, 0)} / ${n(item.umppFroidV, 0)} V</td>
           <td>${nominalDeviationLabel(item)}</td>
           <td>${n(item.imppMpptA, 1)} / ${n(item.iscMpptA, 1)} A</td>
@@ -2233,6 +2698,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
           <div class="kv"><span>Repartition MPPT</span><strong>${item.repartition.join(" / ")}</strong></div>
           <div class="kv"><span>Affectation MPPT</span><strong>${item.mpptAssignmentLabel} (${item.mpptMode})</strong></div>
           <div class="kv"><span>Puissance</span><strong>${kwc(item.puissanceDcW)} DC ; ${kw(item.puissanceAcTotalW)} AC total</strong></div>
+          <div class="kv"><span>Startup ete</span><strong>${startupVoltageDetail(item)}</strong></div>
           <div class="kv"><span>Rated input</span><strong>${nominalDeviationDetail(item)}</strong></div>
           <div class="kv"><span>Surface</span><strong>${n(item.surfaceM2, 2)} m2 (${n(item.surfaceUtiliseePct, 1)} % utile)</strong></div>
         </div>
@@ -2265,6 +2731,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
           <div class="checks">
             ${checkLine(`Uoc froid (${celsiusLabel(item.temperatureFroidC)}) = ${n(item.uocFroidV, 1)} V <= limite RGIE ${n(RGIE_UOC_FROID_MAX_V, 0)} V DC`)}
             ${checkLine(`Uoc froid (${celsiusLabel(item.temperatureFroidC)}) = ${n(item.uocFroidV, 1)} V <= tension DC max ${n(item.inverter.tensionDcMaxV, 1)} V`)}
+            ${checkLine(item.inverter.startupInputVoltageV > 0 ? `Redemarrage apres coupure : Uoc chaud (${celsiusLabel(item.temperatureChaudC)}) = ${n(item.uocChaudV, 1)} V >= startup input ${n(item.inverter.startupInputVoltageV, 1)} V` : "Startup input : non renseigne, controle non bloquant")}
             ${checkLine(`Umpp chaud (${celsiusLabel(item.temperatureChaudC)}) = ${n(item.umppChaudV, 1)} V >= MPPT min ${n(item.inverter.mpptMinV, 1)} V`)}
             ${checkLine(`Umpp froid (${celsiusLabel(item.temperatureFroidC)}) = ${n(item.umppFroidV, 1)} V <= MPPT max ${n(item.inverter.mpptMaxV, 1)} V`)}
             ${checkLine(item.inverter.tensionDcNominaleV > 0 ? `Repere rated input : Umpp STC ${n(item.umppStcV, 1)} V vs ${n(item.inverter.tensionDcNominaleV, 0)} V = ${signedPct(item.ecartUmppNominalPct)}` : "Repere rated input : non renseigne, non bloquant")}
@@ -2290,6 +2757,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         ["distribution", "Limite reseau"],
         ["uocRgie", "Uoc RGIE"],
         ["uoc", "Uoc"],
+        ["startup", "Startup"],
         ["umppMin", "Umpp min"],
         ["umppMax", "Umpp max"],
         ["courant", "Courant"],
@@ -2322,6 +2790,9 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
       const bestSummary = best
         ? `${best.totalModules} modules ${best.panel.reference} / ${best.inverterCount} x ${best.inverter.reference} / ${n(best.productionAnnuelleKwh, 0)} kWh/an / pertes ${n(best.totalLossPct, 2)} %`
         : "aucun resultat valide";
+      const startupSummary = best && best.inverter.startupInputVoltageV > 0
+        ? `${n(best.uocChaudV, 1)} V chaud / ${n(best.inverter.startupInputVoltageV, 1)} V startup`
+        : "non renseigne ou aucun resultat";
       const layoutPlan = best ? calepinageForItem(best) : null;
       const lines = [
         "Application: PV Selector",
@@ -2349,6 +2820,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         `Catalogue onduleurs lignes: ${Math.max(0, fields.invertersCsv.value.split(/\r?\n/).filter(Boolean).length - 1)}`,
         `Configurations valides: ${state.results.length}`,
         `Rejets: ${rejected}`,
+        `Controle startup meilleur choix: ${startupSummary}`,
         `Meilleur choix: ${bestSummary}`
       ];
       return lines.join("\n");
@@ -2447,6 +2919,9 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         "coef_isc_pct_c",
         "uoc_froid_v",
         "limite_rgie_uoc_froid_v",
+        "uoc_chaud_v",
+        "startup_input_onduleur_v",
+        "startup_input_ok",
         "umpp_chaud_v",
         "umpp_froid_v",
         "umpp_stc_v",
@@ -2529,6 +3004,9 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         n(item.panel.coefIscPctC, 3),
         n(item.uocFroidV, 2),
         n(RGIE_UOC_FROID_MAX_V, 0),
+        n(item.uocChaudV, 2),
+        item.inverter.startupInputVoltageV > 0 ? n(item.inverter.startupInputVoltageV, 2) : "",
+        item.inverter.startupInputVoltageV > 0 ? "oui" : "non renseigne",
         n(item.umppChaudV, 2),
         n(item.umppFroidV, 2),
         n(item.umppStcV, 2),
@@ -2599,6 +3077,9 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
       const coverageLine = item.consumptionKwh > 0
         ? `- Couverture client : ${n(item.productionAnnuelleKwh, 0)} / ${n(item.consumptionKwh, 0)} x 100 = ${n(item.tauxCouverturePct, 1)} %`
         : "- Couverture client : non calculee, consommation client non renseignee.";
+      const startupValidationLine = item.inverter.startupInputVoltageV > 0
+        ? `- Validation redemarrage ete : Uoc chaud ${n(item.uocChaudV, 2)} V >= startup input ${n(item.inverter.startupInputVoltageV, 0)} V`
+        : "- Validation redemarrage ete : startup input non renseigne, controle non bloquant.";
       const lines = [
         "# Note de calcul - meilleur choix solaire",
         "",
@@ -2635,6 +3116,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         `- PV max unitaire / total : ${n(item.inverter.puissancePvMaxW, 0)} W / ${n(item.puissancePvMaxTotalW, 0)} W`,
         `- Plage MPPT : ${n(item.inverter.mpptMinV, 0)} a ${n(item.inverter.mpptMaxV, 0)} V`,
         item.inverter.tensionDcNominaleV > 0 ? `- Tension DC nominale rated input : ${n(item.inverter.tensionDcNominaleV, 0)} V` : "- Tension DC nominale rated input : non renseignee",
+        item.inverter.startupInputVoltageV > 0 ? `- Startup input voltage : ${n(item.inverter.startupInputVoltageV, 0)} V` : "- Startup input voltage : non renseigne",
         `- Courant max MPPT / Isc max MPPT : ${n(item.inverter.courantMaxMpptA, 2)} A / ${n(item.inverter.iscMaxMpptA, 2)} A`,
         "",
         "## 3. Construction de la configuration",
@@ -2655,8 +3137,10 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         `- Facteur Uoc chaud (${celsiusLabel(tmax)}) : 1 + (${n(coefPct, 2)} / 100) x (${n(tmax, 0)} - 25) = ${n(factorHot, 4)}`,
         `- Uoc string STC : ${n(item.panel.uocV, 2)} x ${item.modulesParString} = ${n(uocStringStc, 2)} V`,
         `- Uoc froid (${celsiusLabel(tmin)}) : ${n(uocStringStc, 2)} x ${n(factorCold, 4)} = ${n(item.uocFroidV, 2)} V`,
+        `- Uoc chaud (${celsiusLabel(tmax)}) : ${n(uocStringStc, 2)} x ${n(factorHot, 4)} = ${n(item.uocChaudV, 2)} V`,
         `- Validation RGIE : ${n(item.uocFroidV, 2)} V <= ${n(RGIE_UOC_FROID_MAX_V, 0)} V DC`,
         `- Validation onduleur : ${n(item.uocFroidV, 2)} V <= ${n(item.inverter.tensionDcMaxV, 0)} V DC max`,
+        startupValidationLine,
         `- Umpp string STC : ${n(item.panel.umppV, 2)} x ${item.modulesParString} = ${n(umppStringStc, 2)} V`,
         item.inverter.tensionDcNominaleV > 0 ? `- Ecart au rated input : (${n(umppStringStc, 2)} - ${n(item.inverter.tensionDcNominaleV, 0)}) / ${n(item.inverter.tensionDcNominaleV, 0)} x 100 = ${signedPct(item.ecartUmppNominalPct)}` : "- Ecart au rated input : non calcule, tension nominale onduleur absente",
         `- Umpp chaud (${celsiusLabel(tmax)}) : ${n(umppStringStc, 2)} + (${n(uocStringStc, 2)} x ${n(coefPct, 2)} / 100 x (${n(tmax, 0)} - 25)) = ${n(umppStringStc, 2)} + ${n(umppDeltaHot, 2)} = ${n(item.umppChaudV, 2)} V >= MPPT min ${n(item.inverter.mpptMinV, 0)} V`,
@@ -2748,6 +3232,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         distribution: "limite reseau",
         uocRgie: "Uoc froid RGIE",
         uoc: "Uoc froid onduleur",
+        startup: "startup ete",
         umppMin: "Umpp sous MPPT min",
         umppMax: "Umpp au-dessus MPPT max",
         courant: "courants MPPT/Isc",
@@ -2806,6 +3291,15 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
     });
     document.querySelector("#panelsFile").addEventListener("change", (event) => readFileToTextarea(event.target, fields.panelsCsv));
     document.querySelector("#invertersFile").addEventListener("change", (event) => readFileToTextarea(event.target, fields.invertersCsv));
+    fields.previewDatasheet.addEventListener("click", previewDatasheetFile);
+    fields.loadDbCatalogs.addEventListener("click", () => {
+      fields.loadDbCatalogs.disabled = true;
+      loadDbCatalogs(true)
+        .catch((error) => setDbStatus(`Chargement SQLite impossible: ${error.message}`, "error"))
+        .finally(() => {
+          fields.loadDbCatalogs.disabled = false;
+        });
+    });
     document.querySelector("#summaryTab").addEventListener("click", () => showTab("summary"));
     document.querySelector("#catalogTab").addEventListener("click", () => showTab("catalog"));
     fields.distribution.addEventListener("change", calculate);
@@ -2841,6 +3335,10 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
     renderRoofControls();
     renderInverterControls();
     calculate();
+    refreshDbSummary();
+    if (backendAvailable()) {
+      loadDbCatalogs(false).catch((error) => setDbStatus(`SQLite non charge: ${error.message}`, "error"));
+    }
   </script>
 </body>
 </html>

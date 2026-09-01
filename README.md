@@ -9,6 +9,7 @@ Prototype local de dimensionnement photovoltaique.
 - `code/` : scripts Python et modules d'import.
 - `input/` : catalogues CSV, base fabricant et datasheets sources.
 - `output/` : rapports et exports generes localement.
+- `storage/` : stockage runtime ignore par Git, dont SQLite et datasheets uploadees.
 - `docs/` : documentation et notes de version.
 
 ## Lancement rapide
@@ -26,19 +27,21 @@ python code/catalogue_fabricants.py summary
 python code/datasheet_importer.py input/datasheets
 python backend/server.py
 Invoke-RestMethod http://localhost:8000/api/debug
+Invoke-RestMethod http://localhost:8000/api/db/summary
 ```
 
 ## Fonctions principales
 
 - selection panneaux / onduleurs ;
-- controles Uoc froid RGIE 750 V DC, Umpp chaud/froid, Impp/Isc corriges temperature et plages MPPT ;
+- controles Uoc froid RGIE 750 V DC, startup input voltage en ete, Umpp chaud/froid, Impp/Isc corriges temperature et plages MPPT ;
 - toitures multiples avec orientation et pente ;
 - limites mono, biphase, tri delta et tetra ;
 - pertes DC/AC et chute de tension ;
 - calpinage toiture avec marges, orientation panneau, rails et crochets ;
 - affectation MPP automatique ou manuelle ;
 - export CSV et note de calcul ;
-- import local de datasheets fabricants.
+- import local de datasheets fabricants ;
+- stockage SQLite des panneaux/onduleurs avec previsualisation avant insertion.
 
 Deploiement Railway : `Dockerfile`, `railway.toml` et `docs/RAILWAY_DEPLOY.md`.
 

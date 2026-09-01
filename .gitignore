@@ -4,3 +4,6 @@ output/*
 !output/.gitkeep
 !output/datasheet_import_report.csv
 outputs/
+storage/*
+!storage/.gitkeep
+*.sqlite3

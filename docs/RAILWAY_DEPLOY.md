@@ -9,10 +9,17 @@ Ce projet est pret pour Railway avec `railway.toml` et `Dockerfile` a la racine.
 - Le backend ecoute le port fourni par la variable `PORT`.
 - `/health` repond `200` pour les healthchecks Railway.
 - `/` sert l'interface `ui/dimensionnement_solaire.html`.
+- Si un volume `/storage` est monte, la base SQLite runtime est stockee dans `/storage/pv_selector.sqlite3`.
 - Les catalogues sont aussi exposes en API :
   - `/api/catalog/panels`
   - `/api/catalog/inverters`
   - `/api/catalog/summary`
+- Le catalogue SQLite et l'import controle sont exposes via :
+  - `/api/db/summary`
+  - `/api/db/panels`
+  - `/api/db/inverters`
+  - `/api/datasheets/preview`
+  - `/api/db/insert`
 
 ## Mise en place automatique
 
@@ -23,6 +30,7 @@ Ce projet est pret pour Railway avec `railway.toml` et `Dockerfile` a la racine.
 5. Verifier que le service utilise le fichier `railway.toml` a la racine.
 6. Si Railway affiche encore Railpack, verifier que le commit contenant `Dockerfile` et `builder = "DOCKERFILE"` est bien pousse sur GitHub.
 7. Activer le domaine public Railway si necessaire.
+8. Ajouter un volume Railway monte sur `/storage` pour conserver la base SQLite et les datasheets uploadees apres redeploiement.
 
 Une fois le service Railway lie au repo GitHub, chaque `git push` sur `main` redeploie automatiquement le backend.
 

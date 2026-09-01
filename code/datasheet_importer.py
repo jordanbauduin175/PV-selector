@@ -26,7 +26,7 @@ from catalogue_fabricants import (
 )
 
 
-APP_VERSION = "0.24"
+APP_VERSION = "0.27"
 SUPPORTED_EXTENSIONS = {".pdf", ".txt", ".text", ".md"}
 DEFAULT_REPORT = OUTPUT_DIR / "datasheet_import_report.csv"
 DEFAULT_PANELS_OUT = INPUT_DIR / "panneaux.csv"
@@ -170,6 +170,11 @@ def known_manufacturers(db: dict) -> list[str]:
 
 def detect_manufacturer(text: str, path: Path, manufacturers: Iterable[str]) -> str:
     haystack = f"{path.parent.name} {path.stem} {text[:4000]}".lower()
+    if re.search(r"\bsma\b|\bsunny\s+boy\b|\bsunny\s+tripower\b", haystack):
+        for manufacturer in manufacturers:
+            if manufacturer.lower() == "sma":
+                return manufacturer
+        return "SMA"
     for manufacturer in manufacturers:
         if manufacturer.lower() in haystack:
             return manufacturer
@@ -500,9 +505,9 @@ def parse_trina_vertex_panels(document: LoadedDatasheet, path: Path, manufacture
 
 def detect_phase(text: str) -> str | None:
     compact = clean_spaces(text).lower()
-    if re.search(r"\b(three|tri)[ -]?phase\b|3\s*phase|3/n/pe|3l", compact):
+    if re.search(r"\b(three|tri)[ -]?phase\b|3\s*[- ]?\s*phase|3/n/pe|3l", compact):
         return "tri"
-    if re.search(r"\b(single|mono)[ -]?phase\b|1\s*phase|1/n/pe", compact):
+    if re.search(r"\b(single|mono)[ -]?phase\b|1\s*[- ]?\s*phase|1/n/pe", compact):
         return "mono"
     return None
 
@@ -583,6 +588,7 @@ def huawei_base_entry(reference: str, manufacturer: str, path: Path, source_type
         "puissance_pv_max_w": None,
         "tension_dc_max_v": None,
         "tension_dc_nominale_v": None,
+        "startup_input_voltage_v": None,
         "mppt_min_v": None,
         "mppt_max_v": None,
         "courant_max_mppt_a": None,
@@ -692,6 +698,8 @@ def apply_huawei_row(entries: dict[str, dict], row: list[str], model_columns: li
             set_huawei_numeric_field(entries, values, "tension_dc_max_v", decimal)
         elif "ratedinputvoltage" in compact or "rateddcvoltage" in compact or "nominalinputvoltage" in compact:
             set_huawei_numeric_field(entries, values, "tension_dc_nominale_v", decimal)
+        elif "startupinputvoltage" in compact or "startupvoltage" in compact or "startingvoltage" in compact:
+            set_huawei_numeric_field(entries, values, "startup_input_voltage_v", decimal)
         elif "operatingvoltagerange" in compact or "mppvoltagerange" in compact or "mpptvoltagerange" in compact:
             set_huawei_range_field(entries, values)
         elif "maxinputcurrent" in compact and ("mppt" in compact or "mpp" in compact):
@@ -766,6 +774,8 @@ def apply_huawei_text_line(entries: dict[str, dict], line: str, references: list
             set_huawei_numeric_field(entries, huawei_values_from_line(line, references, decimal), "tension_dc_max_v", decimal)
         elif "ratedinputvoltage" in compact or "rateddcvoltage" in compact or "nominalinputvoltage" in compact:
             set_huawei_numeric_field(entries, huawei_values_from_line(line, references, decimal), "tension_dc_nominale_v", decimal)
+        elif "startupinputvoltage" in compact or "startupvoltage" in compact or "startingvoltage" in compact:
+            set_huawei_numeric_field(entries, huawei_values_from_line(line, references, decimal), "startup_input_voltage_v", decimal)
         elif "operatingvoltagerange" in compact or "mppvoltagerange" in compact or "mpptvoltagerange" in compact:
             set_huawei_range_field(entries, huawei_values_from_line(line, references, parse_range_cell))
         elif "maxinputcurrent" in compact and ("mppt" in compact or "mpp" in compact):
@@ -821,6 +831,197 @@ def parse_huawei_multi_inverters(document: LoadedDatasheet, path: Path, manufact
             if entry.get("phase") in {None, ""}:
                 entry["phase"] = phase
     return [entry for entry in entries.values() if any(entry.get(field) not in {None, ""} for field in INVERTERS_HEADER[2:])]
+
+
+def normalize_sma_reference(value: str) -> str | None:
+    compact = re.sub(r"\s+", "", clean_spaces(value).upper())
+    match = re.search(r"\b(?:SBSE|SBS|SB|STP)\d+(?:[.,]\d+)?(?:-[A-Z0-9]+){1,3}\b", compact)
+    if not match:
+        return None
+    return match.group(0).replace(",", ".")
+
+
+def sma_family_references(text: str) -> list[str]:
+    refs: list[str] = []
+    for match in re.finditer(r"\b(?:SBSE|SBS|SB|STP)\s*\d+(?:[.,]\d+)?(?:\s*-[A-Z0-9]+){1,3}\b", clean_spaces(text).upper()):
+        ref = normalize_sma_reference(match.group(0))
+        if ref:
+            refs.append(ref)
+    unique: dict[str, str] = {}
+    for ref in refs:
+        unique.setdefault(ref, ref)
+    return list(unique.values())
+
+
+def sma_base_entry(reference: str, path: Path, source_type: str) -> dict:
+    return {
+        "reference": reference,
+        "fabricant": "SMA",
+        "puissance_ac_w": None,
+        "puissance_pv_max_w": None,
+        "tension_dc_max_v": None,
+        "tension_dc_nominale_v": None,
+        "startup_input_voltage_v": None,
+        "mppt_min_v": None,
+        "mppt_max_v": None,
+        "courant_max_mppt_a": None,
+        "isc_max_mppt_a": None,
+        "nombre_mppt": None,
+        "strings_max_par_mppt": None,
+        "phase": None,
+        "source_url": path.resolve().as_uri(),
+        "source_type": source_type,
+        "last_verified": today(),
+        "notes": "Import automatique datasheet tableau SMA; valeurs communes propagees et valeurs par modele reprises par colonne.",
+    }
+
+
+def sma_table_model_columns(rows: list[list[str]], references: list[str]) -> tuple[int, list[tuple[int, str]]]:
+    for row_index, row in enumerate(rows[:12]):
+        direct_columns: list[tuple[int, str]] = []
+        for column_index, cell in enumerate(row):
+            ref = normalize_sma_reference(cell)
+            if ref:
+                direct_columns.append((column_index, ref))
+        if len(direct_columns) >= 2:
+            return row_index, direct_columns
+
+        model_indexes = [
+            column_index
+            for column_index, cell in enumerate(row)
+            if column_index > 0 and "sunnyboy" in compact_label(cell) and decimal(cell) is not None
+        ]
+        if len(model_indexes) >= 2:
+            if len(references) >= len(model_indexes):
+                return row_index, [(column_index, references[index]) for index, column_index in enumerate(model_indexes)]
+            return row_index, [
+                (column_index, clean_reference(row[column_index], "SMA"))
+                for column_index in model_indexes
+            ]
+    return -1, []
+
+
+def sma_row_label(row: list[str], model_columns: list[tuple[int, str]]) -> str:
+    model_indexes = {index for index, _ in model_columns}
+    for index, cell in enumerate(row):
+        if index in model_indexes or not cell or normalize_sma_reference(cell):
+            continue
+        if re.search(r"[A-Za-z]", cell):
+            return cell
+    return ""
+
+
+def sma_values_by_model(row: list[str], model_columns: list[tuple[int, str]]) -> dict[str, str]:
+    direct_values = []
+    for column_index, reference in model_columns:
+        value = row[column_index] if column_index < len(row) else ""
+        direct_values.append((reference, value))
+    non_empty_direct = [(reference, value) for reference, value in direct_values if value]
+    if len(non_empty_direct) == len(model_columns):
+        return dict(non_empty_direct)
+    if len(non_empty_direct) == 1:
+        shared = non_empty_direct[0][1]
+        return {reference: shared for _, reference in model_columns}
+
+    model_indexes = {index for index, _ in model_columns}
+    candidates = [
+        cell
+        for index, cell in enumerate(row)
+        if index not in model_indexes and index > 0 and cell and not normalize_sma_reference(cell)
+    ]
+    if len(candidates) == len(model_columns):
+        return {reference: candidates[index] for index, (_, reference) in enumerate(model_columns)}
+    if len(candidates) == 1:
+        return {reference: candidates[0] for _, reference in model_columns}
+    return {reference: value for reference, value in direct_values if value}
+
+
+def set_sma_numeric_field(entries: dict[str, dict], values: dict[str, str], field: str, parser) -> None:
+    for reference, value in values.items():
+        parsed = parser(value)
+        if parsed is not None and entries[reference].get(field) in {None, ""}:
+            entries[reference][field] = parsed
+
+
+def set_sma_range_field(entries: dict[str, dict], values: dict[str, str]) -> None:
+    for reference, value in values.items():
+        parsed = parse_range_cell(value)
+        if parsed is None:
+            continue
+        low, high = parsed
+        if entries[reference].get("mppt_min_v") in {None, ""}:
+            entries[reference]["mppt_min_v"] = low
+        if entries[reference].get("mppt_max_v") in {None, ""}:
+            entries[reference]["mppt_max_v"] = high
+
+
+def set_sma_mppt_inputs(entries: dict[str, dict], values: dict[str, str]) -> None:
+    for reference, value in values.items():
+        numbers = [decimal(match.group(0)) for match in re.finditer(r"\d(?:[\d\s.,]*\d)?", value)]
+        numbers = [number for number in numbers if number is not None]
+        if len(numbers) < 2:
+            continue
+        if entries[reference].get("nombre_mppt") in {None, ""}:
+            entries[reference]["nombre_mppt"] = max(1, round(numbers[0]))
+        if entries[reference].get("strings_max_par_mppt") in {None, ""}:
+            entries[reference]["strings_max_par_mppt"] = max(1, round(numbers[1]))
+
+
+def apply_sma_row(entries: dict[str, dict], row: list[str], model_columns: list[tuple[int, str]]) -> None:
+    label = sma_row_label(row, model_columns).lower()
+    compact = compact_label(label)
+    if not label:
+        return
+    values = sma_values_by_model(row, model_columns)
+    if not values:
+        return
+
+    if "maxpvarraypower" in compact or ("maxpv" in compact and "power" in compact):
+        set_sma_numeric_field(entries, values, "puissance_pv_max_w", parse_power_cell)
+    elif "maxinputvoltage" in compact:
+        set_sma_numeric_field(entries, values, "tension_dc_max_v", decimal)
+    elif "ratedinputvoltage" in compact or "nominalinputvoltage" in compact or "rateddcvoltage" in compact:
+        set_sma_numeric_field(entries, values, "tension_dc_nominale_v", decimal)
+    elif "startupinputvoltage" in compact or "startupvoltage" in compact or "startingvoltage" in compact:
+        set_sma_numeric_field(entries, values, "startup_input_voltage_v", decimal)
+    elif "mppvoltagerange" in compact or "mpptvoltagerange" in compact:
+        set_sma_range_field(entries, values)
+    elif "maxusableinputcurrent" in compact or ("maxinputcurrent" in compact and "input" in compact):
+        set_sma_numeric_field(entries, values, "courant_max_mppt_a", decimal)
+    elif "maxdcshortcircuitcurrent" in compact or "maxshortcircuitcurrent" in compact:
+        set_sma_numeric_field(entries, values, "isc_max_mppt_a", decimal)
+    elif "numberofindependentmppinputs" in compact or "numberofindependentmpptinputs" in compact:
+        set_sma_mppt_inputs(entries, values)
+    elif "inputspermpp" in compact or "inputspermppt" in compact:
+        set_sma_numeric_field(entries, values, "strings_max_par_mppt", parse_int_cell)
+    elif "ratedpower" in compact and "230v" in compact:
+        set_sma_numeric_field(entries, values, "puissance_ac_w", parse_power_cell)
+
+
+def parse_sma_multi_inverters(document: LoadedDatasheet, path: Path, manufacturer: str, source_type: str) -> list[dict]:
+    haystack = f"{path.stem} {document.text[:6000]}".lower()
+    if "sunny boy" not in haystack and "sunny tripower" not in haystack and "sma" not in haystack:
+        return []
+
+    references = sma_family_references(document.text)
+    entries: dict[str, dict] = {}
+    for table in document.tables:
+        rows = [[clean_cell(cell) for cell in row] for row in table if row]
+        header_index, model_columns = sma_table_model_columns(rows, references)
+        if header_index < 0:
+            continue
+        for _, reference in model_columns:
+            entries.setdefault(reference, sma_base_entry(reference, path, source_type))
+        for row in rows[header_index + 1 :]:
+            apply_sma_row(entries, row, model_columns)
+
+    phase = detect_phase(document.text)
+    if phase:
+        for entry in entries.values():
+            if entry.get("phase") in {None, ""}:
+                entry["phase"] = phase
+    return [entry for entry in entries.values() if any(entry.get(field) not in {None, ""} for field in INVERTERS_HEADER[2:])]
+
 
 def parse_inverter(text: str, path: Path, manufacturer: str, source_type: str) -> dict:
     mppt_range = find_range(
@@ -906,6 +1107,16 @@ def parse_inverter(text: str, path: Path, manufacturer: str, source_type: str) -
                 r"nominal\s+input\s+voltage",
                 r"rated\s+dc\s+voltage",
                 r"nominal\s+dc\s+voltage",
+            ],
+            "V",
+        ),
+        "startup_input_voltage_v": first_value(
+            text,
+            [
+                r"startup\s+input\s+voltage",
+                r"start[- ]?up\s+voltage",
+                r"starting\s+voltage",
+                r"start\s+voltage",
             ],
             "V",
         ),
@@ -997,7 +1208,10 @@ def parse_datasheets(path: Path, db: dict, forced_kind: str = "auto") -> list[Pa
 
     if kind == "inverter":
         entries = parse_huawei_multi_inverters(document, path, manufacturer, source_type)
-        if len(entries) >= 2:
+        if entries:
+            return [parsed_datasheet_item(path, kind, entry, header, document.extractor) for entry in entries]
+        entries = parse_sma_multi_inverters(document, path, manufacturer, source_type)
+        if entries:
             return [parsed_datasheet_item(path, kind, entry, header, document.extractor) for entry in entries]
         entry = parse_inverter(text, path, manufacturer, source_type)
     else:

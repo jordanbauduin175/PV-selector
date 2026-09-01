@@ -8,7 +8,7 @@ from pathlib import Path
 from urllib.parse import quote_plus
 
 
-APP_VERSION = "0.24"
+APP_VERSION = "0.27"
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 INPUT_DIR = PROJECT_ROOT / "input"
 OUTPUT_DIR = PROJECT_ROOT / "output"
@@ -34,6 +34,7 @@ INVERTERS_HEADER = [
     "puissance_pv_max_w",
     "tension_dc_max_v",
     "tension_dc_nominale_v",
+    "startup_input_voltage_v",
     "mppt_min_v",
     "mppt_max_v",
     "courant_max_mppt_a",
@@ -78,7 +79,8 @@ def parse_int(value: str | float | int) -> int:
     return int(round(parse_float(value)))
 
 
-OPTIONAL_NUMERIC_FIELDS = {"tension_dc_nominale_v", "coef_isc_pct_c"}
+OPTIONAL_NUMERIC_FIELDS = {"tension_dc_nominale_v", "startup_input_voltage_v", "coef_isc_pct_c"}
+META_FIELDS = ("source_url", "source_type", "last_verified", "notes")
 
 def normalize_entry(entry: dict, header: list[str], numeric_ints: set[str] | None = None) -> dict:
     numeric_ints = numeric_ints or set()
@@ -89,7 +91,7 @@ def normalize_entry(entry: dict, header: list[str], numeric_ints: set[str] | Non
             normalized[key] = str(value).strip()
         elif key in numeric_ints:
             normalized[key] = parse_int(value)
-        elif key in OPTIONAL_NUMERIC_FIELDS and str(value).strip() == "":
+        elif key in OPTIONAL_NUMERIC_FIELDS and (value is None or str(value).strip() == ""):
             normalized[key] = 0.0
         else:
             normalized[key] = parse_float(value)
@@ -107,6 +109,20 @@ def upsert(items: list[dict], entry: dict) -> None:
             items[index] = entry
             return
     items.append(entry)
+
+
+def preserve_existing_metadata(items: list[dict], entry: dict, source_row: dict) -> dict:
+    has_explicit_metadata = any(str(source_row.get(field, "")).strip() for field in META_FIELDS)
+    if has_explicit_metadata:
+        return entry
+    key = (entry["fabricant"].lower(), entry["reference"].lower())
+    for item in items:
+        if (item["fabricant"].lower(), item["reference"].lower()) == key:
+            for field in META_FIELDS:
+                if item.get(field) not in {None, ""}:
+                    entry[field] = item[field]
+            return entry
+    return entry
 
 
 def read_csv_rows(path: Path) -> list[dict]:
@@ -130,6 +146,7 @@ def import_app_csv(args: argparse.Namespace) -> None:
         for row in read_csv_rows(Path(args.panels)):
             entry = normalize_entry(row, PANELS_HEADER)
             entry["source_type"] = row.get("source_type", "").strip() or "app_csv"
+            entry = preserve_existing_metadata(db["panels"], entry, row)
             upsert(db["panels"], entry)
     if args.inverters:
         for row in read_csv_rows(Path(args.inverters)):
@@ -139,6 +156,7 @@ def import_app_csv(args: argparse.Namespace) -> None:
                 numeric_ints={"nombre_mppt", "strings_max_par_mppt"},
             )
             entry["source_type"] = row.get("source_type", "").strip() or "app_csv"
+            entry = preserve_existing_metadata(db["inverters"], entry, row)
             upsert(db["inverters"], entry)
     save_db(db_path, db)
     print(f"Catalogue mis a jour : {db_path}")
@@ -266,7 +284,7 @@ def add_common(parser: argparse.ArgumentParser) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Catalogue fabricants PV v0.22")
+    parser = argparse.ArgumentParser(description="Catalogue fabricants PV v0.27")
     sub = parser.add_subparsers(dest="command", required=True)
 
     p = sub.add_parser("summary")

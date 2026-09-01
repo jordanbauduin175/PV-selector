@@ -1,6 +1,26 @@
-# Module catalogue fabricants v0.24
+# Module catalogue fabricants v0.27
 
 Ce module sert a rechercher localement, stocker et exporter les caracteristiques fabricants des panneaux et onduleurs. Il peut aussi importer des fiches techniques placees dans `input/datasheets`.
+
+## Version 0.27
+
+Le schema onduleur ajoute `startup_input_voltage_v`, tension minimale de demarrage ou redemarrage DC. Le champ est stocke en CSV, JSON et SQLite, puis expose dans le formulaire de previsualisation datasheet avant insertion. L'import detecte les libelles courants `startup input voltage`, `start-up voltage` et `starting voltage`, y compris dans les tableaux multi-modeles Huawei et SMA.
+
+## Version 0.26
+
+Le module d'import reconnait les datasheets SMA Sunny Boy Smart Energy multi-modeles. Une fiche `SBSE3.6-50 / SBSE4.0-50 / SBSE5.0-50 / SBSE6.0-50` produit maintenant une entree onduleur par modele avec les valeurs communes propagees et les puissances propres a chaque colonne.
+
+## Version 0.25
+
+Le backend ajoute une base SQLite runtime. En local, elle est creee dans `storage/pv_selector.sqlite3`. Sur Railway, si le volume `/storage` est disponible, elle est creee dans `/storage/pv_selector.sqlite3`.
+
+L'interface permet d'uploader une datasheet PDF/TXT/MD, d'obtenir une extraction pre-remplie, de corriger les champs, puis seulement ensuite d'inserer le panneau ou l'onduleur dans SQLite. Les endpoints utiles sont :
+
+- `GET /api/db/summary`
+- `GET /api/db/panels`
+- `GET /api/db/inverters`
+- `POST /api/datasheets/preview`
+- `POST /api/db/insert`
 
 ## Version 0.24
 
@@ -16,6 +36,7 @@ Le schema catalogue reste synchronise avec l'application v0.22. Les exports gene
 - `input/datasheets/` : repertoire de depot des fiches techniques a analyser.
 - `input/catalogue_fabricants_db.json` : base locale avec fabricants sources et materiel stocke.
 - `input/panneaux.csv` et `input/onduleurs.csv` : catalogues utilises par l'interface.
+- `storage/pv_selector.sqlite3` ou `/storage/pv_selector.sqlite3` : base SQLite runtime validee depuis l'UI.
 - `output/` : rapports et exports generes.
 
 ## Principe
@@ -24,7 +45,7 @@ Le module ne valide pas une fiche technique sans source. Chaque entree peut gard
 
 Le module d'import datasheets reste conservateur : il importe seulement les fiches ou tous les champs requis sont retrouves. Les fiches incompletes sont listees dans `output/datasheet_import_report.csv`.
 
-Les fiches Huawei SUN2000 multi-modeles sont decoupees par colonne : une datasheet `SUN2000-5/6/8/10/12K-MAP0` produit une entree distincte par modele, avec les puissances, plages DC, courants et la tension DC nominale `rated input voltage` repris dans la bonne colonne quand la fiche les fournit.
+Les fiches Huawei SUN2000 multi-modeles sont decoupees par colonne : une datasheet `SUN2000-5/6/8/10/12K-MAP0` produit une entree distincte par modele, avec les puissances, plages DC, courants, tension DC nominale `rated input voltage` et tension de demarrage repris dans la bonne colonne quand la fiche les fournit.
 
 ## Commandes utiles
 
