@@ -114,7 +114,7 @@
       "coef_tension_pct_c": -0.28,
       "source_url": "",
       "source_type": "manual",
-      "last_verified": "2026-07-23",
+      "last_verified": "2026-09-01",
       "notes": ""
     },
     {
@@ -131,7 +131,7 @@
       "coef_tension_pct_c": -0.28,
       "source_url": "",
       "source_type": "manual",
-      "last_verified": "2026-07-23",
+      "last_verified": "2026-09-01",
       "notes": ""
     },
     {
@@ -148,7 +148,7 @@
       "coef_tension_pct_c": -0.24,
       "source_url": "",
       "source_type": "manual",
-      "last_verified": "2026-07-23",
+      "last_verified": "2026-09-01",
       "notes": ""
     },
     {
@@ -165,7 +165,7 @@
       "coef_tension_pct_c": -0.29,
       "source_url": "",
       "source_type": "manual",
-      "last_verified": "2026-07-23",
+      "last_verified": "2026-09-01",
       "notes": ""
     },
     {
@@ -182,7 +182,7 @@
       "coef_tension_pct_c": -0.24,
       "source_url": "file:///home/runner/work/PV-selector/PV-selector/input/datasheets/240307_Datasheet_Vertex%20S%2B_NEG9R.25_EN_2024_PA_web.pdf",
       "source_type": "datasheet_pdf",
-      "last_verified": "2026-07-23",
+      "last_verified": "2026-09-01",
       "notes": "Import automatique datasheet tableau Trina Vertex; valeurs STC par colonne, donnees mecaniques et coefficients Voc/Isc communs. Extracteur: pdfplumber. Confiance: 1.00."
     },
     {
@@ -199,7 +199,7 @@
       "coef_tension_pct_c": -0.25,
       "source_url": "",
       "source_type": "manual",
-      "last_verified": "2026-07-23",
+      "last_verified": "2026-09-01",
       "notes": ""
     },
     {
@@ -216,7 +216,7 @@
       "coef_tension_pct_c": -0.2,
       "source_url": "",
       "source_type": "manual",
-      "last_verified": "2026-07-23",
+      "last_verified": "2026-09-01",
       "notes": ""
     },
     {
@@ -233,7 +233,7 @@
       "coef_tension_pct_c": -0.25,
       "source_url": "",
       "source_type": "manual",
-      "last_verified": "2026-07-23",
+      "last_verified": "2026-09-01",
       "notes": ""
     },
     {
@@ -250,7 +250,7 @@
       "coef_tension_pct_c": -0.24,
       "source_url": "file:///home/runner/work/PV-selector/PV-selector/input/datasheets/240307_Datasheet_Vertex%20S%2B_NEG9R.25_EN_2024_PA_web.pdf",
       "source_type": "datasheet_pdf",
-      "last_verified": "2026-07-23",
+      "last_verified": "2026-09-01",
       "notes": "Import automatique datasheet tableau Trina Vertex; valeurs STC par colonne, donnees mecaniques et coefficients Voc/Isc communs. Extracteur: pdfplumber. Confiance: 1.00."
     },
     {
@@ -267,7 +267,7 @@
       "coef_tension_pct_c": -0.24,
       "source_url": "file:///home/runner/work/PV-selector/PV-selector/input/datasheets/240307_Datasheet_Vertex%20S%2B_NEG9R.25_EN_2024_PA_web.pdf",
       "source_type": "datasheet_pdf",
-      "last_verified": "2026-07-23",
+      "last_verified": "2026-09-01",
       "notes": "Import automatique datasheet tableau Trina Vertex; valeurs STC par colonne, donnees mecaniques et coefficients Voc/Isc communs. Extracteur: pdfplumber. Confiance: 1.00."
     },
     {
@@ -284,7 +284,7 @@
       "coef_tension_pct_c": -0.24,
       "source_url": "file:///home/runner/work/PV-selector/PV-selector/input/datasheets/240307_Datasheet_Vertex%20S%2B_NEG9R.25_EN_2024_PA_web.pdf",
       "source_type": "datasheet_pdf",
-      "last_verified": "2026-07-23",
+      "last_verified": "2026-09-01",
       "notes": "Import automatique datasheet tableau Trina Vertex; valeurs STC par colonne, donnees mecaniques et coefficients Voc/Isc communs. Extracteur: pdfplumber. Confiance: 1.00."
     },
     {
@@ -301,7 +301,7 @@
       "coef_tension_pct_c": -0.24,
       "source_url": "file:///home/runner/work/PV-selector/PV-selector/input/datasheets/240307_Datasheet_Vertex%20S%2B_NEG9R.25_EN_2024_PA_web.pdf",
       "source_type": "datasheet_pdf",
-      "last_verified": "2026-07-23",
+      "last_verified": "2026-09-01",
       "notes": "Import automatique datasheet tableau Trina Vertex; valeurs STC par colonne, donnees mecaniques et coefficients Voc/Isc communs. Extracteur: pdfplumber. Confiance: 1.00."
     },
     {
@@ -318,7 +318,7 @@
       "coef_tension_pct_c": -0.24,
       "source_url": "file:///home/runner/work/PV-selector/PV-selector/input/datasheets/240307_Datasheet_Vertex%20S%2B_NEG9R.25_EN_2024_PA_web.pdf",
       "source_type": "datasheet_pdf",
-      "last_verified": "2026-07-23",
+      "last_verified": "2026-09-01",
       "notes": "Import automatique datasheet tableau Trina Vertex; valeurs STC par colonne, donnees mecaniques et coefficients Voc/Isc communs. Extracteur: pdfplumber. Confiance: 1.00."
     }
   ],
@@ -340,7 +340,7 @@
       "phase": "mono",
       "source_url": "",
       "source_type": "manual",
-      "last_verified": "2026-07-23",
+      "last_verified": "2026-09-01",
       "notes": ""
     },
     {
@@ -360,7 +360,7 @@
       "phase": "mono",
       "source_url": "",
       "source_type": "manual",
-      "last_verified": "2026-07-23",
+      "last_verified": "2026-09-01",
       "notes": ""
     },
     {
@@ -380,7 +380,7 @@
       "phase": "tri",
       "source_url": "",
       "source_type": "manual",
-      "last_verified": "2026-07-23",
+      "last_verified": "2026-09-01",
       "notes": ""
     },
     {
@@ -400,7 +400,7 @@
       "phase": "tri",
       "source_url": "",
       "source_type": "manual",
-      "last_verified": "2026-07-23",
+      "last_verified": "2026-09-01",
       "notes": ""
     },
     {
@@ -420,7 +420,7 @@
       "phase": "mono",
       "source_url": "",
       "source_type": "manual",
-      "last_verified": "2026-07-23",
+      "last_verified": "2026-09-01",
       "notes": ""
     },
     {
@@ -440,7 +440,7 @@
       "phase": "tri",
       "source_url": "",
       "source_type": "manual",
-      "last_verified": "2026-07-23",
+      "last_verified": "2026-09-01",
       "notes": ""
     },
     {
@@ -460,7 +460,7 @@
       "phase": "tri",
       "source_url": "",
       "source_type": "manual",
-      "last_verified": "2026-07-23",
+      "last_verified": "2026-09-01",
       "notes": ""
     },
     {
@@ -480,7 +480,7 @@
       "phase": "tri",
       "source_url": "",
       "source_type": "manual",
-      "last_verified": "2026-07-23",
+      "last_verified": "2026-09-01",
       "notes": ""
     },
     {
@@ -500,7 +500,7 @@
       "phase": "tri",
       "source_url": "file:///home/runner/work/PV-selector/PV-selector/input/datasheets/ondu_pv_rescert.pdf",
       "source_type": "datasheet_pdf",
-      "last_verified": "2026-07-23",
+      "last_verified": "2026-09-01",
       "notes": "Import automatique datasheet tableau Huawei SUN2000; verification technique recommandee. Extracteur: pdfplumber. Confiance: 1.00."
     },
     {
@@ -520,7 +520,7 @@
       "phase": "tri",
       "source_url": "file:///home/runner/work/PV-selector/PV-selector/input/datasheets/ondu_pv_rescert.pdf",
       "source_type": "datasheet_pdf",
-      "last_verified": "2026-07-23",
+      "last_verified": "2026-09-01",
       "notes": "Import automatique datasheet tableau Huawei SUN2000; verification technique recommandee. Extracteur: pdfplumber. Confiance: 1.00."
     },
     {
@@ -540,7 +540,7 @@
       "phase": "tri",
       "source_url": "file:///home/runner/work/PV-selector/PV-selector/input/datasheets/ondu_pv_rescert.pdf",
       "source_type": "datasheet_pdf",
-      "last_verified": "2026-07-23",
+      "last_verified": "2026-09-01",
       "notes": "Import automatique datasheet tableau Huawei SUN2000; verification technique recommandee. Extracteur: pdfplumber. Confiance: 1.00."
     },
     {
@@ -560,7 +560,7 @@
       "phase": "tri",
       "source_url": "file:///home/runner/work/PV-selector/PV-selector/input/datasheets/ondu_pv_rescert.pdf",
       "source_type": "datasheet_pdf",
-      "last_verified": "2026-07-23",
+      "last_verified": "2026-09-01",
       "notes": "Import automatique datasheet tableau Huawei SUN2000; verification technique recommandee. Extracteur: pdfplumber. Confiance: 1.00."
     },
     {
@@ -580,7 +580,7 @@
       "phase": "tri",
       "source_url": "file:///home/runner/work/PV-selector/PV-selector/input/datasheets/ondu_pv_rescert.pdf",
       "source_type": "datasheet_pdf",
-      "last_verified": "2026-07-23",
+      "last_verified": "2026-09-01",
       "notes": "Import automatique datasheet tableau Huawei SUN2000; verification technique recommandee. Extracteur: pdfplumber. Confiance: 1.00."
     }
   ]
