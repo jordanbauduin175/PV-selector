@@ -1,6 +1,6 @@
-# Dimensionnement solaire - prototype GUI v0.27
+# Dimensionnement solaire - prototype GUI v0.28
 
-Ce dossier contient la version `v0.27` du programme :
+Ce dossier contient la version `v0.28` du programme :
 
 - `ui/dimensionnement_solaire.html` : interface graphique locale a ouvrir dans un navigateur.
 - `code/solar_optimizer_gui.py` : interface graphique Python et moteur de selection.
@@ -10,6 +10,10 @@ Ce dossier contient la version `v0.27` du programme :
 - `code/datasheet_importer.py` : module d'import local de datasheets PDF/TXT.
 - `input/catalogue_fabricants_db.json` : base locale des fabricants, panneaux et onduleurs.
 - `storage/pv_selector.sqlite3` : base SQLite runtime creee localement, ou `/storage/pv_selector.sqlite3` sur Railway.
+
+## Version 0.28
+
+Cette version ajoute le mode `Manuel par toiture` pour forcer les strings PV par toiture. Exemple : `2` strings de `7` modules sur la toiture 1 et `1` string de `7` modules sur la toiture 2. Le calcul limite alors les propositions a cette architecture, conserve toutes les validations electriques et pondere le coefficient de production selon les toitures affectees. Le plan strings apparait dans le detail, l'export CSV, la note de calcul et le debug.
 
 ## Version 0.27
 

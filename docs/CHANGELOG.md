@@ -2,6 +2,14 @@
 
 Toutes les modifications notables de PV Selector sont tracees ici.
 
+## v0.28 - 2026-09-06
+
+- Ajout d'un mode `Strings manuel par toiture` dans l'interface.
+- Possibilite de forcer un plan du type `Toiture 1 = 2 strings de 7 modules` et `Toiture 2 = 1 string de 7 modules`.
+- L'optimiseur limite alors la recherche a cette architecture et garde les validations Uoc, startup, Umpp, Isc/MPPT, puissance PV et pertes.
+- Le coefficient de production est pondere selon les toitures reellement affectees par le plan manuel.
+- Ajout du plan strings dans le detail, l'export CSV, la note de calcul, les rejets et les informations debug.
+
 ## v0.27 - 2026-09-01
 
 - Ajout du champ onduleur `startup_input_voltage_v` dans le catalogue CSV/JSON et la base SQLite.
