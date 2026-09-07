@@ -1,6 +1,6 @@
-# Dimensionnement solaire - prototype GUI v0.31
+# Dimensionnement solaire - prototype GUI v0.34
 
-Ce dossier contient la version `v0.31` du programme :
+Ce dossier contient la version `v0.34` du programme :
 
 - `ui/dimensionnement_solaire.html` : interface graphique locale a ouvrir dans un navigateur.
 - `code/solar_optimizer_gui.py` : interface graphique Python et moteur de selection.
@@ -10,6 +10,18 @@ Ce dossier contient la version `v0.31` du programme :
 - `code/datasheet_importer.py` : module d'import local de datasheets PDF/TXT.
 - `input/catalogue_fabricants_db.json` : base locale des fabricants, panneaux et onduleurs.
 - `storage/pv_selector.sqlite3` : base SQLite runtime creee localement, ou `/storage/pv_selector.sqlite3` sur Railway.
+
+## Version 0.34
+
+Cette version corrige le mode strings manuel. Les valeurs saisies dans les toitures sont synchronisees pendant l'encodage et relues juste avant le calcul, ce qui evite qu'un plan `3 strings x 7 modules` reste interprete comme `0 string` si l'utilisateur clique directement sur `Calculer`.
+
+## Version 0.33
+
+Cette version retravaille l'UX de l'application avec la charte couleur Open-Elec : encre sombre, vert energie, bleu technique, panneaux blancs et fond clair. Le header devient une barre de marque `OE` avec navigation compacte vers le calcul, les catalogues et le Plan RGIE. Les boutons, champs, tableaux, cartes, onglets et footer sont harmonises sans changer les formules de dimensionnement.
+
+## Version 0.32
+
+Cette version nettoie le rendu du schema unifilaire RGIE. Les textes techniques ne sont plus places sur les fils ou les symboles : ils sont deplaces dans des cartouches dedies au champ PV, a la liaison DC, a l'onduleur, au depart AC PV, aux controles calcules et au dossier. Les libelles longs sont compactes pour eviter les debordements dans l'interface et dans l'export HTML.
 
 ## Version 0.31
 

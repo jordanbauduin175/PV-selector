@@ -3,19 +3,25 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Dimensionnement solaire v0.31</title>
+  <title>Dimensionnement solaire v0.34</title>
   <style>
     :root {
-      --bg: #f6f7f4;
+      --bg: #f5f7f6;
       --panel: #ffffff;
-      --line: #d9dfd2;
-      --text: #18211b;
-      --muted: #667065;
-      --green: #2f7d45;
-      --blue: #245f8f;
-      --amber: #ad741e;
-      --red: #b84235;
-      --shadow: 0 16px 36px rgba(24, 33, 27, 0.08);
+      --wash: #f5f7f6;
+      --soft: #eef6f2;
+      --line: #dce3df;
+      --text: #101514;
+      --ink-soft: #3c4642;
+      --muted: #6d7772;
+      --green: #18a46f;
+      --green-deep: #0d6f52;
+      --blue: #126c8b;
+      --amber: #f1b83b;
+      --red: #ba2f2f;
+      --accent: var(--green);
+      --shadow: 0 18px 50px rgba(16, 21, 20, 0.1);
+      --shadow-soft: 0 12px 30px rgba(16, 21, 20, 0.06);
       color-scheme: light;
       font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
     }
@@ -27,8 +33,10 @@
     body {
       margin: 0;
       min-height: 100vh;
+      min-width: 320px;
       background: var(--bg);
       color: var(--text);
+      text-rendering: optimizeLegibility;
     }
 
     button,
@@ -41,24 +49,66 @@
     .app {
       min-height: 100vh;
       display: grid;
-      grid-template-rows: auto 1fr auto;
+      grid-template-rows: auto auto 1fr auto;
     }
 
     header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
       display: grid;
-      grid-template-columns: minmax(280px, 1fr) auto;
-      gap: 18px;
+      grid-template-columns: minmax(300px, 0.7fr) minmax(0, 1.3fr);
+      gap: 22px;
       align-items: center;
-      padding: 18px 22px;
+      min-height: 76px;
+      padding: 12px clamp(16px, 2.2vw, 34px);
       border-bottom: 1px solid var(--line);
-      background: #fbfcf8;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 10px 30px rgba(16, 21, 20, 0.08);
+      backdrop-filter: blur(18px);
+    }
+
+    .brand-lockup {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 44px;
+      aspect-ratio: 1;
+      place-items: center;
+      flex: 0 0 auto;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--green) 0%, var(--blue) 72%);
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .brand-copy {
+      min-width: 0;
+    }
+
+    .brand-kicker {
+      margin-bottom: 2px;
+      color: var(--green-deep);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0;
+      text-transform: uppercase;
     }
 
     h1 {
       margin: 0;
-      font-size: 24px;
+      font-size: 22px;
       line-height: 1.2;
       letter-spacing: 0;
+      overflow-wrap: anywhere;
     }
 
     .version-badge {
@@ -69,8 +119,8 @@
       padding: 0 8px;
       border: 1px solid var(--line);
       border-radius: 6px;
-      background: #eef3ea;
-      color: var(--green);
+      background: #e9f8f1;
+      color: var(--green-deep);
       font-size: 13px;
       font-weight: 800;
       vertical-align: middle;
@@ -82,27 +132,81 @@
       font-size: 14px;
     }
 
+    .header-right {
+      display: grid;
+      gap: 8px;
+      width: 100%;
+      min-width: 0;
+      justify-items: end;
+    }
+
+    .app-nav {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      color: var(--ink-soft);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .nav-link {
+      min-height: 30px;
+      padding: 0 10px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+      background: #e9f8f1;
+      color: var(--green-deep);
+    }
+
     .toolbar {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
       justify-content: flex-end;
+      width: 100%;
+      font-size: 13px;
     }
 
     .button {
-      min-height: 38px;
-      padding: 0 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-height: 40px;
+      padding: 0 13px;
       border: 1px solid var(--line);
-      border-radius: 6px;
+      border-radius: 8px;
       background: var(--panel);
       color: var(--text);
+      font-weight: 800;
+      line-height: 1;
       cursor: pointer;
+      transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, background 160ms ease;
     }
 
     .button.primary {
       background: var(--green);
       border-color: var(--green);
       color: white;
+      box-shadow: 0 16px 30px rgba(24, 164, 111, 0.24);
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(24, 164, 111, 0.42);
+    }
+
+    .button.primary:hover {
+      background: var(--green-deep);
+      border-color: var(--green-deep);
     }
 
     .button.link-button {
@@ -113,16 +217,59 @@
     }
     .button:focus,
     input:focus,
+    select:focus,
     textarea:focus {
-      outline: 3px solid rgba(36, 95, 143, 0.22);
+      border-color: var(--green);
+      outline: 3px solid rgba(24, 164, 111, 0.16);
       outline-offset: 1px;
     }
 
+    .top-notice {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 16px;
+      border-bottom: 1px solid rgba(24, 164, 111, 0.18);
+      background: #e9f8f1;
+      color: var(--ink-soft);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .top-notice strong {
+      color: var(--green-deep);
+      font-weight: 900;
+    }
+
+    .top-notice a {
+      color: var(--blue);
+      font-weight: 850;
+      text-decoration: underline;
+      text-decoration-thickness: 2px;
+      text-underline-offset: 4px;
+    }
+
+    .notice-link {
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--blue);
+      font: inherit;
+      font-weight: 850;
+      text-decoration: underline;
+      text-decoration-thickness: 2px;
+      text-underline-offset: 4px;
+      cursor: pointer;
+    }
+
     main {
+      width: min(100%, 1800px);
+      margin: 0 auto;
       display: grid;
-      grid-template-columns: 320px minmax(0, 1fr);
-      gap: 16px;
-      padding: 16px;
+      grid-template-columns: 340px minmax(0, 1fr);
+      gap: 18px;
+      padding: 18px;
       align-items: start;
     }
 
@@ -132,16 +279,20 @@
       gap: 10px 18px;
       align-items: center;
       justify-content: space-between;
-      padding: 12px 22px;
-      border-top: 1px solid var(--line);
-      background: #fbfcf8;
-      color: var(--muted);
+      padding: 14px clamp(16px, 2.2vw, 34px);
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      background: var(--text);
+      color: rgba(255, 255, 255, 0.72);
       font-size: 12px;
     }
 
+    .app-footer strong {
+      color: #ffffff;
+    }
+
     .app-footer a {
-      color: var(--blue);
-      font-weight: 700;
+      color: #9df0c6;
+      font-weight: 850;
       text-decoration: none;
     }
 
@@ -153,19 +304,22 @@
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 8px;
-      box-shadow: var(--shadow);
+      box-shadow: var(--shadow-soft);
     }
 
     aside {
       position: sticky;
-      top: 16px;
-      padding: 14px;
+      top: 94px;
+      max-height: calc(100vh - 110px);
+      padding: 16px;
+      overflow: auto;
     }
 
     .section-title {
       margin: 2px 0 10px;
+      color: var(--text);
       font-size: 15px;
-      font-weight: 700;
+      font-weight: 850;
     }
 
     .field-grid {
@@ -177,7 +331,7 @@
       margin-top: 6px;
       padding-top: 10px;
       border-top: 1px solid var(--line);
-      color: var(--text);
+      color: var(--green-deep);
       font-size: 13px;
       font-weight: 800;
       grid-column: 1 / -1;
@@ -196,7 +350,7 @@
       padding: 10px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: #fbfcf8;
+      background: var(--wash);
     }
 
     .config-row-title {
@@ -219,9 +373,9 @@
       min-width: 34px;
       min-height: 32px;
       border: 1px solid var(--line);
-      border-radius: 6px;
-      background: #eef4f1;
-      color: var(--accent);
+      border-radius: 8px;
+      background: #e9f8f1;
+      color: var(--green-deep);
       font-size: 18px;
       font-weight: 900;
       cursor: pointer;
@@ -249,7 +403,7 @@
       padding: 7px 8px;
       border: 1px solid var(--line);
       border-radius: 6px;
-      background: #fbfcf8;
+      background: var(--wash);
       color: var(--text);
       font-size: 12px;
       font-weight: 700;
@@ -263,8 +417,8 @@
       display: grid;
       gap: 5px;
       color: var(--muted);
-      font-size: 12px;
-      font-weight: 700;
+      font-size: 11px;
+      font-weight: 850;
       text-transform: uppercase;
     }
 
@@ -274,15 +428,16 @@
       width: 100%;
       min-width: 0;
       border: 1px solid var(--line);
-      border-radius: 6px;
-      background: #fbfcf8;
+      border-radius: 8px;
+      background: #ffffff;
       color: var(--text);
+      transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
     }
 
     input,
     select {
-      min-height: 38px;
-      padding: 7px 9px;
+      min-height: 42px;
+      padding: 8px 10px;
     }
 
     textarea {
@@ -293,7 +448,7 @@
       font-size: 12px;
       line-height: 1.45;
       text-transform: none;
-      color: #1f2d22;
+      color: var(--text);
     }
 
     .aside-actions {
@@ -320,10 +475,11 @@
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 8px;
-      box-shadow: var(--shadow);
+      box-shadow: var(--shadow-soft);
       display: grid;
       align-content: center;
       gap: 5px;
+      border-top: 3px solid var(--green);
     }
 
     .metric span {
@@ -336,12 +492,14 @@
     .metric strong {
       font-size: 22px;
       line-height: 1.15;
+      color: var(--text);
       overflow-wrap: anywhere;
     }
 
     .panel {
       min-width: 0;
       overflow: hidden;
+      scroll-margin-top: 126px;
     }
 
     .panel-header {
@@ -351,11 +509,12 @@
       gap: 12px;
       padding: 12px 14px;
       border-bottom: 1px solid var(--line);
+      background: #ffffff;
     }
 
     .panel-header h2 {
       margin: 0;
-      font-size: 16px;
+      font-size: 17px;
       letter-spacing: 0;
     }
 
@@ -401,8 +560,8 @@
       position: sticky;
       top: 0;
       z-index: 1;
-      background: #eef3ea;
-      color: #3b463c;
+      background: var(--wash);
+      color: var(--ink-soft);
       font-size: 12px;
       text-transform: uppercase;
     }
@@ -420,7 +579,7 @@
 
     tbody tr:hover,
     tbody tr.selected {
-      background: #edf6ee;
+      background: #e9f8f1;
     }
 
     .detail-grid {
@@ -435,7 +594,7 @@
       border-radius: 8px;
       padding: 12px;
       min-width: 0;
-      background: #fbfcf8;
+      background: var(--wash);
     }
 
     .detail-block h3 {
@@ -468,7 +627,7 @@
 
     .schema-node {
       text-align: center;
-      background: #eef3ea;
+      background: #e9f8f1;
     }
 
     .schema-node span,
@@ -488,7 +647,7 @@
 
     .schema-link {
       position: relative;
-      background: #fbfcf8;
+      background: var(--wash);
     }
 
     .schema-link::before,
@@ -525,7 +684,7 @@
     .schema-total div {
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: #fbfcf8;
+      background: var(--wash);
       padding: 9px;
     }
 
@@ -575,12 +734,12 @@
 
     .layout-option.recommended {
       border-color: var(--green);
-      background: #f4fbf3;
+      background: #e9f8f1;
     }
 
     .layout-option.warning {
-      border-color: #e1b175;
-      background: #fffaf0;
+      border-color: rgba(241, 184, 59, 0.7);
+      background: #fff8e7;
     }
 
     .layout-option h4 {
@@ -602,8 +761,8 @@
       min-height: 22px;
       padding: 0 7px;
       border-radius: 999px;
-      background: #eef3ea;
-      color: var(--green);
+      background: #e9f8f1;
+      color: var(--green-deep);
       font-size: 11px;
       font-weight: 800;
       text-transform: uppercase;
@@ -614,7 +773,7 @@
       grid-template-columns: minmax(120px, 0.7fr) minmax(0, 1fr);
       gap: 8px;
       padding: 7px 0;
-      border-bottom: 1px solid #e8ece4;
+      border-bottom: 1px solid var(--line);
       font-size: 13px;
     }
 
@@ -650,25 +809,28 @@
 
     .tabs {
       display: flex;
-      gap: 6px;
-      padding: 12px 14px 0;
+      gap: 8px;
+      padding: 12px 14px;
       border-bottom: 1px solid var(--line);
+      background: var(--wash);
     }
 
     .tab {
-      min-height: 34px;
+      min-height: 36px;
       padding: 0 12px;
       border: 1px solid var(--line);
-      border-bottom: 0;
-      border-radius: 6px 6px 0 0;
-      background: #eef3ea;
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--ink-soft);
+      font-weight: 800;
       cursor: pointer;
     }
 
     .tab.active {
-      background: var(--panel);
-      color: var(--green);
-      font-weight: 700;
+      border-color: var(--green);
+      background: var(--green);
+      color: #ffffff;
+      box-shadow: 0 12px 24px rgba(24, 164, 111, 0.18);
     }
 
     .catalog-area {
@@ -704,7 +866,7 @@
       padding: 12px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: #fbfcf8;
+      background: var(--wash);
     }
 
     .datasheet-toolbar {
@@ -735,16 +897,16 @@
     }
 
     .datasheet-card.ready {
-      border-color: rgba(47, 125, 69, 0.55);
+      border-color: rgba(24, 164, 111, 0.55);
     }
 
     .datasheet-card.review {
-      border-color: rgba(173, 116, 30, 0.55);
+      border-color: rgba(241, 184, 59, 0.65);
     }
 
     .datasheet-card.error,
     .datasheet-card.skipped {
-      border-color: rgba(184, 66, 53, 0.55);
+      border-color: rgba(186, 47, 47, 0.55);
     }
 
     .datasheet-card-header {
@@ -765,8 +927,8 @@
       min-height: 24px;
       padding: 0 8px;
       border-radius: 999px;
-      background: #eef3ea;
-      color: var(--green);
+      background: #e9f8f1;
+      color: var(--green-deep);
       font-size: 11px;
       font-weight: 800;
       text-transform: uppercase;
@@ -810,7 +972,7 @@
       padding: 12px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: #fbfcf8;
+      background: var(--wash);
     }
 
     .plan-actions {
@@ -852,6 +1014,7 @@
       border: 1px solid var(--line);
       border-radius: 8px;
       background: var(--panel);
+      box-shadow: var(--shadow-soft);
     }
 
     .plan-card h3 {
@@ -890,7 +1053,7 @@
       padding: 9px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: #fbfcf8;
+      background: var(--wash);
       font-size: 12px;
       line-height: 1.35;
     }
@@ -946,7 +1109,7 @@
       padding: 9px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: #fbfcf8;
+      background: var(--wash);
     }
 
     .reject span {
@@ -968,7 +1131,6 @@
     }
 
     @media (max-width: 980px) {
-      header,
       main,
       .detail-grid,
       .catalog-area,
@@ -999,6 +1161,21 @@
       .toolbar {
         justify-content: flex-start;
       }
+
+      .header-right {
+        justify-items: start;
+      }
+
+      aside {
+        top: 0;
+        max-height: none;
+      }
+    }
+
+    @media (max-width: 760px) {
+      header {
+        grid-template-columns: 1fr;
+      }
     }
 
     @media (max-width: 560px) {
@@ -1007,6 +1184,19 @@
       .app-footer {
         padding: 12px;
       }
+
+      header {
+        position: static;
+      }
+
+      .brand-lockup {
+        align-items: flex-start;
+      }
+
+      .brand-mark {
+        width: 40px;
+      }
+
       h1 {
         font-size: 20px;
       }
@@ -1026,19 +1216,35 @@
 <body>
   <div class="app">
     <header>
-      <div>
-        <h1>Dimensionnement solaire <span class="version-badge">v0.31</span></h1>
-        <div class="subtitle">Selection panneaux / onduleurs avec controles Uoc, Isc, Umpp et plages MPPT</div>
+      <div class="brand-lockup">
+        <span class="brand-mark" aria-hidden="true">OE</span>
+        <div class="brand-copy">
+          <div class="brand-kicker">Open-Elec</div>
+          <h1>PV Selector <span class="version-badge">v0.34</span></h1>
+          <div class="subtitle">Dimensionnement PV/RGIE</div>
+        </div>
       </div>
-      <div class="toolbar">
-        <button class="button primary" id="calculateBtn" type="button">Calculer</button>
-        <button class="button" id="exportBtn" type="button">Exporter CSV</button>
-        <button class="button" id="exportCalcBtn" type="button">Exporter calcul</button>
-        <a class="button link-button" id="changelogLink" href="../docs/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a>
-        <a class="button link-button" href="https://www.open-elec.be" target="_blank" rel="noopener">Open-Elec</a>
-        <button class="button" id="reportIssueBtn" type="button">Reporter un probleme</button>
+      <div class="header-right">
+        <nav class="app-nav" aria-label="Navigation PV Selector">
+          <button class="nav-link active" id="navResultsBtn" type="button">Calcul</button>
+          <button class="nav-link" id="navCatalogBtn" type="button">Catalogues</button>
+          <button class="nav-link" id="navPlanBtn" type="button">Plan RGIE</button>
+        </nav>
+        <div class="toolbar">
+          <button class="button primary" id="calculateBtn" type="button">Calculer</button>
+          <button class="button" id="exportBtn" type="button">Exporter CSV</button>
+          <button class="button" id="exportCalcBtn" type="button">Exporter calcul</button>
+        </div>
       </div>
     </header>
+    <div class="top-notice">
+      <strong>Version Open-Elec</strong>
+      <span>Calcul PV, pertes, calpinage et generation de dossier RGIE.</span>
+      <a id="changelogLink" href="../docs/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a>
+      <a href="https://www.open-elec.be" target="_blank" rel="noopener">Open-Elec</a>
+      <a href="mailto:info@open-elec.be">info@open-elec.be</a>
+      <button class="notice-link" id="reportIssueBtn" type="button">Reporter un probleme</button>
+    </div>
 
     <main>
       <aside>
@@ -1204,7 +1410,7 @@
           <div class="metric"><span>Calpinage</span><strong id="metricLayout">-</strong></div>
         </div>
 
-        <section class="panel">
+        <section class="panel" id="configurationsPanel">
           <div class="panel-header">
             <h2>Configurations valides</h2>
             <div class="status" id="statusText">Calcul en attente</div>
@@ -1237,7 +1443,7 @@
           </div>
         </section>
 
-        <section class="panel">
+        <section class="panel" id="detailPanel">
           <div class="panel-header">
             <h2>Detail de la configuration</h2>
             <div class="status" id="detailStatus">-</div>
@@ -1245,7 +1451,7 @@
           <div class="detail-grid" id="detailGrid"></div>
         </section>
 
-        <section class="panel">
+        <section class="panel" id="workspacePanel">
           <div class="tabs">
             <button class="tab active" id="summaryTab" type="button">Rejets</button>
             <button class="tab" id="catalogTab" type="button">Catalogues</button>
@@ -1384,13 +1590,13 @@
     <footer class="app-footer">
       <div><strong>Open-Elec</strong> - Auteur : Bauduin Jordan - <a href="https://www.open-elec.be" target="_blank" rel="noopener">www.open-elec.be</a></div>
       <div>Copyright (c) 2026 Bauduin Jordan / Open-Elec. Tous droits reserves.</div>
-      <div>UI v0.31 - Backend 0.31 - Schema catalogue 0.27 - <a id="footerChangelogLink" href="../docs/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+      <div>UI v0.34 - Backend 0.34 - Schema catalogue 0.27 - <a id="footerChangelogLink" href="../docs/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
     </footer>
   </div>
 
   <script>
-    const APP_VERSION = "v0.31";
-    const BACKEND_VERSION = "0.31";
+    const APP_VERSION = "v0.34";
+    const BACKEND_VERSION = "0.34";
     const CATALOG_SCHEMA_VERSION = "0.27";
     const APP_AUTHOR = "Bauduin Jordan";
     const APP_OWNER = "Open-Elec";
@@ -2040,15 +2246,22 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
           ` : ""}
         </div>
       `).join("");
-      fields.roofList.querySelectorAll("[data-roof-field]").forEach((input) => {
-        input.addEventListener("change", (event) => {
+      const bindRoofControl = (input) => {
+        const updateRoof = (event) => {
           const row = event.target.closest("[data-roof-id]");
           const roof = state.roofs.find((item) => item.id === Number(row.dataset.roofId));
           if (!roof) return;
           roof[event.target.dataset.roofField] = parseNumber(event.target.value);
+        };
+        input.addEventListener("input", (event) => {
+          updateRoof(event);
+        });
+        input.addEventListener("change", (event) => {
+          updateRoof(event);
           calculate();
         });
-      });
+      };
+      fields.roofList.querySelectorAll("[data-roof-field]").forEach(bindRoofControl);
       fields.roofList.querySelectorAll("[data-remove-roof]").forEach((button) => {
         button.addEventListener("click", () => {
           state.roofs = state.roofs.filter((roof) => roof.id !== Number(button.dataset.removeRoof));
@@ -2109,7 +2322,18 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
       calculate();
     }
 
+    function syncRoofStateFromControls() {
+      fields.roofList.querySelectorAll("[data-roof-id]").forEach((row) => {
+        const roof = state.roofs.find((item) => item.id === Number(row.dataset.roofId));
+        if (!roof) return;
+        row.querySelectorAll("[data-roof-field]").forEach((control) => {
+          roof[control.dataset.roofField] = parseNumber(control.value);
+        });
+      });
+    }
+
     function readRoofs() {
+      syncRoofStateFromControls();
       const roofs = state.roofs.map((roof, index) => ({
         id: roof.id,
         name: `Toiture ${index + 1}`,
@@ -3633,6 +3857,30 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
       return text || fallback;
     }
 
+    function diagramProtectionLabel(value, fallback) {
+      const text = rgieProtectionText(value, fallback);
+      if (/sectionneur dc integre onduleur ou coffret dc/i.test(text)) return "Sectionneur DC / coffret DC";
+      if (/disjoncteur dedie ac pv a verifier/i.test(text)) return "Disj. dedie AC PV a verifier";
+      if (/type a\s*\/\s*300 ma amont/i.test(text)) return "Diff. type A - 300 mA";
+      return text;
+    }
+
+    function svgLabelBox(x, y, width, height, title, lines = []) {
+      const maxChars = Math.max(12, Math.floor((width - 20) / 6.3));
+      const titleSvg = title
+        ? `<text x="${x + 10}" y="${y + 18}" class="one-line-label">${svgText(compactSvgLine(title, maxChars))}</text>`
+        : "";
+      const bodyStartY = title ? y + 38 : y + 19;
+      const bodyLines = lines.slice(0, Math.floor((height - (title ? 32 : 10)) / 15)).map((line, index) => `
+        <text x="${x + 10}" y="${bodyStartY + (index * 15)}" class="one-line-small">${svgText(compactSvgLine(line, maxChars))}</text>
+      `).join("");
+      return `
+        <rect x="${x}" y="${y}" width="${width}" height="${height}" rx="4" class="one-line-info-box"></rect>
+        ${titleSvg}
+        ${bodyLines}
+      `;
+    }
+
     function renderSingleLineSvg(model) {
       const item = model.item;
       const inputs = model.inputs;
@@ -3644,21 +3892,22 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
       const acProtection = rgieProtectionText(inputs.acProtection, rgieBreakerFallback(item));
       const differential = rgieProtectionText(inputs.differential, `${poleLabel} - 300 mA a verifier`);
       const dcProtection = rgieProtectionText(inputs.dcProtection, "Sectionneur DC");
+      const acProtectionDiagram = diagramProtectionLabel(inputs.acProtection, rgieBreakerFallback(item));
+      const differentialDiagram = diagramProtectionLabel(inputs.differential, `${poleLabel} - 300 mA a verifier`);
+      const dcProtectionDiagram = diagramProtectionLabel(inputs.dcProtection, "Sectionneur DC");
       const inverterRef = item.inverterCount > 1 ? `${item.inverter.reference} x ${item.inverterCount}` : item.inverter.reference;
       const inverterSymbolLabel = item.inverterCount > 1 ? `S1..S${item.inverterCount}` : "S1";
       const pvInfo = [
-        `Marque: ${item.panel.fabricant}`,
-        `Type: ${item.panel.reference}`,
-        `${item.nombreStrings} string(s) x ${item.modulesParString}`,
-        `Pmax ${n(item.puissanceDcW, 0)} Wc`,
-        `Uoc froid ${n(item.uocFroidV, 0)} V`
+        `Marque ${item.panel.fabricant}`,
+        `Type ${item.panel.reference}`,
+        `${item.nombreStrings} string(s) de ${item.modulesParString} modules`,
+        `Pmax ${n(item.puissanceDcW, 0)} Wc - Uoc froid ${n(item.uocFroidV, 0)} V`
       ];
       const inverterInfo = [
-        `Marque: ${item.inverter.fabricant}`,
-        `Type: ${inverterRef}`,
+        `Marque ${item.inverter.fabricant}`,
+        `Type ${inverterRef}`,
         "S/N:",
-        `P: ${n(item.puissancePvMaxTotalW || item.puissanceDcW, 0)} W (DC)`,
-        `P: ${n(item.puissanceAcTotalW, 0)} VA (AC)`,
+        `P ${n(item.puissancePvMaxTotalW || item.puissanceDcW, 0)} W DC / ${n(item.puissanceAcTotalW, 0)} VA AC`,
         `MPP: ${item.mpptAssignmentLabel}`
       ];
       const startup = item.inverter.startupInputVoltageV > 0
@@ -3672,13 +3921,14 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         `Pertes: DC ${n(item.dcLossW, 1)} W + AC ${n(item.acLossW, 1)} W = ${n(item.totalLossPct, 2)} %`
       ];
       return `
-        <svg class="rgie-svg single-line-rgie" viewBox="0 0 920 720" role="img" aria-label="Schema unifilaire PV">
+        <svg class="rgie-svg single-line-rgie" viewBox="0 0 980 760" role="img" aria-label="Schema unifilaire PV">
           <defs>
             <style>
               .one-line-wire{stroke:#111;stroke-width:2.4;fill:none;stroke-linecap:square;stroke-linejoin:miter}
               .one-line-thin{stroke:#111;stroke-width:1.4;fill:none;stroke-linecap:square;stroke-linejoin:miter}
               .one-line-device{stroke:#111;stroke-width:1.6;fill:#fff}
               .one-line-node{stroke:#111;stroke-width:1.4;fill:#fff}
+              .one-line-info-box{stroke:#d8dfd2;stroke-width:1.2;fill:#fff}
               .one-line-heading{font:700 16px Arial,sans-serif;fill:#111}
               .one-line-label{font:700 14px Arial,sans-serif;fill:#111}
               .one-line-small{font:12px Arial,sans-serif;fill:#111}
@@ -3686,85 +3936,90 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
               .one-line-tiny{font:10px Arial,sans-serif;fill:#111}
             </style>
           </defs>
-          <text x="876" y="34" text-anchor="end" class="one-line-heading">Schema unifilaire PV - ${svgText(APP_VERSION)}</text>
-          <text x="876" y="55" text-anchor="end" class="one-line-muted">${svgText(compactSvgLine(`${inputs.address || "Adresse a renseigner"} - EAN ${inputs.ean || "a renseigner"} - ${inputs.date}`, 86))}</text>
+          <text x="936" y="34" text-anchor="end" class="one-line-heading">Schema unifilaire PV - ${svgText(APP_VERSION)}</text>
+          <text x="936" y="55" text-anchor="end" class="one-line-muted">${svgText(compactSvgLine(`${inputs.address || "Adresse a renseigner"} - EAN ${inputs.ean || "a renseigner"} - ${inputs.date}`, 92))}</text>
 
-          ${svgVerticalLineList(pvInfo, 72, 218, "one-line-small", 15)}
-          <rect x="118" y="104" width="44" height="86" class="one-line-device"></rect>
-          <polyline points="121,168 140,132 159,168" class="one-line-thin"></polyline>
-          <text x="182" y="141" class="one-line-small">${n(item.puissanceDcW, 0)} Wc</text>
-          <text x="165" y="204" class="one-line-tiny">x${item.modulesParString}/string</text>
-          <line x1="140" y1="190" x2="140" y2="318" class="one-line-wire"></line>
-          <circle cx="140" cy="236" r="6" class="one-line-node"></circle>
-          <path d="M130 280 L140 296 L152 264" class="one-line-thin"></path>
-          <text x="164" y="270" class="one-line-small">${svgText(compactSvgLine(dcProtection, 34))}</text>
-          ${svgVerticalLineList([
-            dcCable,
-            `${n(item.dcMainLengthM, 1)} m/string`,
-            `${n(item.dcLossW, 1)} W DC`
-          ], 160, 310, "one-line-small", 15)}
+          <rect x="114" y="104" width="54" height="92" class="one-line-device"></rect>
+          <polyline points="119,174 141,132 163,174" class="one-line-thin"></polyline>
+          <line x1="141" y1="196" x2="141" y2="330" class="one-line-wire"></line>
+          <text x="170" y="214" class="one-line-tiny">${item.nombreStrings} x ${item.modulesParString}</text>
+          ${svgLabelBox(200, 92, 300, 100, "Champ PV", pvInfo)}
 
-          <text x="74" y="314" class="one-line-label">${svgText(inverterSymbolLabel)}</text>
-          <rect x="78" y="328" width="126" height="58" class="one-line-device"></rect>
-          <line x1="78" y1="386" x2="204" y2="328" class="one-line-thin"></line>
-          <line x1="92" y1="346" x2="112" y2="346" class="one-line-thin"></line>
-          <line x1="92" y1="352" x2="112" y2="352" class="one-line-thin"></line>
-          <path d="M160 363 C170 348 180 378 192 363" class="one-line-thin"></path>
-          ${svgLineList(inverterInfo, 224, 332, "one-line-small", 16)}
+          <path d="M126 248 L141 268 L157 230" class="one-line-thin"></path>
+          <circle cx="141" cy="248" r="5" class="one-line-node"></circle>
+          ${svgLabelBox(200, 216, 300, 80, "Liaison DC", [
+            dcProtectionDiagram,
+            `${dcCable} - ${inputs.dcMode}`,
+            `${n(item.dcMainLengthM, 1)} m/string - pertes ${n(item.dcLossW, 1)} W`
+          ])}
+          <line x1="157" y1="248" x2="200" y2="248" class="one-line-thin"></line>
 
-          <line x1="140" y1="386" x2="140" y2="586" class="one-line-wire"></line>
-          <circle cx="140" cy="420" r="6" class="one-line-node"></circle>
-          <path d="M130 492 L136 504 M136 504 L149 474" class="one-line-thin"></path>
-          <rect x="126" y="520" width="30" height="44" class="one-line-device"></rect>
-          <text x="119" y="548" text-anchor="end" class="one-line-label">A</text>
-          <text transform="translate(151 559) rotate(-90)" class="one-line-tiny">${svgText(poleLabel)}</text>
-          ${svgVerticalLineList([
-            `${acInvCable} - ${n(item.acInvTdDistanceM, 1)} m`,
+          <text x="76" y="340" class="one-line-label">${svgText(inverterSymbolLabel)}</text>
+          <rect x="68" y="354" width="148" height="70" class="one-line-device"></rect>
+          <line x1="68" y1="424" x2="216" y2="354" class="one-line-thin"></line>
+          <line x1="86" y1="374" x2="110" y2="374" class="one-line-thin"></line>
+          <line x1="86" y1="381" x2="110" y2="381" class="one-line-thin"></line>
+          <path d="M162 396 C176 380 190 412 204 396" class="one-line-thin"></path>
+          <line x1="141" y1="330" x2="141" y2="354" class="one-line-wire"></line>
+          <line x1="141" y1="424" x2="141" y2="618" class="one-line-wire"></line>
+          ${svgLabelBox(236, 346, 260, 110, "Onduleur", inverterInfo)}
+
+          <circle cx="141" cy="456" r="6" class="one-line-node"></circle>
+          <path d="M126 526 L141 546 L157 508" class="one-line-thin"></path>
+          <rect x="126" y="560" width="30" height="44" class="one-line-device"></rect>
+          <text x="116" y="588" text-anchor="end" class="one-line-label">A</text>
+          <text x="141" y="588" text-anchor="middle" class="one-line-tiny">${svgText(poleLabel)}</text>
+          ${svgLabelBox(184, 498, 295, 102, "Depart AC PV", [
+            acProtectionDiagram,
+            `${acInvCable} - ${n(item.acInvTdDistanceM, 1)} m - ${inputs.acMode}`,
             acLineLabel(distributionValue),
-            compactSvgLine(acProtection, 34)
-          ], 166, 562, "one-line-small", 15)}
+            `Pertes ${n(item.acInvTdLossW, 1)} W - chute ${n(item.acInvTdVoltageDropPct, 2)} %`
+          ])}
+          <line x1="156" y1="548" x2="184" y2="548" class="one-line-thin"></line>
 
-          <line x1="42" y1="586" x2="760" y2="586" class="one-line-wire"></line>
-          <circle cx="140" cy="586" r="5" class="one-line-node"></circle>
-          <circle cx="290" cy="586" r="5" class="one-line-node"></circle>
-          <circle cx="440" cy="586" r="5" class="one-line-node"></circle>
-          <circle cx="615" cy="586" r="5" class="one-line-node"></circle>
-          <text x="42" y="576" class="one-line-small">Reseau</text>
-          <text x="360" y="608" class="one-line-small">TD principal - ${svgText(item.distributionLabel)}</text>
+          <line x1="42" y1="618" x2="840" y2="618" class="one-line-wire"></line>
+          <circle cx="141" cy="618" r="5" class="one-line-node"></circle>
+          <circle cx="308" cy="618" r="5" class="one-line-node"></circle>
+          <circle cx="534" cy="618" r="5" class="one-line-node"></circle>
+          <circle cx="735" cy="618" r="5" class="one-line-node"></circle>
+          <text x="42" y="606" class="one-line-small">Reseau</text>
+          <text x="420" y="640" text-anchor="middle" class="one-line-small">TD principal - ${svgText(item.distributionLabel)}</text>
 
-          <line x1="70" y1="586" x2="70" y2="648" class="one-line-wire"></line>
-          <line x1="48" y1="648" x2="92" y2="648" class="one-line-wire"></line>
-          <line x1="54" y1="660" x2="86" y2="660" class="one-line-thin"></line>
-          <line x1="60" y1="671" x2="80" y2="671" class="one-line-thin"></line>
-          <line x1="66" y1="682" x2="74" y2="682" class="one-line-thin"></line>
+          <line x1="70" y1="618" x2="70" y2="682" class="one-line-wire"></line>
+          <line x1="48" y1="682" x2="92" y2="682" class="one-line-wire"></line>
+          <line x1="54" y1="694" x2="86" y2="694" class="one-line-thin"></line>
+          <line x1="60" y1="705" x2="80" y2="705" class="one-line-thin"></line>
+          <line x1="66" y1="716" x2="74" y2="716" class="one-line-thin"></line>
 
-          <line x1="290" y1="586" x2="290" y2="638" class="one-line-wire"></line>
-          <rect x="254" y="638" width="72" height="40" class="one-line-device"></rect>
-          <text x="290" y="663" text-anchor="middle" class="one-line-label">kWh</text>
-          <text x="238" y="694" class="one-line-small">Compteur ${svgText(inputs.ean || "")}</text>
-          <text x="238" y="712" class="one-line-small">${svgText(acMeterCable)} - ${n(item.acTdMeterDistanceM, 1)} m</text>
+          <line x1="308" y1="618" x2="308" y2="668" class="one-line-wire"></line>
+          <rect x="270" y="668" width="76" height="42" class="one-line-device"></rect>
+          <text x="308" y="694" text-anchor="middle" class="one-line-label">kWh</text>
+          ${svgLabelBox(230, 710, 210, 46, "", [
+            `Compteur ${inputs.ean || "EAN a renseigner"}`,
+            `${acMeterCable} - ${n(item.acTdMeterDistanceM, 1)} m`
+          ])}
 
-          <line x1="440" y1="586" x2="440" y2="480" class="one-line-wire"></line>
-          <path d="M430 526 L436 538 M436 538 L451 506" class="one-line-thin"></path>
-          <line x1="396" y1="480" x2="535" y2="480" class="one-line-wire"></line>
-          <circle cx="440" cy="480" r="5" class="one-line-node"></circle>
-          <text x="414" y="556" text-anchor="end" class="one-line-label">B</text>
-          <text x="402" y="456" class="one-line-small">vers installation</text>
-          <text x="454" y="536" class="one-line-small">${svgText(poleLabel)} depart client</text>
+          <line x1="534" y1="618" x2="534" y2="504" class="one-line-wire"></line>
+          <path d="M520 546 L534 566 L550 528" class="one-line-thin"></path>
+          <line x1="476" y1="504" x2="620" y2="504" class="one-line-wire"></line>
+          <circle cx="534" cy="504" r="5" class="one-line-node"></circle>
+          <text x="508" y="584" text-anchor="end" class="one-line-label">B</text>
+          <text x="486" y="482" class="one-line-small">vers installation</text>
+          <text x="552" y="554" class="one-line-small">${svgText(poleLabel)} depart client</text>
 
-          <line x1="615" y1="586" x2="615" y2="628" class="one-line-wire"></line>
-          <rect x="548" y="628" width="166" height="48" class="one-line-device"></rect>
-          <path d="M568 660 L590 646" class="one-line-thin"></path>
-          <circle cx="568" cy="660" r="3" class="one-line-node"></circle>
-          <circle cx="590" cy="646" r="3" class="one-line-node"></circle>
-          <text x="631" y="649" text-anchor="middle" class="one-line-small">${svgText(compactSvgLine(differential, 28))}</text>
-          <text x="631" y="666" text-anchor="middle" class="one-line-tiny">Differentiel a verifier selon notice</text>
+          <line x1="735" y1="618" x2="735" y2="664" class="one-line-wire"></line>
+          <rect x="664" y="664" width="210" height="62" class="one-line-device"></rect>
+          <path d="M682 704 L706 688" class="one-line-thin"></path>
+          <circle cx="682" cy="704" r="3" class="one-line-node"></circle>
+          <circle cx="706" cy="688" r="3" class="one-line-node"></circle>
+          <text x="724" y="688" class="one-line-small">${svgText(compactSvgLine(differentialDiagram, 30))}</text>
+          <text x="724" y="706" class="one-line-tiny">a verifier selon notice</text>
 
-          <rect x="590" y="100" width="286" height="170" fill="#fff" stroke="#d8dfd2" stroke-width="1.2"></rect>
-          <text x="610" y="126" class="one-line-label">Controles calcules</text>
-          ${svgLineList(checks, 610, 152, "one-line-small", 20)}
-          <text x="610" y="284" class="one-line-muted">Pieces a joindre : fiches panneaux/onduleurs, notices, consignes securite.</text>
-          <text x="610" y="306" class="one-line-muted">C10/26 : ${inputs.c1026Verified ? "verifie" : "a verifier"} - Signalisation DC : ${inputs.dcLabels ? "prevue" : "a completer"}.</text>
+          ${svgLabelBox(576, 122, 360, 188, "Controles calcules", checks)}
+          ${svgLabelBox(576, 324, 360, 64, "Dossier", [
+            "Fiches techniques et notices a joindre",
+            `C10/26: ${inputs.c1026Verified ? "verifie" : "a verifier"} - etiquettes DC: ${inputs.dcLabels ? "prevues" : "a completer"}`
+          ])}
         </svg>
       `;
     }
@@ -3873,7 +4128,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
           ${svgArrow(1010, 92, 1060, 92, "AC", "arrowPositionPlan")}
           ${svgBox(1060, 46, 92, 92, "Compteur", ["Reseau", `${n(item.acTdMeterDistanceM, 1)} m`])}
           ${roofBlocks}
-          <rect x="28" y="${height - 58}" width="1124" height="36" rx="8" fill="#fbfcf8" stroke="#d8dfd2"></rect>
+          <rect x="28" y="${height - 58}" width="1124" height="36" rx="8" fill="#f5f7f6" stroke="#dce3df"></rect>
           <text x="48" y="${height - 36}" class="svg-small">Calpinage total: ${layout.placedPanels}/${layout.targetPanels} panneaux, ${layout.railCount} rails, ${n(layout.railLengthTotalM, 2)} m lineaires, ${layout.hooksTotal} crochets.</text>
         </svg>
       `;
@@ -4542,9 +4797,20 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
       document.querySelector("#catalogTab").classList.toggle("active", isCatalog);
       document.querySelector("#summaryTab").classList.toggle("active", isSummary);
       document.querySelector("#planTab").classList.toggle("active", isPlan);
+      document.querySelector("#navCatalogBtn")?.classList.toggle("active", isCatalog);
+      document.querySelector("#navResultsBtn")?.classList.toggle("active", isSummary);
+      document.querySelector("#navPlanBtn")?.classList.toggle("active", isPlan);
       if (isPlan) {
         renderRgiePlan();
       }
+    }
+
+    function scrollToPanel(selector) {
+      const panel = document.querySelector(selector);
+      if (!panel) return;
+      const headerHeight = document.querySelector("header")?.getBoundingClientRect().height || 0;
+      const top = panel.getBoundingClientRect().top + window.scrollY - headerHeight - 14;
+      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
     }
 
     fields.panelsCsv.value = DEFAULT_PANELS_CSV;
@@ -4576,6 +4842,18 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
     document.querySelector("#summaryTab").addEventListener("click", () => showTab("summary"));
     document.querySelector("#catalogTab").addEventListener("click", () => showTab("catalog"));
     document.querySelector("#planTab").addEventListener("click", () => showTab("plan"));
+    document.querySelector("#navResultsBtn").addEventListener("click", () => {
+      showTab("summary");
+      scrollToPanel("#configurationsPanel");
+    });
+    document.querySelector("#navCatalogBtn").addEventListener("click", () => {
+      showTab("catalog");
+      scrollToPanel("#workspacePanel");
+    });
+    document.querySelector("#navPlanBtn").addEventListener("click", () => {
+      showTab("plan");
+      scrollToPanel("#workspacePanel");
+    });
     fields.refreshPlan.addEventListener("click", renderRgiePlan);
     fields.exportRgiePlan.addEventListener("click", exportRgiePlan);
     [

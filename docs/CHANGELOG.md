@@ -2,6 +2,27 @@
 
 Toutes les modifications notables de PV Selector sont tracees ici.
 
+## v0.34 - 2026-09-07
+
+- Correction du mode strings manuel : les champs toiture sont maintenant synchronises pendant la saisie et juste avant le calcul.
+- Correction du cas ou `3 strings x 7 modules` restait lu comme `0 string` si l'utilisateur cliquait directement sur `Calculer`.
+- Verification navigateur : `3 x 7` est bien accepte quand le nombre d'onduleurs/MPPT autorise le courant par MPPT.
+
+## v0.33 - 2026-09-07
+
+- Refonte UX visuelle inspiree du style RGIE Maker avec charte couleur Open-Elec.
+- Application de la palette Open-Elec : encre `#101514`, vert `#18a46f`, vert profond `#0d6f52`, bleu `#126c8b`, ambre `#f1b83b`.
+- Ajout d'une barre de marque `OE`, d'une navigation compacte et d'un bandeau de contexte.
+- Harmonisation des boutons, champs, tableaux, onglets, cartes de resultats et footer.
+- Navigation rapide vers les resultats, catalogues et Plan RGIE sans modifier les calculs.
+
+## v0.32 - 2026-09-07
+
+- Nettoyage UX du schema unifilaire RGIE.
+- Separation des symboles electriques et des informations techniques dans des cartouches dedies.
+- Suppression des textes verticaux poses sur les fils et reduction des lignes de liaison parasites.
+- Libelles longs compactes pour eviter les debordements dans l'interface et l'export HTML.
+
 ## v0.31 - 2026-09-07
 
 - Remplacement du schema unifilaire horizontal par un rendu plus proche d'un schema electrique RGIE.
