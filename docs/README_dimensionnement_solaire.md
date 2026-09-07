@@ -1,6 +1,6 @@
-# Dimensionnement solaire - prototype GUI v0.28
+# Dimensionnement solaire - prototype GUI v0.29
 
-Ce dossier contient la version `v0.28` du programme :
+Ce dossier contient la version `v0.29` du programme :
 
 - `ui/dimensionnement_solaire.html` : interface graphique locale a ouvrir dans un navigateur.
 - `code/solar_optimizer_gui.py` : interface graphique Python et moteur de selection.
@@ -10,6 +10,10 @@ Ce dossier contient la version `v0.28` du programme :
 - `code/datasheet_importer.py` : module d'import local de datasheets PDF/TXT.
 - `input/catalogue_fabricants_db.json` : base locale des fabricants, panneaux et onduleurs.
 - `storage/pv_selector.sqlite3` : base SQLite runtime creee localement, ou `/storage/pv_selector.sqlite3` sur Railway.
+
+## Version 0.29
+
+Cette version affine le mode `Manuel par toiture` : le calpinage est calcule separement pour chaque toiture qui recoit des strings manuels, avec longueur et largeur brutes propres a cette toiture. Les resultats additionnent ensuite les panneaux poses, rails, metres lineaires et crochets. Les pertes DC sont aussi clarifiees : longueur et perte sont affichees par string puis multipliees par le nombre de strings pour le total, tandis que la chute de tension reste une chute par string.
 
 ## Version 0.28
 
@@ -120,7 +124,7 @@ Pour chaque combinaison panneau / onduleur / nombre de modules / nombre de strin
 - Si une consommation client est renseignee, le classement privilegie la configuration dont la production annuelle estimee est la plus proche de cette consommation.
 - Si la consommation client vaut 0, le classement privilegie la puissance DC installee, puis l'utilisation de surface.
 - Les pertes cables sont calculees avec une resistivite cuivre de `0,0175 ohm.mm2/m`.
-- Cote DC, le programme prend une distance onduleur-panneaux par string, ajoute l'aller-retour, ajoute un retour de string proportionnel au nombre de panneaux, puis ajoute les cordons panneaux en section fixe `4 mm2`.
+- Cote DC, le programme prend une distance onduleur-panneaux par string, ajoute l'aller-retour, ajoute un retour de string proportionnel au nombre de panneaux, puis ajoute les cordons panneaux en section fixe `4 mm2`. La perte Joule totale DC additionne les strings, mais la chute de tension DC reste affichee par string.
 - Cote AC, le programme calcule deux troncons : onduleur vers TD, puis TD vers compteur. La section TD-compteur est `10 mm2` par defaut et peut etre passee a `6` ou `16 mm2`.
 - En multi-onduleurs, le troncon onduleur-TD est compte par onduleur et le troncon TD-compteur porte le courant total.
 - Le bouton `+ Onduleur` ajoute un emplacement autorise. Le moteur peut choisir le meilleur nombre d'onduleurs jusqu'a cette limite.
@@ -128,6 +132,7 @@ Pour chaque combinaison panneau / onduleur / nombre de modules / nombre de strin
 - Les pourcentages de chute de tension AC sont calcules par rapport a `230 V` reseau. En tetra, la chute affichee est la chute phase-neutre utilisee pour ce pourcentage.
 - La production annuelle affichee est nette des pertes cables ; la production brute avant pertes reste visible dans le detail de configuration.
 - Le calpinage toiture utilise la longueur comme axe horizontal gauche-droite et la largeur comme axe de rampant egout-faitage. Les marges appliquees sont 30 cm a gauche, 30 cm a droite, 30 cm a l'egout et 10 cm au faitage.
+- En mode strings manuel, le calpinage utilise les dimensions brutes de chaque toiture et additionne ensuite rails, crochets et metres lineaires.
 - Les lignes `Exemple` des CSV sont fictives ; les lignes Trina Solar, Jinko Solar, LONGi, SMA, Huawei FusionSolar et Fronius proviennent de fiches fabricant verifiees.
 - Certaines fiches onduleur ont des MPPT asymetriques. Quand le modele actuel ne permet pas de distinguer MPPT 1 et MPPT 2, la valeur limitante est utilisee pour rester conservateur.
 

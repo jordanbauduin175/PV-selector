@@ -36,8 +36,8 @@ Invoke-RestMethod http://localhost:8000/api/db/summary
 - controles Uoc froid RGIE 750 V DC, startup input voltage en ete, Umpp chaud/froid, Impp/Isc corriges temperature et plages MPPT ;
 - toitures multiples avec orientation, pente et plan strings manuel par toiture ;
 - limites mono, biphase, tri delta et tetra ;
-- pertes DC/AC et chute de tension ;
-- calpinage toiture avec marges, orientation panneau, rails et crochets ;
+- pertes DC/AC et chute de tension, avec pertes DC additionnees sur toutes les strings ;
+- calpinage toiture par toiture avec marges, orientation panneau, rails et crochets ;
 - affectation MPP automatique ou manuelle ;
 - export CSV et note de calcul ;
 - import local de datasheets fabricants ;

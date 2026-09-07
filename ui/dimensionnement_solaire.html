@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Dimensionnement solaire v0.28</title>
+  <title>Dimensionnement solaire v0.29</title>
   <style>
     :root {
       --bg: #f6f7f4;
@@ -551,6 +551,19 @@
       margin-top: 10px;
     }
 
+    .layout-roof {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+
+    .layout-roof h4 {
+      margin: 0;
+      font-size: 13px;
+    }
+
     .layout-option {
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -870,7 +883,7 @@
   <div class="app">
     <header>
       <div>
-        <h1>Dimensionnement solaire <span class="version-badge">v0.28</span></h1>
+        <h1>Dimensionnement solaire <span class="version-badge">v0.29</span></h1>
         <div class="subtitle">Selection panneaux / onduleurs avec controles Uoc, Isc, Umpp et plages MPPT</div>
       </div>
       <div class="toolbar">
@@ -1137,13 +1150,13 @@
     <footer class="app-footer">
       <div><strong>Open-Elec</strong> - Auteur : Bauduin Jordan - <a href="https://www.open-elec.be" target="_blank" rel="noopener">www.open-elec.be</a></div>
       <div>Copyright (c) 2026 Bauduin Jordan / Open-Elec. Tous droits reserves.</div>
-      <div>UI v0.28 - Backend 0.28 - Schema catalogue 0.27 - <a id="footerChangelogLink" href="../docs/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+      <div>UI v0.29 - Backend 0.29 - Schema catalogue 0.27 - <a id="footerChangelogLink" href="../docs/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
     </footer>
   </div>
 
   <script>
-    const APP_VERSION = "v0.28";
-    const BACKEND_VERSION = "0.28";
+    const APP_VERSION = "v0.29";
+    const BACKEND_VERSION = "0.29";
     const CATALOG_SCHEMA_VERSION = "0.27";
     const APP_AUTHOR = "Bauduin Jordan";
     const APP_OWNER = "Open-Elec";
@@ -1314,7 +1327,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
       nextRoofId: 2,
       nextInverterSlotId: 2,
       roofs: [
-        { id: 1, surfaceM2: 40, orientationDeg: 0, slopeDeg: 35, manualStringCount: 0, manualModulesPerString: 0 }
+        { id: 1, surfaceM2: 40, orientationDeg: 0, slopeDeg: 35, manualStringCount: 0, manualModulesPerString: 0, layoutLengthM: 10, layoutWidthM: 4 }
       ],
       inverterSlots: [
         { id: 1 }
@@ -1759,6 +1772,14 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
               Modules/string
               <input data-roof-field="manualModulesPerString" type="number" min="0" step="1" value="${roof.manualModulesPerString ?? 0}">
             </label>
+            <label>
+              Longueur brute (m)
+              <input data-roof-field="layoutLengthM" type="number" min="0" step="0.01" value="${roof.layoutLengthM ?? fields.layoutRoofLength.value}">
+            </label>
+            <label>
+              Largeur brute (m)
+              <input data-roof-field="layoutWidthM" type="number" min="0" step="0.01" value="${roof.layoutWidthM ?? fields.layoutRoofWidth.value}">
+            </label>
           ` : ""}
         </div>
       `).join("");
@@ -1789,7 +1810,9 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         orientationDeg: state.nextRoofId % 2 === 0 ? 45 : -45,
         slopeDeg: 35,
         manualStringCount: 0,
-        manualModulesPerString: 0
+        manualModulesPerString: 0,
+        layoutLengthM: parseOptionalNumber(fields.layoutRoofLength.value) || 10,
+        layoutWidthM: parseOptionalNumber(fields.layoutRoofWidth.value) || 4
       });
       state.nextRoofId += 1;
       renderRoofControls();
@@ -1836,11 +1859,19 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         surfaceM2: Number(roof.surfaceM2),
         orientationDeg: Number(roof.orientationDeg),
         orientationLabel: orientationLabelFromValue(roof.orientationDeg),
-        slopeDeg: Number(roof.slopeDeg)
+        slopeDeg: Number(roof.slopeDeg),
+        layoutLengthM: Number(roof.layoutLengthM ?? fields.layoutRoofLength.value),
+        layoutWidthM: Number(roof.layoutWidthM ?? fields.layoutRoofWidth.value)
       }));
       for (const roof of roofs) {
-        if (roof.surfaceM2 < 0 || roof.slopeDeg < 0 || roof.slopeDeg > 90) {
-          throw new Error("Verifie les surfaces et pentes des toitures.");
+        if (
+          roof.surfaceM2 < 0 ||
+          roof.slopeDeg < 0 ||
+          roof.slopeDeg > 90 ||
+          roof.layoutLengthM < 0 ||
+          roof.layoutWidthM < 0
+        ) {
+          throw new Error("Verifie les surfaces, pentes et dimensions de calpinage des toitures.");
         }
       }
       const activeRoofs = roofs.filter((roof) => roof.surfaceM2 > 0);
@@ -1941,6 +1972,8 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
     function calculateCableLosses(panel, inverter, inverterCount, modulesParString, nombreStrings, params) {
       const dcMainLengthM = (2 * params.dcDistanceM) + (modulesParString * params.dcReturnPerPanelM);
       const dcPanelCordLengthM = modulesParString * params.panelCordM;
+      const dcMainLengthTotalM = dcMainLengthM * nombreStrings;
+      const dcPanelCordLengthTotalM = dcPanelCordLengthM * nombreStrings;
       const dcResistanceOhm =
         cableResistance(dcMainLengthM, params.dcSectionMm2) +
         cableResistance(dcPanelCordLengthM, 4);
@@ -1969,11 +2002,14 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
 
       return {
         dcMainLengthM,
+        dcMainLengthTotalM,
         dcPanelCordLengthM,
+        dcPanelCordLengthTotalM,
         dcResistanceOhm,
         dcCurrentA,
         dcVoltageDropV,
         dcVoltageDropPct,
+        dcLossPerStringW,
         dcLossW,
         acUnitCurrentA,
         acCurrentA: acTotalCurrentA,
@@ -2492,10 +2528,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
       return Math.max(0, Math.floor((availableM + LAYOUT_CLAMP_GAP_M + 1e-9) / (itemLengthM + LAYOUT_CLAMP_GAP_M)));
     }
 
-    function readCalepinageParams() {
-      const grossLengthM = parseNumber(fields.layoutRoofLength.value);
-      const grossWidthM = parseNumber(fields.layoutRoofWidth.value);
-      const forcedPanelCount = Math.max(0, Math.round(parseOptionalNumber(fields.layoutPanelCount.value)));
+    function calepinageParamsFromDimensions(grossLengthM, grossWidthM, forcedPanelCount = 0) {
       const rafterSpacingCm = Number(fields.layoutRafterSpacing.value);
       const netLengthM = grossLengthM - (2 * LAYOUT_SIDE_MARGIN_M);
       const netWidthM = grossWidthM - LAYOUT_EAVE_MARGIN_M - LAYOUT_RIDGE_MARGIN_M;
@@ -2511,6 +2544,13 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         rafterSpacingCm,
         hookSpacingM: hookSpacingForRafters(rafterSpacingCm)
       };
+    }
+
+    function readCalepinageParams() {
+      const grossLengthM = parseNumber(fields.layoutRoofLength.value);
+      const grossWidthM = parseNumber(fields.layoutRoofWidth.value);
+      const forcedPanelCount = Math.max(0, Math.round(parseOptionalNumber(fields.layoutPanelCount.value)));
+      return calepinageParamsFromDimensions(grossLengthM, grossWidthM, forcedPanelCount);
     }
 
     function calepinageOption(orientation, panelLengthM, panelWidthM, params, targetPanels) {
@@ -2552,26 +2592,63 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
       };
     }
 
+    function buildSingleCalepinagePlan(item, params, targetPanels, title = "Toiture") {
+      const options = [
+        calepinageOption("Portrait", item.panel.largeurM, item.panel.hauteurM, params, targetPanels),
+        calepinageOption("Paysage", item.panel.hauteurM, item.panel.largeurM, params, targetPanels)
+      ];
+      const ranked = [...options].sort((a, b) => {
+        if (a.fits !== b.fits) return a.fits ? -1 : 1;
+        if (a.placedPanels !== b.placedPanels) return b.placedPanels - a.placedPanels;
+        if (a.rowsUsed !== b.rowsUsed) return a.rowsUsed - b.rowsUsed;
+        if (a.hooksTotal !== b.hooksTotal) return a.hooksTotal - b.hooksTotal;
+        return a.railLengthTotalM - b.railLengthTotalM;
+      });
+      const best = ranked[0] ?? null;
+      options.forEach((option) => {
+        option.recommended = option === best;
+      });
+      return { title, params, targetPanels, options, best };
+    }
+
+    function manualCalepinageSegments(item) {
+      return (item.roofAllocation || [])
+        .filter((roof) => roof.modules > 0 && roof.stringCount > 0)
+        .map((roof) => {
+          const params = calepinageParamsFromDimensions(
+            Number(roof.layoutLengthM ?? fields.layoutRoofLength.value),
+            Number(roof.layoutWidthM ?? fields.layoutRoofWidth.value),
+            0
+          );
+          return buildSingleCalepinagePlan(
+            item,
+            params,
+            roof.modules,
+            `${roof.name} - ${roof.stringCount} x ${roof.modulesParString}`
+          );
+        });
+    }
+
     function calepinageForItem(item) {
       try {
+        if (item.stringPlanMode === "manuel") {
+          const segments = manualCalepinageSegments(item);
+          if (segments.length) {
+            const totals = segments.reduce((acc, segment) => {
+              acc.targetPanels += segment.targetPanels;
+              acc.placedPanels += segment.best ? segment.best.placedPanels : 0;
+              acc.railCount += segment.best ? segment.best.railCount : 0;
+              acc.railLengthTotalM += segment.best ? segment.best.railLengthTotalM : 0;
+              acc.hooksTotal += segment.best ? segment.best.hooksTotal : 0;
+              acc.fits = acc.fits && Boolean(segment.best && segment.best.fits);
+              return acc;
+            }, { targetPanels: 0, placedPanels: 0, railCount: 0, railLengthTotalM: 0, hooksTotal: 0, fits: true });
+            return { mode: "manual-roofs", segments, targetPanels: totals.targetPanels, totals, best: totals };
+          }
+        }
         const params = readCalepinageParams();
         const targetPanels = params.forcedPanelCount > 0 ? params.forcedPanelCount : item.totalModules;
-        const options = [
-          calepinageOption("Portrait", item.panel.largeurM, item.panel.hauteurM, params, targetPanels),
-          calepinageOption("Paysage", item.panel.hauteurM, item.panel.largeurM, params, targetPanels)
-        ];
-        const ranked = [...options].sort((a, b) => {
-          if (a.fits !== b.fits) return a.fits ? -1 : 1;
-          if (a.placedPanels !== b.placedPanels) return b.placedPanels - a.placedPanels;
-          if (a.rowsUsed !== b.rowsUsed) return a.rowsUsed - b.rowsUsed;
-          if (a.hooksTotal !== b.hooksTotal) return a.hooksTotal - b.hooksTotal;
-          return a.railLengthTotalM - b.railLengthTotalM;
-        });
-        const best = ranked[0] ?? null;
-        options.forEach((option) => {
-          option.recommended = option === best;
-        });
-        return { params, targetPanels, options, best };
+        return buildSingleCalepinagePlan(item, params, targetPanels, "Toiture globale");
       } catch (error) {
         return { error: error.message, targetPanels: item && item.totalModules ? item.totalModules : 0, options: [], best: null };
       }
@@ -2579,9 +2656,30 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
 
     function calepinageSummaryLabel(plan) {
       if (!plan || plan.error) return "A verifier";
+      if (plan.segments) {
+        const status = plan.totals.fits ? "Multi-toitures" : "Multi-toitures partiel";
+        return `${status} ${plan.totals.placedPanels}/${plan.totals.targetPanels} - ${plan.totals.hooksTotal} crochets`;
+      }
       if (!plan.best || plan.best.capacity <= 0) return "Impossible";
       const status = plan.best.fits ? plan.best.orientation : `${plan.best.orientation} partiel`;
       return `${status} ${plan.best.rowsUsed} x ${plan.best.maxColumns} - ${plan.best.hooksTotal} crochets`;
+    }
+
+    function renderCalepinageOptions(plan) {
+      return `
+        <div class="layout-options">
+          ${plan.options.map((option) => `
+            <div class="layout-option ${option.recommended ? "recommended" : ""} ${option.fits ? "" : "warning"}">
+              <h4>${option.orientation}<span class="layout-chip">${option.recommended ? "Propose" : option.fits ? "OK" : "Partiel"}</span></h4>
+              <small>${option.maxColumns} colonnes x ${option.maxRows} rangees max, ${option.capacity} panneaux max.</small>
+              <div class="kv"><span>Pose</span><strong>${option.placedPanels}/${plan.targetPanels} panneaux, rangees ${option.rowPanelCounts.join(" / ") || "0"}</strong></div>
+              <div class="kv"><span>Encombrement</span><strong>${n(option.usedLengthM, 2)} x ${n(option.usedWidthM, 2)} m</strong></div>
+              <div class="kv"><span>Rails</span><strong>${option.railCount} rails, ${n(option.railLengthTotalM, 2)} m lineaires</strong></div>
+              <div class="kv"><span>Crochets</span><strong>${option.hooksTotal} crochets${option.missingPanels ? `, manque ${option.missingPanels} panneaux` : ""}</strong></div>
+            </div>
+          `).join("")}
+        </div>
+      `;
     }
 
     function renderCalepinageBlock(item) {
@@ -2594,6 +2692,27 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
           </div>
         `;
       }
+      if (plan.segments) {
+        return `
+          <div class="detail-block schema-block">
+            <h3>Calpinage par toiture</h3>
+            <div class="kv"><span>Plan strings</span><strong>${item.stringPlanLabel}</strong></div>
+            <div class="kv"><span>Panneaux calpines</span><strong>${plan.totals.placedPanels}/${plan.totals.targetPanels} panneaux</strong></div>
+            <div class="kv"><span>Total rails</span><strong>${plan.totals.railCount} rails, ${n(plan.totals.railLengthTotalM, 2)} m lineaires</strong></div>
+            <div class="kv"><span>Total crochets</span><strong>${plan.totals.hooksTotal} crochets</strong></div>
+            ${plan.segments.map((segment) => `
+              <div class="layout-roof">
+                <h4>${segment.title}</h4>
+                <div class="kv"><span>Toiture brute</span><strong>${n(segment.params.grossLengthM, 2)} x ${n(segment.params.grossWidthM, 2)} m</strong></div>
+                <div class="kv"><span>Toiture nette</span><strong>${n(segment.params.netLengthM, 2)} x ${n(segment.params.netWidthM, 2)} m, marges 30 cm laterales, 30 cm egout, 10 cm faitage</strong></div>
+                <div class="kv"><span>Panneaux</span><strong>${segment.targetPanels} x ${item.panel.reference}, clame ${n(LAYOUT_CLAMP_GAP_M * 100, 0)} cm entre panneaux</strong></div>
+                <div class="kv"><span>Chevrons</span><strong>Entraxe ${segment.params.rafterSpacingCm} cm, crochet max tous les ${n(segment.params.hookSpacingM, 2)} m</strong></div>
+                ${renderCalepinageOptions(segment)}
+              </div>
+            `).join("")}
+          </div>
+        `;
+      }
       const params = plan.params;
       return `
         <div class="detail-block schema-block">
@@ -2602,24 +2721,33 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
           <div class="kv"><span>Toiture nette</span><strong>${n(params.netLengthM, 2)} x ${n(params.netWidthM, 2)} m, marges 30 cm laterales, 30 cm egout, 10 cm faitage</strong></div>
           <div class="kv"><span>Panneaux</span><strong>${plan.targetPanels} x ${item.panel.reference}, clame ${n(LAYOUT_CLAMP_GAP_M * 100, 0)} cm entre panneaux</strong></div>
           <div class="kv"><span>Chevrons</span><strong>Entraxe ${params.rafterSpacingCm} cm, crochet max tous les ${n(params.hookSpacingM, 2)} m</strong></div>
-          <div class="layout-options">
-            ${plan.options.map((option) => `
-              <div class="layout-option ${option.recommended ? "recommended" : ""} ${option.fits ? "" : "warning"}">
-                <h4>${option.orientation}<span class="layout-chip">${option.recommended ? "Propose" : option.fits ? "OK" : "Partiel"}</span></h4>
-                <small>${option.maxColumns} colonnes x ${option.maxRows} rangees max, ${option.capacity} panneaux max.</small>
-                <div class="kv"><span>Pose</span><strong>${option.placedPanels}/${plan.targetPanels} panneaux, rangees ${option.rowPanelCounts.join(" / ") || "0"}</strong></div>
-                <div class="kv"><span>Encombrement</span><strong>${n(option.usedLengthM, 2)} x ${n(option.usedWidthM, 2)} m</strong></div>
-                <div class="kv"><span>Rails</span><strong>${option.railCount} rails, ${n(option.railLengthTotalM, 2)} m lineaires</strong></div>
-                <div class="kv"><span>Crochets</span><strong>${option.hooksTotal} crochets${option.missingPanels ? `, manque ${option.missingPanels} panneaux` : ""}</strong></div>
-              </div>
-            `).join("")}
-          </div>
+          ${renderCalepinageOptions(plan)}
         </div>
       `;
     }
 
     function calepinageReportLines(plan) {
       if (!plan || plan.error) return [`- Calpinage : ${plan && plan.error ? plan.error : "non calcule"}`];
+      if (plan.segments) {
+        const lines = [
+          `- Calpinage multi-toitures : ${plan.totals.placedPanels}/${plan.totals.targetPanels} panneaux`,
+          `- Totaux : ${plan.totals.railCount} rails, ${n(plan.totals.railLengthTotalM, 2)} m lineaires, ${plan.totals.hooksTotal} crochets`
+        ];
+        for (const segment of plan.segments) {
+          lines.push(`- ${segment.title}`);
+          lines.push(`  - Toiture brute : ${n(segment.params.grossLengthM, 2)} x ${n(segment.params.grossWidthM, 2)} m`);
+          lines.push(`  - Toiture nette : ${n(segment.params.netLengthM, 2)} x ${n(segment.params.netWidthM, 2)} m`);
+          lines.push(`  - Panneaux a poser : ${segment.targetPanels}`);
+          lines.push(`  - Proposition retenue : ${segment.best.orientation}, ${segment.best.rowPanelCounts.join(" / ") || "0"} panneaux par rangee`);
+          lines.push(`  - Capacite : ${segment.best.placedPanels}/${segment.targetPanels} panneaux ; encombrement ${n(segment.best.usedLengthM, 2)} x ${n(segment.best.usedWidthM, 2)} m`);
+          lines.push(`  - Rails : ${segment.best.railCount} rails, soit ${n(segment.best.railLengthTotalM, 2)} m lineaires`);
+          lines.push(`  - Crochets : ${segment.best.hooksTotal}`);
+          for (const option of segment.options) {
+            lines.push(`  - Variante ${option.orientation} : ${option.placedPanels}/${segment.targetPanels} panneaux, ${option.railCount} rails, ${option.hooksTotal} crochets${option.missingPanels ? `, manque ${option.missingPanels} panneaux` : ""}`);
+          }
+        }
+        return lines;
+      }
       const params = plan.params;
       const lines = [
         `- Toiture brute : ${n(params.grossLengthM, 2)} x ${n(params.grossWidthM, 2)} m`,
@@ -2789,8 +2917,8 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
             </div>
             <div class="schema-link">
               <span>DC</span>
-              <strong>${n(item.dcLossW, 1)} W - ${n(item.dcVoltageDropV, 2)} V</strong>
-              <small>${n(item.dcMainLengthM, 2)} m en ${n(item.dcSectionMm2, 0)} mm2 + ${n(item.dcPanelCordLengthM, 2)} m cordons 4 mm2</small>
+              <strong>${n(item.dcLossW, 1)} W total - ${n(item.dcVoltageDropV, 2)} V/string</strong>
+              <small>${n(item.dcMainLengthM, 2)} m/string x ${item.nombreStrings} = ${n(item.dcMainLengthTotalM, 2)} m + ${n(item.dcPanelCordLengthM, 2)} m cordons/string</small>
             </div>
             <div class="schema-node">
               <span>Onduleur</span>
@@ -2819,7 +2947,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
             </div>
           </div>
           <div class="schema-total">
-            <div><span>Pertes DC</span><strong>${n(item.dcLossW, 1)} W</strong></div>
+            <div><span>Pertes DC</span><strong>${n(item.dcLossPerStringW, 1)} W/string x ${item.nombreStrings} = ${n(item.dcLossW, 1)} W</strong></div>
             <div><span>Pertes AC</span><strong>${n(item.acLossW, 1)} W</strong></div>
             <div><span>Total W</span><strong>${n(item.totalLossW, 1)} W</strong></div>
             <div><span>Total %</span><strong>${n(item.totalLossPct, 2)} %</strong></div>
@@ -2853,10 +2981,10 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         </div>
         <div class="detail-block">
           <h3>Pertes et cables</h3>
-          <div class="kv"><span>DC string</span><strong>${n(item.dcDistanceM, 1)} m aller site, section ${n(item.dcSectionMm2, 0)} mm2</strong></div>
-          <div class="kv"><span>Retour string</span><strong>${n(item.dcMainLengthM, 2)} m au total, dont ${n(item.modulesParString * item.dcReturnPerPanelM, 2)} m retour panneaux</strong></div>
-          <div class="kv"><span>Cordons panneaux</span><strong>${n(item.dcPanelCordLengthM, 2)} m en 4 mm2</strong></div>
-          <div class="kv"><span>Pertes DC</span><strong>${n(item.dcLossW, 1)} W ; chute ${n(item.dcVoltageDropV, 2)} V (${n(item.dcVoltageDropPct, 2)} %)</strong></div>
+          <div class="kv"><span>DC string</span><strong>${n(item.dcDistanceM, 1)} m onduleur-premier panneau par string, section ${n(item.dcSectionMm2, 0)} mm2</strong></div>
+          <div class="kv"><span>Boucle principale</span><strong>${n(item.dcMainLengthM, 2)} m/string x ${item.nombreStrings} = ${n(item.dcMainLengthTotalM, 2)} m total, dont ${n(item.modulesParString * item.dcReturnPerPanelM, 2)} m retour panneaux/string</strong></div>
+          <div class="kv"><span>Cordons panneaux</span><strong>${n(item.dcPanelCordLengthM, 2)} m/string x ${item.nombreStrings} = ${n(item.dcPanelCordLengthTotalM, 2)} m total en 4 mm2</strong></div>
+          <div class="kv"><span>Pertes DC</span><strong>${n(item.dcLossPerStringW, 1)} W/string x ${item.nombreStrings} = ${n(item.dcLossW, 1)} W ; chute ${n(item.dcVoltageDropV, 2)} V/string (${n(item.dcVoltageDropPct, 2)} %)</strong></div>
           <div class="kv"><span>AC onduleur-TD</span><strong>${n(item.acInvTdDistanceM, 1)} m en ${n(item.acInvTdSectionMm2, 0)} mm2</strong></div>
           <div class="kv"><span>AC TD-compteur</span><strong>${n(item.acTdMeterDistanceM, 1)} m en ${n(item.acTdMeterSectionMm2, 0)} mm2</strong></div>
           <div class="kv"><span>Pertes AC onduleur-TD</span><strong>${n(item.acInvTdLossW, 1)} W total ; chute ${n(item.acInvTdVoltageDropV, 2)} V par onduleur (${n(item.acInvTdVoltageDropPct, 2)} % sur ${n(item.acVoltageDropReferenceV, 0)} V)</strong></div>
@@ -2926,6 +3054,9 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
       const roofSummary = state.roofs
         .map((roof, index) => `T${index + 1}:${roof.surfaceM2}m2/${orientationLabelFromValue(roof.orientationDeg)}/${roof.slopeDeg}deg`)
         .join("; ") || "aucune";
+      const layoutRoofSummary = state.roofs
+        .map((roof, index) => `T${index + 1}:${roof.layoutLengthM ?? fields.layoutRoofLength.value}x${roof.layoutWidthM ?? fields.layoutRoofWidth.value}m/${roof.manualStringCount ?? 0}x${roof.manualModulesPerString ?? 0}`)
+        .join("; ") || "aucune";
       const bestSummary = best
         ? `${best.totalModules} modules ${best.panel.reference} / ${best.inverterCount} x ${best.inverter.reference} / ${n(best.productionAnnuelleKwh, 0)} kWh/an / pertes ${n(best.totalLossPct, 2)} %`
         : "aucun resultat valide";
@@ -2955,7 +3086,8 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         `Emplacements onduleurs: ${state.inverterSlots.length}`,
         `Mode MPPT: ${fields.mpptMode.value}`,
         `Calpinage: ${layoutPlan ? calepinageSummaryLabel(layoutPlan) : "aucun"}`,
-        `Toiture calpinage brute: ${fields.layoutRoofLength.value} x ${fields.layoutRoofWidth.value} m`,
+        `Toitures calpinage: ${layoutRoofSummary}`,
+        `Toiture calpinage globale: ${fields.layoutRoofLength.value} x ${fields.layoutRoofWidth.value} m`,
         `Entraxe chevrons: ${fields.layoutRafterSpacing.value} cm`,
         `Catalogue panneaux lignes: ${Math.max(0, fields.panelsCsv.value.split(/\r?\n/).filter(Boolean).length - 1)}`,
         `Catalogue onduleurs lignes: ${Math.max(0, fields.invertersCsv.value.split(/\r?\n/).filter(Boolean).length - 1)}`,
@@ -3030,12 +3162,17 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         "pertes_totales_w",
         "pertes_totales_pct",
         "pertes_dc_w",
-        "chute_tension_dc_v",
-        "chute_tension_dc_pct",
-        "distance_dc_onduleur_panneaux_m",
+        "pertes_dc_par_string_w",
+        "chute_tension_dc_v_par_string",
+        "chute_tension_dc_pct_par_string",
+        "distance_dc_onduleur_panneaux_par_string_m",
         "section_dc_mm2",
-        "retour_string_m",
-        "cordons_panneaux_4mm2_m",
+        "retour_string_par_string_m",
+        "retour_string_total_m",
+        "longueur_dc_principale_par_string_m",
+        "longueur_dc_principale_totale_m",
+        "cordons_panneaux_4mm2_par_string_m",
+        "cordons_panneaux_4mm2_total_m",
         "pertes_ac_w",
         "pertes_ac_onduleur_td_w",
         "pertes_ac_td_compteur_w",
@@ -3117,12 +3254,17 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         n(item.totalLossW, 2),
         n(item.totalLossPct, 3),
         n(item.dcLossW, 2),
+        n(item.dcLossPerStringW, 2),
         n(item.dcVoltageDropV, 3),
         n(item.dcVoltageDropPct, 3),
         n(item.dcDistanceM, 2),
         n(item.dcSectionMm2, 0),
         n(item.modulesParString * item.dcReturnPerPanelM, 2),
+        n(item.modulesParString * item.dcReturnPerPanelM * item.nombreStrings, 2),
+        n(item.dcMainLengthM, 2),
+        n(item.dcMainLengthTotalM, 2),
         n(item.dcPanelCordLengthM, 2),
+        n(item.dcPanelCordLengthTotalM, 2),
         n(item.acLossW, 2),
         n(item.acInvTdLossW, 2),
         n(item.acTdMeterLossW, 2),
@@ -3214,6 +3356,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
       const stringsMaxParMppt = Math.max(...item.repartition);
       const dcStringVoltage = item.umppChaudV;
       const dcReturnLength = item.modulesParString * item.dcReturnPerPanelM;
+      const dcReturnLengthTotal = dcReturnLength * item.nombreStrings;
       const dcMainBaseLength = 2 * item.dcDistanceM;
       const acTotalDistance = item.acInvTdDistanceM + item.acTdMeterDistanceM;
       const rejectedTotal = Object.values(state.rejected).reduce((sum, value) => sum + Number(value || 0), 0);
@@ -3303,11 +3446,14 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         "## 5. Pertes cables DC",
         "",
         `- Longueur principale DC/string : 2 x ${n(item.dcDistanceM, 2)} + (${item.modulesParString} x ${n(item.dcReturnPerPanelM, 2)}) = ${n(dcMainBaseLength, 2)} + ${n(dcReturnLength, 2)} = ${n(item.dcMainLengthM, 2)} m`,
-        `- Cordons panneaux : ${item.modulesParString} x ${n(item.panelCordM, 2)} = ${n(item.dcPanelCordLengthM, 2)} m en 4 mm2`,
+        `- Longueur principale DC totale : ${n(item.dcMainLengthM, 2)} x ${item.nombreStrings} strings = ${n(item.dcMainLengthTotalM, 2)} m, dont ${n(dcReturnLengthTotal, 2)} m de retour panneaux`,
+        `- Cordons panneaux/string : ${item.modulesParString} x ${n(item.panelCordM, 2)} = ${n(item.dcPanelCordLengthM, 2)} m en 4 mm2`,
+        `- Cordons panneaux total : ${n(item.dcPanelCordLengthM, 2)} x ${item.nombreStrings} strings = ${n(item.dcPanelCordLengthTotalM, 2)} m`,
         `- Resistance DC/string : rho x L / S = ${n(item.dcResistanceOhm, 5)} ohm`,
         `- Chute tension DC/string : I x R = ${n(item.dcCurrentA, 2)} x ${n(item.dcResistanceOhm, 5)} = ${n(item.dcVoltageDropV, 3)} V`,
-        `- Reference tension string chaud (${celsiusLabel(tmax)}) : ${n(dcStringVoltage, 2)} V ; chute = ${n(item.dcVoltageDropPct, 3)} %`,
-        `- Perte Joule DC : I2 x R x strings = ${n(item.dcCurrentA, 2)}2 x ${n(item.dcResistanceOhm, 5)} x ${item.nombreStrings} = ${n(item.dcLossW, 2)} W`,
+        `- Reference tension string chaud (${celsiusLabel(tmax)}) : ${n(dcStringVoltage, 2)} V ; chute = ${n(item.dcVoltageDropPct, 3)} %. La chute de tension reste par string, elle ne s'additionne pas entre strings paralleles.`,
+        `- Perte Joule DC/string : I2 x R = ${n(item.dcCurrentA, 2)}2 x ${n(item.dcResistanceOhm, 5)} = ${n(item.dcLossPerStringW, 2)} W`,
+        `- Perte Joule DC totale : ${n(item.dcLossPerStringW, 2)} x ${item.nombreStrings} strings = ${n(item.dcLossW, 2)} W`,
         "",
         "## 6. Pertes cables AC",
         "",

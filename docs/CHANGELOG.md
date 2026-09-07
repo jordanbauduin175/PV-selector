@@ -2,6 +2,14 @@
 
 Toutes les modifications notables de PV Selector sont tracees ici.
 
+## v0.29 - 2026-09-07
+
+- Calpinage en mode `Strings manuel par toiture` calcule toiture par toiture, avec les dimensions brutes propres a chaque toiture.
+- Affichage des totaux multi-toitures : panneaux poses, rails, metres lineaires et crochets.
+- Clarification des pertes DC : longueur principale et cordons affiches par string puis multiplies par le nombre de strings.
+- La chute de tension DC reste exprimee par string, tandis que la perte Joule DC totale additionne les strings paralleles.
+- Ajout des longueurs DC par string et totales dans l'export CSV, la note de calcul et les informations debug.
+
 ## v0.28 - 2026-09-06
 
 - Ajout d'un mode `Strings manuel par toiture` dans l'interface.
