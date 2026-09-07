@@ -2,6 +2,22 @@
 
 Toutes les modifications notables de PV Selector sont tracees ici.
 
+## v0.31 - 2026-09-07
+
+- Remplacement du schema unifilaire horizontal par un rendu plus proche d'un schema electrique RGIE.
+- Ajout des symboles panneau/string, sectionneur DC, onduleur DC/AC, protection AC PV, barre TD, depart installation, compteur et terre.
+- Affichage direct dans le schema des cables Solar/XVB, sections, distances, polarites/conducteurs, puissances DC/AC, affectation MPP et controles principaux.
+- L'export `Dossier RGIE` reprend automatiquement ce nouveau schema.
+
+## v0.30 - 2026-09-07
+
+- Ajout d'un onglet `Plan RGIE` dans l'interface.
+- Generation d'un schema unifilaire simplifie `PV - coupure DC - onduleur - protection AC - TD - compteur`.
+- Generation d'un plan de position PV base sur le calpinage et l'allocation des toitures retenues.
+- Ajout des champs dossier : adresse, EAN, responsable, date, modes de pose DC/AC, protections AC/DC, differentiel, PE structures, verification C10/26 et signalisation DC.
+- Ajout d'une checklist dossier avec statuts `OK`, `a verifier` ou `erreur` pour les validations electriques et pieces a joindre.
+- Ajout d'un export HTML imprimable du dossier RGIE avec schemas, checklist, signature, versions et informations debug.
+
 ## v0.29 - 2026-09-07
 
 - Calpinage en mode `Strings manuel par toiture` calcule toiture par toiture, avec les dimensions brutes propres a chaque toiture.

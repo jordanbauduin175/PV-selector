@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Dimensionnement solaire v0.29</title>
+  <title>Dimensionnement solaire v0.31</title>
   <style>
     :root {
       --bg: #f6f7f4;
@@ -792,6 +792,148 @@
       min-height: 82px;
     }
 
+    .plan-area {
+      display: none;
+      gap: 12px;
+      padding: 0 14px 14px;
+    }
+
+    .plan-area.active {
+      display: grid;
+    }
+
+    .plan-toolbar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 8px;
+      align-items: end;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcf8;
+    }
+
+    .plan-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .plan-actions label {
+      display: flex;
+      grid-column: auto;
+      align-items: center;
+      gap: 6px;
+      min-height: 38px;
+      text-transform: none;
+    }
+
+    .plan-actions input[type="checkbox"] {
+      width: auto;
+      min-height: auto;
+    }
+
+    .plan-toolbar .wide-field {
+      grid-column: 1 / -1;
+    }
+
+    .plan-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 12px;
+    }
+
+    .plan-card {
+      min-width: 0;
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    .plan-card h3 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .plan-card.wide {
+      grid-column: 1 / -1;
+    }
+
+    .rgie-svg {
+      width: 100%;
+      min-height: 260px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+    }
+
+    .single-line-rgie {
+      height: 680px;
+      max-height: 78vh;
+    }
+
+    .rgie-checklist {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 8px;
+    }
+
+    .rgie-check {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px;
+      align-items: start;
+      padding: 9px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcf8;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .rgie-dot {
+      width: 11px;
+      height: 11px;
+      margin-top: 3px;
+      border-radius: 999px;
+      background: var(--muted);
+    }
+
+    .rgie-check.ok .rgie-dot {
+      background: var(--green);
+    }
+
+    .rgie-check.warning .rgie-dot {
+      background: var(--amber);
+    }
+
+    .rgie-check.error .rgie-dot {
+      background: var(--red);
+    }
+
+    .rgie-check strong {
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .rgie-check span {
+      color: var(--muted);
+    }
+
+    .plan-notes {
+      min-height: 86px;
+    }
+
+    .signature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 8px;
+    }
+
     .rejects {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
@@ -829,7 +971,8 @@
       header,
       main,
       .detail-grid,
-      .catalog-area {
+      .catalog-area,
+      .plan-grid {
         grid-template-columns: 1fr;
       }
 
@@ -843,7 +986,8 @@
 
       .schema-flow,
       .schema-total,
-      .datasheet-toolbar {
+      .datasheet-toolbar,
+      .plan-toolbar {
         grid-template-columns: 1fr;
       }
 
@@ -883,7 +1027,7 @@
   <div class="app">
     <header>
       <div>
-        <h1>Dimensionnement solaire <span class="version-badge">v0.29</span></h1>
+        <h1>Dimensionnement solaire <span class="version-badge">v0.31</span></h1>
         <div class="subtitle">Selection panneaux / onduleurs avec controles Uoc, Isc, Umpp et plages MPPT</div>
       </div>
       <div class="toolbar">
@@ -1105,6 +1249,7 @@
           <div class="tabs">
             <button class="tab active" id="summaryTab" type="button">Rejets</button>
             <button class="tab" id="catalogTab" type="button">Catalogues</button>
+            <button class="tab" id="planTab" type="button">Plan RGIE</button>
           </div>
           <div class="rejects" id="rejectArea"></div>
           <div class="catalog-area" id="catalogArea">
@@ -1144,19 +1289,108 @@
               <div class="datasheet-review empty" id="datasheetReviewArea">Charge une datasheet pour preparer une insertion controlee.</div>
             </div>
           </div>
+          <div class="plan-area" id="planArea">
+            <div class="plan-toolbar">
+              <label>
+                Adresse installation
+                <input id="planAddressInput" type="text" placeholder="Rue, numero, code postal, commune">
+              </label>
+              <label>
+                Code EAN
+                <input id="planEanInput" type="text" inputmode="numeric" placeholder="18 chiffres">
+              </label>
+              <label>
+                Responsable travaux
+                <input id="planResponsibleInput" type="text" value="Bauduin Jordan">
+              </label>
+              <label>
+                Date dossier
+                <input id="planDateInput" type="date">
+              </label>
+              <label>
+                Pose cable DC
+                <select id="planDcModeInput">
+                  <option value="Apparent">Apparent</option>
+                  <option value="Sous conduit">Sous conduit</option>
+                  <option value="Goulotte">Goulotte</option>
+                  <option value="Chemin de cables">Chemin de cables</option>
+                  <option value="Encastre">Encastre</option>
+                </select>
+              </label>
+              <label>
+                Pose cable AC
+                <select id="planAcModeInput">
+                  <option value="Apparent">Apparent</option>
+                  <option value="Sous conduit">Sous conduit</option>
+                  <option value="Goulotte">Goulotte</option>
+                  <option value="Chemin de cables">Chemin de cables</option>
+                  <option value="Encastre">Encastre</option>
+                </select>
+              </label>
+              <label>
+                Protection AC PV
+                <input id="planAcProtectionInput" type="text" value="Disjoncteur dedie AC PV a verifier">
+              </label>
+              <label>
+                Differentiel
+                <input id="planDifferentialInput" type="text" value="Type A / 300 mA amont, a verifier selon fabricant">
+              </label>
+              <label>
+                Coupure / protection DC
+                <input id="planDcProtectionInput" type="text" value="Sectionneur DC integre onduleur ou coffret DC">
+              </label>
+              <label>
+                PE structures (mm2)
+                <input id="planPeSectionInput" type="number" min="0" step="0.5" value="4">
+              </label>
+              <div class="plan-actions">
+                <label><input id="planPeProtectedInput" type="checkbox"> PE protege mec.</label>
+                <label><input id="planC1026Input" type="checkbox"> C10/26 verifie</label>
+                <label><input id="planDcLabelsInput" type="checkbox" checked> Signalisation DC</label>
+                <button class="button" id="refreshPlanBtn" type="button">Actualiser plan</button>
+                <button class="button primary" id="exportRgiePlanBtn" type="button">Exporter dossier RGIE</button>
+              </div>
+              <label class="wide-field">
+                Notes dossier
+                <textarea id="planNotesInput" class="plan-notes"></textarea>
+              </label>
+            </div>
+            <div class="plan-grid">
+              <div class="plan-card wide">
+                <h3>Schema unifilaire PV</h3>
+                <div id="singleLinePlan"></div>
+              </div>
+              <div class="plan-card wide">
+                <h3>Plan de position PV</h3>
+                <div id="positionPlan"></div>
+              </div>
+              <div class="plan-card wide">
+                <h3>Checklist dossier RGIE</h3>
+                <div class="rgie-checklist" id="rgieChecklist"></div>
+              </div>
+              <div class="plan-card">
+                <h3>Identification</h3>
+                <div id="rgieIdentity"></div>
+              </div>
+              <div class="plan-card">
+                <h3>Signature</h3>
+                <div class="signature-grid" id="rgieSignature"></div>
+              </div>
+            </div>
+          </div>
         </section>
       </section>
     </main>
     <footer class="app-footer">
       <div><strong>Open-Elec</strong> - Auteur : Bauduin Jordan - <a href="https://www.open-elec.be" target="_blank" rel="noopener">www.open-elec.be</a></div>
       <div>Copyright (c) 2026 Bauduin Jordan / Open-Elec. Tous droits reserves.</div>
-      <div>UI v0.29 - Backend 0.29 - Schema catalogue 0.27 - <a id="footerChangelogLink" href="../docs/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+      <div>UI v0.31 - Backend 0.31 - Schema catalogue 0.27 - <a id="footerChangelogLink" href="../docs/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
     </footer>
   </div>
 
   <script>
-    const APP_VERSION = "v0.29";
-    const BACKEND_VERSION = "0.29";
+    const APP_VERSION = "v0.31";
+    const BACKEND_VERSION = "0.31";
     const CATALOG_SCHEMA_VERSION = "0.27";
     const APP_AUTHOR = "Bauduin Jordan";
     const APP_OWNER = "Open-Elec";
@@ -1317,13 +1551,36 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
       previewDatasheet: document.querySelector("#previewDatasheetBtn"),
       loadDbCatalogs: document.querySelector("#loadDbCatalogsBtn"),
       dbStatus: document.querySelector("#dbStatusText"),
-      datasheetReview: document.querySelector("#datasheetReviewArea")
+      datasheetReview: document.querySelector("#datasheetReviewArea"),
+      planArea: document.querySelector("#planArea"),
+      singleLinePlan: document.querySelector("#singleLinePlan"),
+      positionPlan: document.querySelector("#positionPlan"),
+      rgieChecklist: document.querySelector("#rgieChecklist"),
+      rgieIdentity: document.querySelector("#rgieIdentity"),
+      rgieSignature: document.querySelector("#rgieSignature"),
+      planAddress: document.querySelector("#planAddressInput"),
+      planEan: document.querySelector("#planEanInput"),
+      planResponsible: document.querySelector("#planResponsibleInput"),
+      planDate: document.querySelector("#planDateInput"),
+      planDcMode: document.querySelector("#planDcModeInput"),
+      planAcMode: document.querySelector("#planAcModeInput"),
+      planAcProtection: document.querySelector("#planAcProtectionInput"),
+      planDifferential: document.querySelector("#planDifferentialInput"),
+      planDcProtection: document.querySelector("#planDcProtectionInput"),
+      planPeSection: document.querySelector("#planPeSectionInput"),
+      planPeProtected: document.querySelector("#planPeProtectedInput"),
+      planC1026: document.querySelector("#planC1026Input"),
+      planDcLabels: document.querySelector("#planDcLabelsInput"),
+      refreshPlan: document.querySelector("#refreshPlanBtn"),
+      exportRgiePlan: document.querySelector("#exportRgiePlanBtn"),
+      planNotes: document.querySelector("#planNotesInput")
     };
 
     const state = {
       results: [],
       rejected: {},
       selectedIndex: 0,
+      activeTab: "summary",
       nextRoofId: 2,
       nextInverterSlotId: 2,
       roofs: [
@@ -2829,6 +3086,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         renderResults(limit);
         renderRejects();
         renderDetail();
+        renderRgiePlan();
       } catch (error) {
         document.querySelector("#statusText").textContent = error.message;
       }
@@ -2875,6 +3133,7 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
           state.selectedIndex = index;
           renderResults(limit);
           renderDetail();
+          renderRgiePlan();
         });
         body.appendChild(row);
       });
@@ -3037,6 +3296,709 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
       `).join("");
     }
 
+    function planText(field) {
+      return String(field?.value ?? "").trim();
+    }
+
+    function planNumber(field) {
+      const text = planText(field);
+      if (!text) return 0;
+      const parsed = Number(text.replace(",", "."));
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function currentRgieItem() {
+      return state.results[state.selectedIndex] || state.results[0] || null;
+    }
+
+    function planRoofLabel(roof) {
+      if (!roof) return "Toiture globale";
+      if (roof.stringCount && roof.modulesParString) {
+        return `${roof.name}: ${roof.stringCount} x ${roof.modulesParString} modules`;
+      }
+      return `${roof.name}: ${roof.modules} modules`;
+    }
+
+    function planStringLabel(item) {
+      if (!item) return "-";
+      if (item.stringPlanMode === "manuel") {
+        return item.roofAllocation.map(planRoofLabel).join(" ; ");
+      }
+      return `${item.nombreStrings} x ${item.modulesParString} modules/string - allocation ${item.roofSummary}`;
+    }
+
+    function buildRgiePlanSegments(item, calepinage) {
+      if (!item || !calepinage || calepinage.error) return [];
+      if (calepinage.segments) {
+        return calepinage.segments.map((segment, index) => ({
+          title: segment.title,
+          roof: item.roofAllocation[index] || null,
+          segment,
+          error: ""
+        }));
+      }
+      const roofAllocation = item.roofAllocation || [];
+      if (roofAllocation.length > 1) {
+        return roofAllocation.map((roof) => {
+          try {
+            const params = calepinageParamsFromDimensions(
+              Number(roof.layoutLengthM ?? fields.layoutRoofLength.value),
+              Number(roof.layoutWidthM ?? fields.layoutRoofWidth.value),
+              0
+            );
+            const segment = buildSingleCalepinagePlan(item, params, roof.modules, `${roof.name} - ${roof.modules} modules`);
+            return { title: segment.title, roof, segment, error: "" };
+          } catch (error) {
+            return { title: roof.name, roof, segment: null, error: error.message };
+          }
+        });
+      }
+      return [{
+        title: calepinage.title || "Toiture globale",
+        roof: roofAllocation[0] || null,
+        segment: calepinage,
+        error: ""
+      }];
+    }
+
+    function buildRgiePlanModel(item) {
+      const calepinage = calepinageForItem(item);
+      const inputs = {
+        address: planText(fields.planAddress),
+        ean: planText(fields.planEan),
+        responsible: planText(fields.planResponsible),
+        date: planText(fields.planDate) || new Date().toISOString().slice(0, 10),
+        dcMode: planText(fields.planDcMode),
+        acMode: planText(fields.planAcMode),
+        acProtection: planText(fields.planAcProtection),
+        differential: planText(fields.planDifferential),
+        dcProtection: planText(fields.planDcProtection),
+        peSectionMm2: planNumber(fields.planPeSection),
+        peProtected: Boolean(fields.planPeProtected.checked),
+        c1026Verified: Boolean(fields.planC1026.checked),
+        dcLabels: Boolean(fields.planDcLabels.checked),
+        notes: planText(fields.planNotes)
+      };
+      return {
+        item,
+        inputs,
+        calepinage,
+        planSegments: buildRgiePlanSegments(item, calepinage),
+        inverterLabel: item.inverterCount > 1 ? `${item.inverterCount} x ${item.inverter.reference}` : item.inverter.reference,
+        distribution: selectedDistribution(),
+        generatedAt: new Date().toISOString()
+      };
+    }
+
+    function rgieLayoutTotals(model) {
+      const segments = model.planSegments || [];
+      if (segments.length) {
+        return segments.reduce((acc, entry) => {
+          const best = entry.segment?.best;
+          const targetPanels = entry.segment?.targetPanels || entry.roof?.modules || 0;
+          acc.targetPanels += targetPanels;
+          acc.placedPanels += best ? best.placedPanels : 0;
+          acc.railCount += best ? best.railCount : 0;
+          acc.railLengthTotalM += best ? best.railLengthTotalM : 0;
+          acc.hooksTotal += best ? best.hooksTotal : 0;
+          acc.fits = acc.fits && Boolean(best && best.fits && !entry.error);
+          return acc;
+        }, { targetPanels: 0, placedPanels: 0, railCount: 0, railLengthTotalM: 0, hooksTotal: 0, fits: true });
+      }
+      const best = model.calepinage?.best;
+      return {
+        targetPanels: model.calepinage?.targetPanels || model.item.totalModules,
+        placedPanels: best ? best.placedPanels : 0,
+        railCount: best ? best.railCount : 0,
+        railLengthTotalM: best ? best.railLengthTotalM : 0,
+        hooksTotal: best ? best.hooksTotal : 0,
+        fits: Boolean(best && best.fits)
+      };
+    }
+
+    function rgieStatus(ok, warningWhenFalse = true) {
+      if (ok) return "ok";
+      return warningWhenFalse ? "warning" : "error";
+    }
+
+    function buildRgieChecklist(model) {
+      const item = model.item;
+      const inputs = model.inputs;
+      const layout = rgieLayoutTotals(model);
+      const peMinMm2 = inputs.peProtected ? 2.5 : 4;
+      const startupKnown = item.inverter.startupInputVoltageV > 0;
+      const startupOk = !startupKnown || item.uocChaudV >= item.inverter.startupInputVoltageV;
+      const mpptOk = item.umppChaudV >= item.inverter.mpptMinV && item.umppFroidV <= item.inverter.mpptMaxV;
+      const currentOk = item.imppMpptA <= item.inverter.courantMaxMpptA && item.iscMpptA <= item.inverter.iscMaxMpptA;
+      const phaseOk = !(isSingleOrBiphaseDistribution(fields.distribution.value) && item.inverter.phase === "tri");
+      return [
+        {
+          status: "ok",
+          title: "Schema unifilaire",
+          detail: `PV - DC - onduleur - protection AC - TD - compteur avec sections et modes de pose.`
+        },
+        {
+          status: layout.fits ? "ok" : "warning",
+          title: "Plan de position",
+          detail: `${layout.placedPanels}/${layout.targetPanels} panneaux places, ${layout.railCount} rails, ${layout.hooksTotal} crochets.`
+        },
+        {
+          status: inputs.address ? "ok" : "warning",
+          title: "Adresse installation",
+          detail: inputs.address || "A renseigner avant envoi controle."
+        },
+        {
+          status: /^\d{18}$/.test(inputs.ean) ? "ok" : "warning",
+          title: "Code EAN",
+          detail: inputs.ean || "EAN 18 chiffres a renseigner."
+        },
+        {
+          status: inputs.responsible && inputs.date ? "ok" : "warning",
+          title: "Responsable et date",
+          detail: `${inputs.responsible || "Responsable manquant"} - ${inputs.date || "date manquante"}.`
+        },
+        {
+          status: item.puissanceAcTotalW <= 10000 ? "ok" : "warning",
+          title: "Cadre PV domestique",
+          detail: `${kw(item.puissanceAcTotalW)} AC total. Au-dela de 10 kVA, verifier les exigences GRD/RGIE applicables.`
+        },
+        {
+          status: inputs.c1026Verified ? "ok" : "warning",
+          title: "Onduleur Synergrid",
+          detail: inputs.c1026Verified ? "Homologation C10/26 declaree verifiee." : "Verifier la presence sur la liste C10/26 avant raccordement."
+        },
+        {
+          status: rgieStatus(item.uocFroidV <= RGIE_UOC_FROID_MAX_V, false),
+          title: `Uoc froid ${celsiusLabel(item.temperatureFroidC)}`,
+          detail: `${n(item.uocFroidV, 1)} V <= ${n(RGIE_UOC_FROID_MAX_V, 0)} V DC.`
+        },
+        {
+          status: rgieStatus(item.uocFroidV <= item.inverter.tensionDcMaxV, false),
+          title: "Tension DC max onduleur",
+          detail: `${n(item.uocFroidV, 1)} V <= ${n(item.inverter.tensionDcMaxV, 0)} V.`
+        },
+        {
+          status: rgieStatus(startupOk, false),
+          title: `Startup ete ${celsiusLabel(item.temperatureChaudC)}`,
+          detail: startupKnown
+            ? `${n(item.uocChaudV, 1)} V >= ${n(item.inverter.startupInputVoltageV, 0)} V.`
+            : "Startup input absent du catalogue, controle non bloquant."
+        },
+        {
+          status: rgieStatus(mpptOk, false),
+          title: "Plage MPPT",
+          detail: `${n(item.umppChaudV, 1)} V chaud >= ${n(item.inverter.mpptMinV, 0)} V ; ${n(item.umppFroidV, 1)} V froid <= ${n(item.inverter.mpptMaxV, 0)} V.`
+        },
+        {
+          status: rgieStatus(currentOk, false),
+          title: "Courants entree DC",
+          detail: `Impp/MPPT ${n(item.imppMpptA, 1)} A <= ${n(item.inverter.courantMaxMpptA, 1)} A ; Isc/MPPT ${n(item.iscMpptA, 1)} A <= ${n(item.inverter.iscMaxMpptA, 1)} A.`
+        },
+        {
+          status: rgieStatus(item.totalLossPct <= MAX_JOULE_LOSS_PCT, false),
+          title: "Pertes Joule",
+          detail: `${n(item.totalLossW, 1)} W = ${n(item.totalLossPct, 2)} % de ${kwc(item.puissanceDcW)}.`
+        },
+        {
+          status: phaseOk && item.inverter.puissanceAcW <= item.maxInverterAcVa ? "ok" : "error",
+          title: "Distribution",
+          detail: `${item.distributionLabel}, ${item.inverter.phase}, limite unitaire ${kva(item.maxInverterAcVa)}.`
+        },
+        {
+          status: inputs.acProtection ? "ok" : "warning",
+          title: "Protection AC",
+          detail: inputs.acProtection || "Protection AC PV a specifier."
+        },
+        {
+          status: inputs.differential ? "ok" : "warning",
+          title: "Differentiel",
+          detail: inputs.differential || "Differentiel amont a specifier."
+        },
+        {
+          status: inputs.dcProtection ? "ok" : "warning",
+          title: "Coupure DC",
+          detail: inputs.dcProtection || "Sectionnement DC a specifier."
+        },
+        {
+          status: inputs.dcLabels ? "ok" : "warning",
+          title: "Signalisation DC",
+          detail: inputs.dcLabels ? "Etiquetage DC prevu." : "Ajouter les etiquettes DC et consignes de securite."
+        },
+        {
+          status: inputs.peSectionMm2 >= peMinMm2 ? "ok" : "error",
+          title: "Liaison PE structures",
+          detail: `${n(inputs.peSectionMm2, 1)} mm2 ; minimum interne ${n(peMinMm2, 1)} mm2 selon protection mecanique declaree.`
+        },
+        {
+          status: "warning",
+          title: "Pieces a joindre",
+          detail: "Joindre fiches techniques panneaux/onduleurs, notices et consignes securite constructeur."
+        }
+      ];
+    }
+
+    function renderChecklistCards(items) {
+      return items.map((item) => `
+        <div class="rgie-check ${item.status}">
+          <span class="rgie-dot"></span>
+          <div><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.detail)}</span></div>
+        </div>
+      `).join("");
+    }
+
+    function svgText(value) {
+      return escapeHtml(value);
+    }
+
+    function compactSvgLine(value, maxChars = 24) {
+      const text = String(value ?? "");
+      return text.length > maxChars ? `${text.slice(0, Math.max(0, maxChars - 3))}...` : text;
+    }
+
+    function svgBox(x, y, width, height, title, lines = [], fill = "#eef5e9") {
+      const maxChars = Math.max(10, Math.floor(width / 7));
+      const textLines = lines.slice(0, 4).map((line, index) => `
+        <text x="${x + width / 2}" y="${y + 48 + (index * 18)}" text-anchor="middle" class="svg-small">${svgText(compactSvgLine(line, maxChars))}</text>
+      `).join("");
+      return `
+        <rect x="${x}" y="${y}" width="${width}" height="${height}" rx="8" fill="${fill}" stroke="#cdd9c4"></rect>
+        <text x="${x + width / 2}" y="${y + 24}" text-anchor="middle" class="svg-title">${svgText(title)}</text>
+        ${textLines}
+      `;
+    }
+
+    function svgArrow(x1, y1, x2, y2, label = "", markerId = "arrow") {
+      const labelSvg = label ? `<text x="${(x1 + x2) / 2}" y="${y1 - 10}" text-anchor="middle" class="svg-label">${svgText(label)}</text>` : "";
+      return `
+        <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#2d5d8a" stroke-width="2.4" marker-end="url(#${markerId})"></line>
+        ${labelSvg}
+      `;
+    }
+
+    function svgLineList(lines, x, y, className = "one-line-small", lineHeight = 17, anchor = "start") {
+      return lines.map((line, index) => `
+        <text x="${x}" y="${y + (index * lineHeight)}" text-anchor="${anchor}" class="${className}">${svgText(line)}</text>
+      `).join("");
+    }
+
+    function svgVerticalLineList(lines, x, y, className = "one-line-small", lineHeight = 15) {
+      return `
+        <g transform="translate(${x} ${y}) rotate(-90)">
+          ${lines.map((line, index) => `<text x="0" y="${index * lineHeight}" class="${className}">${svgText(line)}</text>`).join("")}
+        </g>
+      `;
+    }
+
+    function sectionMm2Label(value) {
+      const rounded = Number(value);
+      const decimals = Number.isInteger(rounded) ? 0 : 1;
+      return n(rounded, decimals).replace(".", ",");
+    }
+
+    function acPoleLabel(distributionValue) {
+      if (distributionValue === "tetra") return "4P";
+      if (distributionValue === "tri_delta") return "3P";
+      return "2P";
+    }
+
+    function acLineLabel(distributionValue) {
+      if (distributionValue === "tetra") return "L1/L2/L3/N/PE";
+      if (distributionValue === "tri_delta") return "L1/L2/L3/PE";
+      if (distributionValue === "biphase") return "L1/L2/PE";
+      return "L/N/PE";
+    }
+
+    function acCableDesignation(distributionValue, sectionMm2) {
+      const section = sectionMm2Label(sectionMm2);
+      if (distributionValue === "tetra") return `XVB 5G${section}`;
+      if (distributionValue === "tri_delta") return `XVB 4G${section}`;
+      return `XVB 3G${section}`;
+    }
+
+    function dcCableDesignation(item, inputs) {
+      const section = sectionMm2Label(item.dcSectionMm2);
+      const peSection = inputs.peSectionMm2 > 0 ? sectionMm2Label(inputs.peSectionMm2) : section;
+      const prefix = item.nombreStrings > 1 ? `${item.nombreStrings} x ` : "";
+      return `${prefix}Solar 2x${section} + PE 1x${peSection}`;
+    }
+
+    function rgieBreakerFallback(item) {
+      const pole = acPoleLabel(fields.distribution.value);
+      const currentA = Math.ceil(item.acUnitCurrentA || item.acCurrentA || 0);
+      return `${pole} - C${currentA}A a verifier`;
+    }
+
+    function rgieProtectionText(value, fallback) {
+      const text = String(value || "").trim();
+      return text || fallback;
+    }
+
+    function renderSingleLineSvg(model) {
+      const item = model.item;
+      const inputs = model.inputs;
+      const distributionValue = fields.distribution.value;
+      const poleLabel = acPoleLabel(distributionValue);
+      const dcCable = dcCableDesignation(item, inputs);
+      const acInvCable = acCableDesignation(distributionValue, item.acInvTdSectionMm2);
+      const acMeterCable = acCableDesignation(distributionValue, item.acTdMeterSectionMm2);
+      const acProtection = rgieProtectionText(inputs.acProtection, rgieBreakerFallback(item));
+      const differential = rgieProtectionText(inputs.differential, `${poleLabel} - 300 mA a verifier`);
+      const dcProtection = rgieProtectionText(inputs.dcProtection, "Sectionneur DC");
+      const inverterRef = item.inverterCount > 1 ? `${item.inverter.reference} x ${item.inverterCount}` : item.inverter.reference;
+      const inverterSymbolLabel = item.inverterCount > 1 ? `S1..S${item.inverterCount}` : "S1";
+      const pvInfo = [
+        `Marque: ${item.panel.fabricant}`,
+        `Type: ${item.panel.reference}`,
+        `${item.nombreStrings} string(s) x ${item.modulesParString}`,
+        `Pmax ${n(item.puissanceDcW, 0)} Wc`,
+        `Uoc froid ${n(item.uocFroidV, 0)} V`
+      ];
+      const inverterInfo = [
+        `Marque: ${item.inverter.fabricant}`,
+        `Type: ${inverterRef}`,
+        "S/N:",
+        `P: ${n(item.puissancePvMaxTotalW || item.puissanceDcW, 0)} W (DC)`,
+        `P: ${n(item.puissanceAcTotalW, 0)} VA (AC)`,
+        `MPP: ${item.mpptAssignmentLabel}`
+      ];
+      const startup = item.inverter.startupInputVoltageV > 0
+        ? `${n(item.uocChaudV, 0)} V / start ${n(item.inverter.startupInputVoltageV, 0)} V`
+        : "startup non renseigne";
+      const checks = [
+        `Uoc froid ${celsiusLabel(item.temperatureFroidC)}: ${n(item.uocFroidV, 1)} V <= ${n(RGIE_UOC_FROID_MAX_V, 0)} V`,
+        `Startup ete ${celsiusLabel(item.temperatureChaudC)}: ${startup}`,
+        `Umpp chaud/froid: ${n(item.umppChaudV, 1)} / ${n(item.umppFroidV, 1)} V`,
+        `Impp/Isc MPPT: ${n(item.imppMpptA, 1)} / ${n(item.iscMpptA, 1)} A`,
+        `Pertes: DC ${n(item.dcLossW, 1)} W + AC ${n(item.acLossW, 1)} W = ${n(item.totalLossPct, 2)} %`
+      ];
+      return `
+        <svg class="rgie-svg single-line-rgie" viewBox="0 0 920 720" role="img" aria-label="Schema unifilaire PV">
+          <defs>
+            <style>
+              .one-line-wire{stroke:#111;stroke-width:2.4;fill:none;stroke-linecap:square;stroke-linejoin:miter}
+              .one-line-thin{stroke:#111;stroke-width:1.4;fill:none;stroke-linecap:square;stroke-linejoin:miter}
+              .one-line-device{stroke:#111;stroke-width:1.6;fill:#fff}
+              .one-line-node{stroke:#111;stroke-width:1.4;fill:#fff}
+              .one-line-heading{font:700 16px Arial,sans-serif;fill:#111}
+              .one-line-label{font:700 14px Arial,sans-serif;fill:#111}
+              .one-line-small{font:12px Arial,sans-serif;fill:#111}
+              .one-line-muted{font:11px Arial,sans-serif;fill:#555}
+              .one-line-tiny{font:10px Arial,sans-serif;fill:#111}
+            </style>
+          </defs>
+          <text x="876" y="34" text-anchor="end" class="one-line-heading">Schema unifilaire PV - ${svgText(APP_VERSION)}</text>
+          <text x="876" y="55" text-anchor="end" class="one-line-muted">${svgText(compactSvgLine(`${inputs.address || "Adresse a renseigner"} - EAN ${inputs.ean || "a renseigner"} - ${inputs.date}`, 86))}</text>
+
+          ${svgVerticalLineList(pvInfo, 72, 218, "one-line-small", 15)}
+          <rect x="118" y="104" width="44" height="86" class="one-line-device"></rect>
+          <polyline points="121,168 140,132 159,168" class="one-line-thin"></polyline>
+          <text x="182" y="141" class="one-line-small">${n(item.puissanceDcW, 0)} Wc</text>
+          <text x="165" y="204" class="one-line-tiny">x${item.modulesParString}/string</text>
+          <line x1="140" y1="190" x2="140" y2="318" class="one-line-wire"></line>
+          <circle cx="140" cy="236" r="6" class="one-line-node"></circle>
+          <path d="M130 280 L140 296 L152 264" class="one-line-thin"></path>
+          <text x="164" y="270" class="one-line-small">${svgText(compactSvgLine(dcProtection, 34))}</text>
+          ${svgVerticalLineList([
+            dcCable,
+            `${n(item.dcMainLengthM, 1)} m/string`,
+            `${n(item.dcLossW, 1)} W DC`
+          ], 160, 310, "one-line-small", 15)}
+
+          <text x="74" y="314" class="one-line-label">${svgText(inverterSymbolLabel)}</text>
+          <rect x="78" y="328" width="126" height="58" class="one-line-device"></rect>
+          <line x1="78" y1="386" x2="204" y2="328" class="one-line-thin"></line>
+          <line x1="92" y1="346" x2="112" y2="346" class="one-line-thin"></line>
+          <line x1="92" y1="352" x2="112" y2="352" class="one-line-thin"></line>
+          <path d="M160 363 C170 348 180 378 192 363" class="one-line-thin"></path>
+          ${svgLineList(inverterInfo, 224, 332, "one-line-small", 16)}
+
+          <line x1="140" y1="386" x2="140" y2="586" class="one-line-wire"></line>
+          <circle cx="140" cy="420" r="6" class="one-line-node"></circle>
+          <path d="M130 492 L136 504 M136 504 L149 474" class="one-line-thin"></path>
+          <rect x="126" y="520" width="30" height="44" class="one-line-device"></rect>
+          <text x="119" y="548" text-anchor="end" class="one-line-label">A</text>
+          <text transform="translate(151 559) rotate(-90)" class="one-line-tiny">${svgText(poleLabel)}</text>
+          ${svgVerticalLineList([
+            `${acInvCable} - ${n(item.acInvTdDistanceM, 1)} m`,
+            acLineLabel(distributionValue),
+            compactSvgLine(acProtection, 34)
+          ], 166, 562, "one-line-small", 15)}
+
+          <line x1="42" y1="586" x2="760" y2="586" class="one-line-wire"></line>
+          <circle cx="140" cy="586" r="5" class="one-line-node"></circle>
+          <circle cx="290" cy="586" r="5" class="one-line-node"></circle>
+          <circle cx="440" cy="586" r="5" class="one-line-node"></circle>
+          <circle cx="615" cy="586" r="5" class="one-line-node"></circle>
+          <text x="42" y="576" class="one-line-small">Reseau</text>
+          <text x="360" y="608" class="one-line-small">TD principal - ${svgText(item.distributionLabel)}</text>
+
+          <line x1="70" y1="586" x2="70" y2="648" class="one-line-wire"></line>
+          <line x1="48" y1="648" x2="92" y2="648" class="one-line-wire"></line>
+          <line x1="54" y1="660" x2="86" y2="660" class="one-line-thin"></line>
+          <line x1="60" y1="671" x2="80" y2="671" class="one-line-thin"></line>
+          <line x1="66" y1="682" x2="74" y2="682" class="one-line-thin"></line>
+
+          <line x1="290" y1="586" x2="290" y2="638" class="one-line-wire"></line>
+          <rect x="254" y="638" width="72" height="40" class="one-line-device"></rect>
+          <text x="290" y="663" text-anchor="middle" class="one-line-label">kWh</text>
+          <text x="238" y="694" class="one-line-small">Compteur ${svgText(inputs.ean || "")}</text>
+          <text x="238" y="712" class="one-line-small">${svgText(acMeterCable)} - ${n(item.acTdMeterDistanceM, 1)} m</text>
+
+          <line x1="440" y1="586" x2="440" y2="480" class="one-line-wire"></line>
+          <path d="M430 526 L436 538 M436 538 L451 506" class="one-line-thin"></path>
+          <line x1="396" y1="480" x2="535" y2="480" class="one-line-wire"></line>
+          <circle cx="440" cy="480" r="5" class="one-line-node"></circle>
+          <text x="414" y="556" text-anchor="end" class="one-line-label">B</text>
+          <text x="402" y="456" class="one-line-small">vers installation</text>
+          <text x="454" y="536" class="one-line-small">${svgText(poleLabel)} depart client</text>
+
+          <line x1="615" y1="586" x2="615" y2="628" class="one-line-wire"></line>
+          <rect x="548" y="628" width="166" height="48" class="one-line-device"></rect>
+          <path d="M568 660 L590 646" class="one-line-thin"></path>
+          <circle cx="568" cy="660" r="3" class="one-line-node"></circle>
+          <circle cx="590" cy="646" r="3" class="one-line-node"></circle>
+          <text x="631" y="649" text-anchor="middle" class="one-line-small">${svgText(compactSvgLine(differential, 28))}</text>
+          <text x="631" y="666" text-anchor="middle" class="one-line-tiny">Differentiel a verifier selon notice</text>
+
+          <rect x="590" y="100" width="286" height="170" fill="#fff" stroke="#d8dfd2" stroke-width="1.2"></rect>
+          <text x="610" y="126" class="one-line-label">Controles calcules</text>
+          ${svgLineList(checks, 610, 152, "one-line-small", 20)}
+          <text x="610" y="284" class="one-line-muted">Pieces a joindre : fiches panneaux/onduleurs, notices, consignes securite.</text>
+          <text x="610" y="306" class="one-line-muted">C10/26 : ${inputs.c1026Verified ? "verifie" : "a verifier"} - Signalisation DC : ${inputs.dcLabels ? "prevue" : "a completer"}.</text>
+        </svg>
+      `;
+    }
+
+    function renderPanelGrid(entry, x, y, roofWidth, roofHeight) {
+      const segment = entry.segment;
+      const option = segment?.best;
+      if (!segment || !option || !option.placedPanels) {
+        const reason = entry.error || "Calpinage non disponible.";
+        return `
+          <rect x="${x}" y="${y}" width="${roofWidth}" height="${roofHeight}" rx="8" fill="#fff8e9" stroke="#e2b35d"></rect>
+          <text x="${x + 18}" y="${y + 34}" class="svg-value">${svgText(entry.title)}</text>
+          <text x="${x + 18}" y="${y + 60}" class="svg-small">${svgText(reason)}</text>
+        `;
+      }
+      const params = segment.params;
+      const scaleX = roofWidth / params.grossLengthM;
+      const scaleY = roofHeight / params.grossWidthM;
+      const netX = x + (LAYOUT_SIDE_MARGIN_M * scaleX);
+      const netY = y + (LAYOUT_RIDGE_MARGIN_M * scaleY);
+      const netWidth = params.netLengthM * scaleX;
+      const netHeight = params.netWidthM * scaleY;
+      const panelWidth = option.panelLengthM * scaleX;
+      const panelHeight = option.panelWidthM * scaleY;
+      const gapX = LAYOUT_CLAMP_GAP_M * scaleX;
+      const gapY = LAYOUT_CLAMP_GAP_M * scaleY;
+      const usedWidth = option.usedLengthM * scaleX;
+      const usedHeight = option.usedWidthM * scaleY;
+      const startX = netX + Math.max(0, (netWidth - usedWidth) / 2);
+      const startY = netY + Math.max(0, (netHeight - usedHeight) / 2);
+      const panels = [];
+      option.rowPanelCounts.forEach((count, rowIndex) => {
+        for (let col = 0; col < count; col += 1) {
+          const panelX = startX + (col * (panelWidth + gapX));
+          const panelY = startY + (rowIndex * (panelHeight + gapY));
+          panels.push(`<rect x="${panelX}" y="${panelY}" width="${Math.max(4, panelWidth)}" height="${Math.max(4, panelHeight)}" rx="2" fill="#e8f2df" stroke="#6f9d6c"></rect>`);
+        }
+      });
+      const stringInfo = entry.roof?.stringCount
+        ? `${entry.roof.stringCount} string(s) x ${entry.roof.modulesParString}`
+        : `${entry.roof?.modules || segment.targetPanels} modules`;
+      return `
+        <text x="${x}" y="${y - 18}" class="svg-value">${svgText(entry.title)}</text>
+        <text x="${x}" y="${y - 2}" class="svg-note">${svgText(stringInfo)} - ${svgText(option.orientation)} - ${option.rowPanelCounts.join(" / ") || "0"} panneaux/rangee</text>
+        <rect x="${x}" y="${y}" width="${roofWidth}" height="${roofHeight}" rx="8" fill="#fafbf7" stroke="#cdd9c4"></rect>
+        <rect x="${netX}" y="${netY}" width="${netWidth}" height="${netHeight}" rx="4" fill="#ffffff" stroke="#88a779" stroke-dasharray="5 4"></rect>
+        <text x="${x + roofWidth - 78}" y="${y + 18}" class="svg-note">Faitage 10 cm</text>
+        <text x="${x + roofWidth - 78}" y="${y + roofHeight - 10}" class="svg-note">Egout 30 cm</text>
+        ${panels.join("")}
+        <text x="${x + 14}" y="${y + roofHeight - 12}" class="svg-note">Brut ${n(params.grossLengthM, 2)} x ${n(params.grossWidthM, 2)} m - net ${n(params.netLengthM, 2)} x ${n(params.netWidthM, 2)} m</text>
+      `;
+    }
+
+    function renderPositionSvg(model) {
+      const item = model.item;
+      const segments = model.planSegments;
+      const height = Math.max(380, 128 + (segments.length || 1) * 232);
+      const roofWidth = 520;
+      const roofHeight = 164;
+      if (!segments.length) {
+        const message = model.calepinage?.error || "Aucun plan de position disponible.";
+        return `
+          <svg class="rgie-svg" viewBox="0 0 1180 260" role="img" aria-label="Plan de position PV">
+            <style>
+              .svg-heading{font:700 20px Arial,sans-serif;fill:#18221d}
+              .svg-small{font:12px Arial,sans-serif;fill:#18221d}
+            </style>
+            <text x="28" y="36" class="svg-heading">Plan de position PV</text>
+            <text x="28" y="74" class="svg-small">${svgText(message)}</text>
+          </svg>
+        `;
+      }
+      const roofBlocks = segments.map((entry, index) => {
+        const y = 132 + (index * 232);
+        const centerY = y + roofHeight / 2;
+        const dcLabel = entry.roof?.stringCount
+          ? `${entry.roof.stringCount} string(s), DC ${n(item.dcDistanceM, 1)} m`
+          : `DC ${n(item.dcDistanceM, 1)} m, ${item.nombreStrings} string(s)`;
+        return `
+          ${renderPanelGrid(entry, 28, y, roofWidth, roofHeight)}
+          <polyline points="${28 + roofWidth},${centerY} 638,${centerY} 638,92 716,92" fill="none" stroke="#2d5d8a" stroke-width="2"></polyline>
+          <text x="568" y="${centerY - 8}" class="svg-label">${svgText(dcLabel)}</text>
+        `;
+      }).join("");
+      const layout = rgieLayoutTotals(model);
+      return `
+        <svg class="rgie-svg" viewBox="0 0 1180 ${height}" role="img" aria-label="Plan de position PV">
+          <defs>
+            <marker id="arrowPositionPlan" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L0,6 L9,3 z" fill="#2d5d8a"></path>
+            </marker>
+            <style>
+              .svg-heading{font:700 20px Arial,sans-serif;fill:#18221d}
+              .svg-title{font:700 13px Arial,sans-serif;fill:#445047;text-transform:uppercase}
+              .svg-small{font:12px Arial,sans-serif;fill:#18221d}
+              .svg-label{font:700 11px Arial,sans-serif;fill:#2d5d8a}
+              .svg-note{font:12px Arial,sans-serif;fill:#687168}
+              .svg-value{font:700 13px Arial,sans-serif;fill:#18221d}
+            </style>
+          </defs>
+          <text x="28" y="32" class="svg-heading">Plan de position PV</text>
+          <text x="28" y="56" class="svg-note">${svgText(compactSvgLine(planStringLabel(item), 150))}</text>
+          ${svgBox(716, 46, 140, 92, "Onduleur", [model.inverterLabel, `${item.inverter.nombreMppt * item.inverterCount} MPP`])}
+          ${svgArrow(856, 92, 906, 92, "AC", "arrowPositionPlan")}
+          ${svgBox(906, 46, 104, 92, "TD", [item.distributionLabel, `${n(item.acInvTdDistanceM, 1)} m`])}
+          ${svgArrow(1010, 92, 1060, 92, "AC", "arrowPositionPlan")}
+          ${svgBox(1060, 46, 92, 92, "Compteur", ["Reseau", `${n(item.acTdMeterDistanceM, 1)} m`])}
+          ${roofBlocks}
+          <rect x="28" y="${height - 58}" width="1124" height="36" rx="8" fill="#fbfcf8" stroke="#d8dfd2"></rect>
+          <text x="48" y="${height - 36}" class="svg-small">Calpinage total: ${layout.placedPanels}/${layout.targetPanels} panneaux, ${layout.railCount} rails, ${n(layout.railLengthTotalM, 2)} m lineaires, ${layout.hooksTotal} crochets.</text>
+        </svg>
+      `;
+    }
+
+    function rgieIdentityHtml(model) {
+      const item = model.item;
+      return `
+        <div class="kv"><span>Adresse</span><strong>${escapeHtml(model.inputs.address || "A renseigner")}</strong></div>
+        <div class="kv"><span>Code EAN</span><strong>${escapeHtml(model.inputs.ean || "A renseigner")}</strong></div>
+        <div class="kv"><span>Client conso</span><strong>${n(item.consumptionKwh, 0)} kWh/an</strong></div>
+        <div class="kv"><span>Distribution</span><strong>${escapeHtml(item.distributionLabel)}</strong></div>
+        <div class="kv"><span>Panneau</span><strong>${escapeHtml(item.totalModules)} x ${escapeHtml(item.panel.reference)} (${escapeHtml(item.panel.fabricant)})</strong></div>
+        <div class="kv"><span>Onduleur</span><strong>${escapeHtml(model.inverterLabel)} (${escapeHtml(item.inverter.fabricant)})</strong></div>
+        <div class="kv"><span>Puissance</span><strong>${kwc(item.puissanceDcW)} DC / ${kw(item.puissanceAcTotalW)} AC</strong></div>
+        <div class="kv"><span>Production estimee</span><strong>${kwh(item.productionAnnuelleKwh)}</strong></div>
+        <div class="kv"><span>Mode de pose DC/AC</span><strong>${escapeHtml(model.inputs.dcMode)} / ${escapeHtml(model.inputs.acMode)}</strong></div>
+        <div class="kv"><span>Notes</span><strong>${escapeHtml(model.inputs.notes || "-")}</strong></div>
+      `;
+    }
+
+    function rgieSignatureHtml(model) {
+      return `
+        <div class="kv"><span>Responsable</span><strong>${escapeHtml(model.inputs.responsible || "A renseigner")}</strong></div>
+        <div class="kv"><span>Date dossier</span><strong>${escapeHtml(model.inputs.date)}</strong></div>
+        <div class="kv"><span>Version UI</span><strong>${APP_VERSION}</strong></div>
+        <div class="kv"><span>Backend</span><strong>${BACKEND_VERSION}</strong></div>
+        <div class="kv"><span>Auteur</span><strong>${APP_AUTHOR}</strong></div>
+        <div class="kv"><span>Site</span><strong>${APP_URL}</strong></div>
+      `;
+    }
+
+    function renderRgiePlan() {
+      const item = currentRgieItem();
+      if (!item) {
+        fields.singleLinePlan.innerHTML = `<div class="empty">Aucune configuration valide pour generer le schema.</div>`;
+        fields.positionPlan.innerHTML = `<div class="empty">Aucun plan de position disponible.</div>`;
+        fields.rgieChecklist.innerHTML = "";
+        fields.rgieIdentity.innerHTML = `<div class="empty">Aucune configuration selectionnee.</div>`;
+        fields.rgieSignature.innerHTML = "";
+        return;
+      }
+      try {
+        const model = buildRgiePlanModel(item);
+        fields.singleLinePlan.innerHTML = renderSingleLineSvg(model);
+        fields.positionPlan.innerHTML = renderPositionSvg(model);
+        fields.rgieChecklist.innerHTML = renderChecklistCards(buildRgieChecklist(model));
+        fields.rgieIdentity.innerHTML = rgieIdentityHtml(model);
+        fields.rgieSignature.innerHTML = rgieSignatureHtml(model);
+      } catch (error) {
+        fields.singleLinePlan.innerHTML = `<div class="empty">Plan RGIE impossible : ${escapeHtml(error.message)}</div>`;
+        fields.positionPlan.innerHTML = "";
+        fields.rgieChecklist.innerHTML = "";
+      }
+    }
+
+    function rgieExportHtml(model) {
+      const checklist = renderChecklistCards(buildRgieChecklist(model));
+      const debug = currentDebugInfo();
+      return `<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Dossier RGIE PV - ${escapeHtml(model.item.panel.reference)} - ${escapeHtml(model.inverterLabel)}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #18221d; background: #fff; }
+    h1 { font-size: 24px; margin: 0 0 6px; }
+    h2 { font-size: 18px; margin: 28px 0 10px; }
+    .meta { color: #687168; margin-bottom: 18px; }
+    .rgie-svg { width: 100%; max-width: 1180px; border: 1px solid #d8dfd2; border-radius: 8px; background: #fff; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .kv, .rgie-check { border: 1px solid #d8dfd2; border-radius: 8px; padding: 8px; margin-bottom: 6px; }
+    .kv span { color: #687168; display: block; font-size: 12px; }
+    .kv strong { display: block; margin-top: 2px; }
+    .rgie-check { display: grid; grid-template-columns: auto 1fr; gap: 8px; break-inside: avoid; }
+    .rgie-dot { width: 11px; height: 11px; margin-top: 3px; border-radius: 999px; background: #6e766e; display: inline-block; }
+    .rgie-check.ok .rgie-dot { background: #3d8545; }
+    .rgie-check.warning .rgie-dot { background: #d1922c; }
+    .rgie-check.error .rgie-dot { background: #ba2f2f; }
+    .rgie-check span:not(.rgie-dot) { color: #687168; }
+    pre { white-space: pre-wrap; border: 1px solid #d8dfd2; border-radius: 8px; padding: 10px; font-size: 11px; }
+    @media print {
+      body { margin: 12mm; }
+      h2 { break-after: avoid; }
+      .page-break { break-before: page; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Dossier de travail RGIE - installation photovoltaique</h1>
+  <div class="meta">Genere le ${escapeHtml(new Date().toLocaleString("fr-BE"))} - ${APP_AUTHOR} / ${APP_OWNER} - ${APP_URL}</div>
+  <h2>Identification</h2>
+  <div class="grid">${rgieIdentityHtml(model)}</div>
+  <h2>Schema unifilaire</h2>
+  ${renderSingleLineSvg(model)}
+  <h2 class="page-break">Plan de position</h2>
+  ${renderPositionSvg(model)}
+  <h2>Checklist dossier</h2>
+  <div class="grid">${checklist}</div>
+  <h2>Signature et versions</h2>
+  <div class="grid">${rgieSignatureHtml(model)}</div>
+  <h2>Informations debug</h2>
+  <pre>${escapeHtml(debug)}</pre>
+</body>
+</html>
+`;
+    }
+
+    function exportRgiePlan() {
+      const item = currentRgieItem();
+      if (!item) {
+        document.querySelector("#statusText").textContent = "Aucune configuration valide a exporter en dossier RGIE.";
+        return;
+      }
+      try {
+        const model = buildRgiePlanModel(item);
+        const filename = `dossier_rgie_pv_${new Date().toISOString().slice(0, 10)}.html`;
+        downloadText(rgieExportHtml(model), filename, "text/html;charset=utf-8");
+        document.querySelector("#statusText").textContent = `Dossier RGIE genere : ${filename}`;
+        document.querySelector("#detailStatus").textContent = `Export dossier RGIE genere : ${filename}`;
+      } catch (error) {
+        document.querySelector("#statusText").textContent = `Export dossier RGIE impossible : ${error.message}`;
+      }
+    }
+
     function changelogHref() {
       return window.location.protocol === "file:" ? "../docs/CHANGELOG.md" : "/docs/CHANGELOG.md";
     }
@@ -3089,6 +4051,13 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
         `Toitures calpinage: ${layoutRoofSummary}`,
         `Toiture calpinage globale: ${fields.layoutRoofLength.value} x ${fields.layoutRoofWidth.value} m`,
         `Entraxe chevrons: ${fields.layoutRafterSpacing.value} cm`,
+        `Plan RGIE adresse: ${fields.planAddress.value ? "renseignee" : "manquante"}`,
+        `Plan RGIE EAN: ${fields.planEan.value ? fields.planEan.value : "manquant"}`,
+        `Plan RGIE responsable/date: ${fields.planResponsible.value || "manquant"} / ${fields.planDate.value || "manquante"}`,
+        `Plan RGIE modes pose DC/AC: ${fields.planDcMode.value} / ${fields.planAcMode.value}`,
+        `Plan RGIE protections: AC=${fields.planAcProtection.value || "manquante"} ; diff=${fields.planDifferential.value || "manquant"} ; DC=${fields.planDcProtection.value || "manquante"}`,
+        `Plan RGIE PE: ${fields.planPeSection.value || "0"} mm2 ; protege mecanique=${fields.planPeProtected.checked ? "oui" : "non"}`,
+        `Plan RGIE C10/26=${fields.planC1026.checked ? "oui" : "non"} ; etiquetage DC=${fields.planDcLabels.checked ? "oui" : "non"}`,
         `Catalogue panneaux lignes: ${Math.max(0, fields.panelsCsv.value.split(/\r?\n/).filter(Boolean).length - 1)}`,
         `Catalogue onduleurs lignes: ${Math.max(0, fields.invertersCsv.value.split(/\r?\n/).filter(Boolean).length - 1)}`,
         `Configurations valides: ${state.results.length}`,
@@ -3564,14 +4533,23 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
 
     function showTab(name) {
       const isCatalog = name === "catalog";
+      const isPlan = name === "plan";
+      const isSummary = name === "summary";
+      state.activeTab = name;
       document.querySelector("#catalogArea").classList.toggle("active", isCatalog);
-      document.querySelector("#rejectArea").style.display = isCatalog ? "none" : "grid";
+      fields.planArea.classList.toggle("active", isPlan);
+      document.querySelector("#rejectArea").style.display = isSummary ? "grid" : "none";
       document.querySelector("#catalogTab").classList.toggle("active", isCatalog);
-      document.querySelector("#summaryTab").classList.toggle("active", !isCatalog);
+      document.querySelector("#summaryTab").classList.toggle("active", isSummary);
+      document.querySelector("#planTab").classList.toggle("active", isPlan);
+      if (isPlan) {
+        renderRgiePlan();
+      }
     }
 
     fields.panelsCsv.value = DEFAULT_PANELS_CSV;
     fields.invertersCsv.value = DEFAULT_INVERTERS_CSV;
+    fields.planDate.value = new Date().toISOString().slice(0, 10);
 
     initializeMetaLinks();
     document.querySelector("#reportIssueBtn").addEventListener("click", reportIssue);
@@ -3597,6 +4575,28 @@ SB5.0-1AV-41,SMA,5000.0,7500.0,600.0,0.0,0.0,175.0,500.0,15.0,20.0,2,2,mono`;
     });
     document.querySelector("#summaryTab").addEventListener("click", () => showTab("summary"));
     document.querySelector("#catalogTab").addEventListener("click", () => showTab("catalog"));
+    document.querySelector("#planTab").addEventListener("click", () => showTab("plan"));
+    fields.refreshPlan.addEventListener("click", renderRgiePlan);
+    fields.exportRgiePlan.addEventListener("click", exportRgiePlan);
+    [
+      fields.planAddress,
+      fields.planEan,
+      fields.planResponsible,
+      fields.planDate,
+      fields.planDcMode,
+      fields.planAcMode,
+      fields.planAcProtection,
+      fields.planDifferential,
+      fields.planDcProtection,
+      fields.planPeSection,
+      fields.planPeProtected,
+      fields.planC1026,
+      fields.planDcLabels,
+      fields.planNotes
+    ].forEach((field) => {
+      const eventName = field.type === "checkbox" || field.tagName === "SELECT" || field.type === "date" ? "change" : "input";
+      field.addEventListener(eventName, renderRgiePlan);
+    });
     fields.distribution.addEventListener("change", calculate);
     fields.stringMode.addEventListener("change", () => {
       renderRoofControls();

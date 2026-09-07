@@ -1,6 +1,6 @@
-# Dimensionnement solaire - prototype GUI v0.29
+# Dimensionnement solaire - prototype GUI v0.31
 
-Ce dossier contient la version `v0.29` du programme :
+Ce dossier contient la version `v0.31` du programme :
 
 - `ui/dimensionnement_solaire.html` : interface graphique locale a ouvrir dans un navigateur.
 - `code/solar_optimizer_gui.py` : interface graphique Python et moteur de selection.
@@ -10,6 +10,14 @@ Ce dossier contient la version `v0.29` du programme :
 - `code/datasheet_importer.py` : module d'import local de datasheets PDF/TXT.
 - `input/catalogue_fabricants_db.json` : base locale des fabricants, panneaux et onduleurs.
 - `storage/pv_selector.sqlite3` : base SQLite runtime creee localement, ou `/storage/pv_selector.sqlite3` sur Railway.
+
+## Version 0.31
+
+Cette version transforme le schema unifilaire du module `Plan RGIE` en dessin electrique plus proche d'un dossier de controle : champ PV vertical, liaison DC, sectionneur DC, onduleur DC/AC, protection AC PV, barre TD, depart installation, differentiel, compteur et terre. Les libelles reprennent les sections de cable Solar/XVB, distances, puissances, MPPT et validations principales calculees par l'outil.
+
+## Version 0.30
+
+Cette version ajoute un module `Plan RGIE` dans l'interface. Il genere un schema unifilaire simplifie, un plan de position PV base sur le calpinage retenu, une checklist dossier et un export HTML imprimable. Le module reprend les valeurs calculees par le dimensionnement : strings, MPPT, tensions froid/chaud, startup input, sections, distances, pertes AC/DC, puissance AC/DC et allocation par toiture. Les champs adresse, EAN, responsable, modes de pose, protections et signalisation permettent de preparer un dossier de controle, avec les points a verifier clairement signales.
 
 ## Version 0.29
 
@@ -112,6 +120,7 @@ Pour chaque combinaison panneau / onduleur / nombre de modules / nombre de strin
 - affectation MPP automatique ou manuelle, avec controle du nombre de strings par MPP et des courants MPPT/Isc.
 - pertes Joule totales DC + AC inferieures ou egales a `2 %` de la puissance DC installee.
 - production annuelle estimee a partir de la consommation client et du coefficient orientation/pente de chaque toiture.
+- dossier `Plan RGIE` : presence du schema unifilaire, plan de position, EAN, responsable/date, protections AC/DC, differentiel, PE structures, signalisation DC et verification C10/26.
 
 ## Hypotheses du prototype
 
@@ -133,6 +142,7 @@ Pour chaque combinaison panneau / onduleur / nombre de modules / nombre de strin
 - La production annuelle affichee est nette des pertes cables ; la production brute avant pertes reste visible dans le detail de configuration.
 - Le calpinage toiture utilise la longueur comme axe horizontal gauche-droite et la largeur comme axe de rampant egout-faitage. Les marges appliquees sont 30 cm a gauche, 30 cm a droite, 30 cm a l'egout et 10 cm au faitage.
 - En mode strings manuel, le calpinage utilise les dimensions brutes de chaque toiture et additionne ensuite rails, crochets et metres lineaires.
+- Le module `Plan RGIE` produit un dossier de travail. Les calibres exacts de protection, type de differentiel, parafoudre, notices constructeur et exigences GRD restent a valider selon le chantier, les datasheets et l'organisme de controle.
 - Les lignes `Exemple` des CSV sont fictives ; les lignes Trina Solar, Jinko Solar, LONGi, SMA, Huawei FusionSolar et Fronius proviennent de fiches fabricant verifiees.
 - Certaines fiches onduleur ont des MPPT asymetriques. Quand le modele actuel ne permet pas de distinguer MPPT 1 et MPPT 2, la valeur limitante est utilisee pour rester conservateur.
 
